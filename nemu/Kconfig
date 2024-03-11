@@ -151,6 +151,9 @@ config ITRACE_COND
   string "Only trace instructions when the condition is true"
   default "true"
 
+config FTRACE
+  bool "Enable function tracer"
+  default n
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
@@ -159,6 +162,25 @@ config DIFFTEST
   help
     Enable differential testing with a reference design.
     Note that this will significantly reduce the performance of NEMU.
+
+config MTRACE
+  bool "Enable mtracer"
+  default n
+
+config MTRACE_SIZE_CONF
+  bool "Mtrace within specified address range"
+  depends on MTRACE
+  default n
+
+config MTRACE_BASE
+  hex "Mtrace base address"
+  depends on MTRACE && MTRACE_SIZE_CONF
+  default MBASE
+
+config MTRACE_SIZE
+  hex "Mtrace size"
+  depends on MTRACE && MTRACE_SIZE_CONF
+  default MSIZE
 
 choice
   prompt "Reference design"

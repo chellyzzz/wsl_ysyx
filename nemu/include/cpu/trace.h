@@ -13,24 +13,27 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <isa.h>
-#include <cpu/difftest.h>
-#include "../local-include/reg.h"
+#ifndef __CPU_TRACE_H__
+#define __CPU_TRACE_H__
 
-bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  int reg_num = ARRLEN(cpu.gpr);
-  for (int i = 0; i < reg_num; i++) {
-    if (ref_r->gpr[i] != cpu.gpr[i]) {
-       printf("error at pc = 0x%08x", cpu.pc);
-      return false;
-    }
-  }
-  if(ref_r->pc != cpu.pc){
-      printf("error at pc = 0x%08x", cpu.pc);
-      return false;
-  }
-  return true;
-}
+#include <common.h>
+#include <device/map.h>
 
-void isa_difftest_attach() {
-}
+#ifdef CONFIG_ITRACE
+
+#define DASM_PRINTBUF_SIZE 128
+#define RingBuffSize 20
+
+typedef struct
+{
+  char logbuf[DASM_PRINTBUF_SIZE];
+}RingBuff_Type;
+
+#endif
+
+#ifdef CONFIG_DTRACE
+void dtrace_read(paddr_t addr, int len, IOMap *map);
+void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map);
+#endif
+
+#endif
