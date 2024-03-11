@@ -160,8 +160,8 @@ static void statistic() {
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 
 #ifdef CONFIG_FTRACE
-  // print_funcnodes();
-  // free_funcnodes();
+  print_funcnodes();
+  free_funcnodes();
 #endif
 }
 
