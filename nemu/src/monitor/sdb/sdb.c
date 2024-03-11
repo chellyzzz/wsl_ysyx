@@ -18,11 +18,18 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/paddr.h>
+
 
 static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+void init_wp_pool();
+void wp_display();
+void wp_create(char *args, word_t res);
+void wp_delete(int num);
+
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -49,8 +56,212 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  nemu_state.state =NEMU_QUIT;
   return -1;
 }
+
+static int cmd_si(char *args) {
+  int n =0;
+  if(args == NULL)  n=1;
+  else 
+    sscanf(args,"%d",&n);
+  cpu_exec(n);
+  return 0;
+}
+
+
+
+static int cmd_info(char *args) {
+
+  if(args==NULL){
+    printf("no info parameters!\n");
+    return 1;
+  }
+  if(strcmp(args,"r")==0) {
+    isa_reg_display();
+  }
+  if(strcmp(args,"w")==0) {
+    wp_display();
+  } 
+  return 0;
+}
+
+static int cmd_d(char *args) {
+  
+  char *arg=strtok(args," ");
+  if(arg == NULL){
+    printf("lose parameters!\n");
+    return 0;
+  }
+  else if(strtok(NULL," ") != NULL){
+    printf("too many args!\n");
+    return 0;
+  }
+  else {
+    int num = atoi(arg);
+    wp_delete(num);
+    return 0;
+  }
+}
+
+static int cmd_t(char *args) {
+    FILE *input_file = fopen("./tools/gen-expr/input", "r");
+    if (input_file == NULL) {
+        printf("Failed to open input file.\n");
+        return 1;
+    }
+
+    char expression[1000]; 
+    word_t expected_result;
+    int tests=0;
+    int errors = 0;
+    char line[1000];
+
+    while (fgets(line, sizeof(line), input_file) != NULL) {
+      tests++;
+        expected_result = atoi(strtok(line," "));
+        char *tmp = strtok(NULL, "\n");
+        strcpy(expression, tmp);
+        bool success = true;
+        word_t result = expr(expression, &success);
+
+        if (success) {
+            if(expected_result != result) {
+                printf("expected:%u\tresult:%u\n",expected_result,result);
+                printf("%s\tTest Failed!\n",expression);
+                errors ++;
+            }
+        } else {
+            printf("Error evaluating expression: %s\n", expression);
+        }
+    }
+
+    fclose(input_file);
+    printf("\ntotal tests: %d\nerrors: %d\n", tests,errors);
+    return 0;
+}
+
+static int cmd_w(char *args) {
+  if(args == NULL){
+    printf("lose parameters!\n");
+    return 0;
+  }
+  bool success= true;
+  word_t res = expr(args, &success);
+  if(!success){
+    printf("wrong expr!\n");
+    //assert(0);
+    return 0;
+  }
+  else {
+     wp_create(args, res);
+     return 0;
+  }
+}
+
+static int cmd_x(char *args) {
+  if(args == NULL){
+    printf("no memory parameters!\n");
+    return 1;
+  }
+  char *argn=strtok(args," ");
+  int n=atoi(argn);
+  if(n == 0){
+  printf("miss parameters!\n");
+    return 0;
+  }
+  char *arg2=strtok(NULL,"\0");
+  bool success= true;
+  word_t res = expr(arg2, &success);
+  if(!success){
+    printf("error expr!\n");
+    assert(0);
+  }
+
+  else{
+    paddr_t addr=res;
+    for (int i=0;i<n;i++){
+
+    if(i==0)  printf("%#010x:\t",addr);
+    else if(i!=0 && i%4==0)  printf("\n%#010x:\t",addr);
+    printf("%#010x\t\t",paddr_read(addr,4));
+    addr+=4;
+    }
+    printf("\n");
+  }
+   
+  return 0;
+}
+
+ static int cmd_b(char *args) {
+        char arg12[20];
+        strcpy(arg12,"$pc==");
+        strcat(arg12,args);
+        printf("%s",arg12);
+      cmd_w(arg12);
+    return 0;
+ }
+
+
+static int cmd_p(char *args) {
+  if(args == NULL){
+    printf("no expression parameters!\n");
+    return 1;
+  }
+  // char *arg_par1 = strtok(args," ");
+  // char *arg_par2 = strtok(NULL," ");
+  bool success= true;
+  // if(arg_par2 == NULL){
+    word_t res = expr(args, &success);
+    if(!success){
+      printf("wrong expr!\n");
+      return 0;
+      //assert(0);
+    }  
+    printf("%s = %u\n",args,res); 
+  // }
+  // else if(strcmp(arg_par1,"x") == 0){
+  //  word_t res = expr(arg_par2, &success);
+  //   if(!success){
+  //     printf("wrong expr!\n");
+  //     //assert(0);
+  //     return 0;
+  //   }  
+  //       printf("%s = 0x%x\n",args,res);
+  
+  // }
+  return 0;
+}
+
+static int cmd_px(char *args) {
+  if(args == NULL){
+    printf("no expression parameters!\n");
+    return 1;
+  }
+
+  bool success= true;
+  // if(arg_par2 == NULL){
+    word_t res = expr(args, &success);
+    if(!success){
+      printf("wrong expr!\n");
+      return 0;
+      //assert(0);
+    }  
+    printf("%s = 0x%x\n",args,res); 
+  // }
+  // else if(strcmp(arg_par1,"x") == 0){
+  //  word_t res = expr(arg_par2, &success);
+  //   if(!success){
+  //     printf("wrong expr!\n");
+  //     //assert(0);
+  //     return 0;
+  //   }  
+  //       printf("%s = 0x%x\n",args,res);
+  
+  // }
+  return 0;
+}
+
 
 static int cmd_help(char *args);
 
@@ -62,6 +273,15 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "si", "step program n times,default n=1", cmd_si },
+  { "info", "Print -r Register Status -w monitor point", cmd_info },
+  { "d", "delete monitor point n", cmd_d },
+  { "w", "create watchpoint", cmd_w },
+  { "x", "scan memory", cmd_x },
+  { "p", "Expression evaluation", cmd_p },
+  { "px", "Expression evaluation in hex", cmd_px },
+  { "b", "set breakpoint", cmd_b },
+  { "t", "test for expr", cmd_t },
 
   /* TODO: Add more commands */
 
@@ -101,8 +321,8 @@ void sdb_mainloop() {
     cmd_c(NULL);
     return;
   }
-
   for (char *str; (str = rl_gets()) != NULL; ) {
+
     char *str_end = str + strlen(str);
 
     /* extract the first token as the command */
