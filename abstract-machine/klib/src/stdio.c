@@ -117,11 +117,12 @@ int printf(const char *fmt, ...) {
 
 
 int sprintf(char *out, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    int written = vsprintf(out, fmt, args);
-    va_end(args);
-    return written;
+    // va_list args;
+    // va_start(args, fmt);
+    // int written = vsprintf(out, fmt, args);
+    // va_end(args);
+    // return written;
+    panic("no\n");
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
