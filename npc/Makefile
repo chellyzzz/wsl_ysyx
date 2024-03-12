@@ -15,12 +15,10 @@ VERILATOR_FLAGS += -cc --exe --build --trace -MMD \
 				-O3 --x-assign fast --x-initial fast
 # Warn abount lint issues; may not want this on less solid designs
 # VERILATOR_FLAGS += -Wall
-# Make waveforms
 VERILATOR_FLAGS += -Wno-fatal
 # Generate coverage analysis
 # VERILATOR_FLAGS += --coverage
-# Run Verilator in debug mode
-#VERILATOR_FLAGS += --debug
+
 # Add this trace to get a backtrace in gdb
 #VERILATOR_FLAGS += --gdbbt
 
