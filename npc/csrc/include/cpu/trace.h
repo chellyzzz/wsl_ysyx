@@ -22,7 +22,7 @@
 #ifdef CONFIG_ITRACE
 
 #define DASM_PRINTBUF_SIZE 128
-#define RingBuffSize 20
+#define RingBuffSize 10
 
 typedef struct
 {
