@@ -27,6 +27,64 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
+#ifdef CONFIG_MTRACE
+typedef struct {
+    paddr_t addr;   
+    int len;        
+    bool is_write;  
+} MemoryTrace;
+
+#define MTRACE_SIZE 5
+static MemoryTrace memory_traces[MTRACE_SIZE];
+static int num_traces = 0;
+
+static inline void mtrace_push(paddr_t addr, int len, bool is_write) {
+  #ifdef CONFIG_MTRACE_SIZE_CONF
+    if(addr < CONFIG_MTRACE_BASE || addr > CONFIG_MTRACE_BASE + CONFIG_MTRACE_SIZE) return ;
+  #endif
+  MemoryTrace *trace = &memory_traces[num_traces % MTRACE_SIZE];
+  trace->addr = addr;
+  trace->len = len;
+  trace->is_write = is_write;
+  num_traces ++;
+}
+
+static void print_out_of_bound() {
+  int i;
+  printf("----------- Memory Trace ------------\n");
+  if(num_traces <= MTRACE_SIZE){
+    for(i = 0; i < num_traces; i++){
+      if(i == num_traces - 1){
+        printf("--> %s: " FMT_PADDR ", Length %d\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].len);        
+      }
+      else printf("    %s: " FMT_PADDR ", Length %d\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].len);
+    }
+  }
+  else {
+    if(num_traces % MTRACE_SIZE == 0){
+      for(i = num_traces % MTRACE_SIZE; i < MTRACE_SIZE-1; i++){
+        printf("    %s: " FMT_PADDR ", Length %d\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].len);
+      }
+        printf("--> %s: " FMT_PADDR ", Length %d\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].len);
+
+    }
+    else{
+      for(i = num_traces % MTRACE_SIZE; i < MTRACE_SIZE; i++){
+        printf("    %s: " FMT_PADDR ", Length %d\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].len);
+      }
+
+      for(i = 0; i < num_traces % MTRACE_SIZE; i++){
+        if(i == num_traces % MTRACE_SIZE - 1){
+          printf("--> %s: " FMT_PADDR ", Length %d\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].len);
+        }
+        else printf("    %s: " FMT_PADDR ", Length %d\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].len);
+      }
+    }
+  }
+  printf("----------------- End -----------------\n");
+}
+#endif
+
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
   return ret;
@@ -37,6 +95,7 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
 }
 
 static void out_of_bound(paddr_t addr) {
+  IFDEF(CONFIG_MTRACE, print_out_of_bound());
   panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
       addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
 }
@@ -46,19 +105,35 @@ void init_mem() {
   pmem = malloc(CONFIG_MSIZE);
   assert(pmem);
 #endif
-  IFDEF(CONFIG_MEM_RANDOM, memset(pmem, rand(), CONFIG_MSIZE));
+#ifdef CONFIG_MEM_RANDOM
+  uint32_t *p = (uint32_t *)pmem;
+  int i;
+  for (i = 0; i < (int) (CONFIG_MSIZE / sizeof(p[0])); i ++) {
+    p[i] = rand();
+  }
+#endif
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
 word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return pmem_read(addr, len);
+  IFDEF(CONFIG_MTRACE,mtrace_push(addr, len, false));
+  word_t data;
+  if (likely(in_pmem(addr))) {
+    data = pmem_read(addr, len);
+    return data;
+
+  }
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
+  IFDEF(CONFIG_MTRACE,mtrace_push(addr, len, true));
+  if (likely(in_pmem(addr))) {
+    pmem_write(addr, len, data); 
+    return; 
+    }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
 }
