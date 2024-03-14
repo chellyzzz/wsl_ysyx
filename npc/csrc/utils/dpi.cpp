@@ -16,19 +16,18 @@ extern "C" void check_rst(bool rst_flag){
     rst_n_sync = false;
 }
 
-extern "C" void npc_pmem_read(int raddr,int *rdata, int ren, int len){
+extern "C" void npc_pmem_read(int raddr, int if_mtrace, int *rdata, int ren, int len){
   //raddr = raddr & ~0x3ul;  //clear low 2bit for 4byte align.
   if (ren && raddr>=PMEM_LEFT && raddr<=PMEM_RIGHT){
-    *rdata = paddr_read(raddr, len);
+    *rdata = paddr_read(raddr, len, if_mtrace);
   }
-  else //avoid latch.
-    *rdata = 0;
+  return ;
 }
 
 extern "C" void npc_pmem_write(int waddr, int wdata, int wen, int len){
   //waddr = waddr & ~0x3ul;  //clear low 2bit for 4byte align.
-  if (wen && waddr>=PMEM_LEFT && waddr<=PMEM_RIGHT){
+  if (wen && len ==4 || len == 2 || len == 1){
     paddr_write(waddr, len, wdata);
   }
-  return;
+  return ;
 }

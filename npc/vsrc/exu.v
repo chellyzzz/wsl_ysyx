@@ -1,6 +1,8 @@
 `include "para_defines.v"
 
 module ysyx_23060124_exu(
+  input clk,
+  input i_rst_n,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src1,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src2,
   input if_unsigned,
@@ -42,6 +44,8 @@ ysyx_23060124_alu exu_alu(
 );
 
 ysyx_23060124_lsu exu_lsu(
+  // .clk(clk),
+  // .i_rst_n(i_rst_n),
   .lsu_src2(src2),
   .alu_res(alu_res),
   .load_opt(load_opt),

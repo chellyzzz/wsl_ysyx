@@ -132,9 +132,9 @@ always @(ins)begin
   end
   `ysyx_23060124_TYPE_S: begin 
     case(func3)
-    `ysyx_23060124_FUN3_SB: begin o_store_opt = `ysyx_23060124_OPT_LSU_SB; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; end
-    `ysyx_23060124_FUN3_SH: begin o_store_opt = `ysyx_23060124_OPT_LSU_SH; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; end
-    `ysyx_23060124_FUN3_SW: begin o_store_opt = `ysyx_23060124_OPT_LSU_SW; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; end
+    `ysyx_23060124_FUN3_SB: begin o_store_opt = `ysyx_23060124_OPT_LSU_SB; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM; end
+    `ysyx_23060124_FUN3_SH: begin o_store_opt = `ysyx_23060124_OPT_LSU_SH; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM; end
+    `ysyx_23060124_FUN3_SW: begin o_store_opt = `ysyx_23060124_OPT_LSU_SW; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM; end
     default:id_err[1] = i_rst_n ? 1'b1 : 1'b0; //func3_err
     endcase
   end
