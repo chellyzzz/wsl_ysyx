@@ -29,6 +29,7 @@ wire [`ysyx_23060124_REG_ADDR-1:0] rd  = ins[11:7];
 
 
 reg [2:0] id_err; //0:opc_err, 1:funct3_err, 2:funct7_err
+
 always @(ins)
 begin
   o_imm = `ysyx_23060124_ISA_WIDTH'b0;
@@ -38,10 +39,6 @@ begin
   o_wen = 1'b0;
   id_err = 3'b0;
   o_if_unsigned = 1'b0;
-end
-
-always @(ins)
-begin
   case(opcode)
     `ysyx_23060124_TYPE_I:      begin o_imm = {{20{ins[31]}},ins[31:20]};       o_rd = rd; o_rs1 = rs1;              o_wen = 1'b1; end
     `ysyx_23060124_TYPE_I_LOAD: begin o_imm = {{20{ins[31]}},ins[31:20]};       o_rd = rd; o_rs1 = rs1;              o_wen = 1'b1; end
@@ -135,9 +132,9 @@ always @(ins)begin
   end
   `ysyx_23060124_TYPE_S: begin 
     case(func3)
-    `ysyx_23060124_FUN3_SB: begin o_store_opt = `ysyx_23060124_OPT_LSU_SB; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; end
-    `ysyx_23060124_FUN3_SH: begin o_store_opt = `ysyx_23060124_OPT_LSU_SH; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; end
-    `ysyx_23060124_FUN3_SW: begin o_store_opt = `ysyx_23060124_OPT_LSU_SW; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; end
+    `ysyx_23060124_FUN3_SB: begin o_store_opt = `ysyx_23060124_OPT_LSU_SB; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM; end
+    `ysyx_23060124_FUN3_SH: begin o_store_opt = `ysyx_23060124_OPT_LSU_SH; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM; end
+    `ysyx_23060124_FUN3_SW: begin o_store_opt = `ysyx_23060124_OPT_LSU_SW; o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM; end
     default:id_err[1] = i_rst_n ? 1'b1 : 1'b0; //func3_err
     endcase
   end

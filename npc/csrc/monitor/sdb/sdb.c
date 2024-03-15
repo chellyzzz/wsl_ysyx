@@ -367,6 +367,7 @@ void assert_fail_msg() {
   #ifdef CONFIG_ITRACE  
     if(!hit_goodtrap()){
       iringbuf_print(iringbuf, ptr);
+      IFDEF(CONFIG_MTRACE, print_out_of_bound());
       // isa_reg_display();
     }
   #endif
