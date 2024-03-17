@@ -44,8 +44,8 @@ ysyx_23060124_alu exu_alu(
 );
 
 ysyx_23060124_lsu exu_lsu(
-  // .clk(clk),
-  // .i_rst_n(i_rst_n),
+  .i_clk(clk),
+  .i_rst_n(i_rst_n),
   .lsu_src2(src2),
   .alu_res(alu_res),
   .load_opt(load_opt),
@@ -64,16 +64,15 @@ ysyx_23060124_lsu exu_lsu(
 //   default: brch_res = 1'b0;
 //   endcase
 // end
-
-assign brch_res = (brch_opt == `ysyx_23060124_OPT_BRCH_BGE) ? ((alu_res == 0) ? 1'b1 : 1'b0) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BNE) ? ((alu_res != 0) ? 1'b1 : 1'b0) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BLT) ? (alu_res[31] == 1'b1) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BGE) ? (alu_res[31] == 1'b0) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BLTU) ? ((carry == 1'b1) ? 1'b1 : 1'b0) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BGEU) ? ((carry == 1'b0) ? 1'b1 : 1'b0) :
+assign brch_res = (brch_opt == `ysyx_23060124_OPT_BRCH_BEQ) ? ((alu_res == 0)) :
+                  (brch_opt == `ysyx_23060124_OPT_BRCH_BNE) ? ((alu_res != 0)) :
+                  (brch_opt == `ysyx_23060124_OPT_BRCH_BLT) ? (carry == 1'b1) :
+                  (brch_opt == `ysyx_23060124_OPT_BRCH_BGE) ? (carry == 1'b0) :
+                  (brch_opt == `ysyx_23060124_OPT_BRCH_BLTU) ? ((carry == 1'b1)) :
+                  (brch_opt == `ysyx_23060124_OPT_BRCH_BGEU) ? ((carry == 1'b0)) :
                   1'b0;
 
-assign o_res = (|load_opt) ? lsu_res : (brch_res ? brch_res : alu_res);
+assign o_res = (|load_opt) ? lsu_res : (|brch_opt ? brch_res : alu_res);
 assign o_zero = ~(|o_res);
 
 endmodule

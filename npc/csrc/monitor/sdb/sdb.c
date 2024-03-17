@@ -109,8 +109,12 @@ void exec_once(Decode *s){
 
 void cpu_exec(uint64_t n){
     Decode s;
+    int one_print = 0;
     if (n == -1) {
         n = -1u;
+    }
+    else if (n == 1) {
+        one_print = 1;
     }
     for(; n > 0; n--){
       if(contextp->gotFinish()){
@@ -125,6 +129,7 @@ void cpu_exec(uint64_t n){
           }
         #endif
     }
+    if(one_print == 1) printf("%s\n",s.logbuf);
     return;
 }
 
@@ -368,7 +373,7 @@ void assert_fail_msg() {
     if(!hit_goodtrap()){
       iringbuf_print(iringbuf, ptr);
       IFDEF(CONFIG_MTRACE, print_out_of_bound());
-      // isa_reg_display();
+      isa_reg_display();
     }
   #endif
 }

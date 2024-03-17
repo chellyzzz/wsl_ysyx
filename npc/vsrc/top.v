@@ -64,6 +64,8 @@ ysyx_23060124_idu idu1(
 
 
 ysyx_23060124_exu exu1(
+  .clk(clk),
+  .i_rst_n(rst_n_sync),
   .src1(rs1),
   .src2(rs2),
   .if_unsigned(if_unsigned),

@@ -27,7 +27,8 @@ const char *regs[] = {
 
 void isa_reg_display() {
   for(int i = 0;i < sizeof(regs)/sizeof(regs[0]); i++){
-    printf("%-5s\t0x%08x\t%u\n", regs[i], cpu.gpr[i], cpu.gpr[i]);
+    printf("%3s[%02d]: 0x%08x\t", regs[i], i, cpu.gpr[i]);
+    if((i+1) % 4 == 0) printf("\n");
   }
 }
 bool diff_checkregs(CPU_state *ref_r, vaddr_t pc) {
