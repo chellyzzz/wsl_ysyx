@@ -378,7 +378,7 @@ void assert_fail_msg() {
   #endif
 }
 
-void sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb) {
+int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb) {
   contextp = contextp_sdb;
   top = top_sdb;  
   vcd = vcd_sdb;
@@ -413,7 +413,7 @@ void sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* 
       if (strcmp(cmd, cmd_table[i].name) == 0) {
         if (cmd_table[i].handler(args) < 0) { 
           assert_fail_msg();
-          return; 
+          return hit_goodtrap(); 
         }
         break;
       }
