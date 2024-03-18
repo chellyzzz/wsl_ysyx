@@ -8,7 +8,7 @@ void init_monitor(int, char *[]);
 bool difftest_check();
 void difftest_step();
 void print_regs();
-void sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb);
+int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb);
 
 bool rst_n_sync = false; // read from rtl by dpi-c.
 
@@ -60,8 +60,8 @@ int main(int argc,char *argv[]){
     // }
     // end_wave();    
     // return 0;
-    sdb_mainloop(contextp, top, vcd);
+    int good = sdb_mainloop(contextp, top, vcd);
     end_wave();
-    return 0;
+    return !good;
 }
 

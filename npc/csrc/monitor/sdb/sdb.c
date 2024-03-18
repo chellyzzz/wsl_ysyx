@@ -109,8 +109,12 @@ void exec_once(Decode *s){
 
 void cpu_exec(uint64_t n){
     Decode s;
+    int one_print = 0;
     if (n == -1) {
         n = -1u;
+    }
+    else if (n == 1) {
+        one_print = 1;
     }
     for(; n > 0; n--){
       if(contextp->gotFinish()){
@@ -125,10 +129,11 @@ void cpu_exec(uint64_t n){
           }
         #endif
     }
+    if(one_print == 1) printf("%s\n",s.logbuf);
     return;
 }
 
-bool hit_goodtrap(){
+int hit_goodtrap(){
   return (cpu.gpr[10] == 0 && instr == 0x100073);
 }
 
@@ -368,19 +373,19 @@ void assert_fail_msg() {
     if(!hit_goodtrap()){
       iringbuf_print(iringbuf, ptr);
       IFDEF(CONFIG_MTRACE, print_out_of_bound());
-      // isa_reg_display();
+      isa_reg_display();
     }
   #endif
 }
 
-void sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb) {
+int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb) {
   contextp = contextp_sdb;
   top = top_sdb;  
   vcd = vcd_sdb;
 
   if (is_batch_mode) {
     cmd_c(NULL);
-    return;
+    return hit_goodtrap();
   }
   for (char *str; (str = rl_gets()) != NULL; ) {
 
@@ -408,7 +413,7 @@ void sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* 
       if (strcmp(cmd, cmd_table[i].name) == 0) {
         if (cmd_table[i].handler(args) < 0) { 
           assert_fail_msg();
-          return; 
+          return hit_goodtrap(); 
         }
         break;
       }

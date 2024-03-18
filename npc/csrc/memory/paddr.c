@@ -47,7 +47,7 @@ static inline void mtrace_push(paddr_t addr, int len, int data, bool is_write) {
   trace->addr = addr;
   trace->len = len;
   trace->data = data;
-  trace->pc = cpu.pc;
+  trace->pc = cpu.pc + 4;
   trace->is_write = is_write;
   num_traces ++;
 }
@@ -88,6 +88,13 @@ void print_out_of_bound() {
 }
 #endif
 
+static void out_of_bound(paddr_t addr) {
+  IFDEF(CONFIG_MTRACE, print_out_of_bound());
+  panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
+      addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
+}
+
+
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
   return ret;
@@ -124,8 +131,8 @@ word_t paddr_read(paddr_t addr, int len) {
 
   }
   // IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
-  // out_of_bound(addr);
-  // return 0;
+  out_of_bound(addr);
+  return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
@@ -135,5 +142,5 @@ void paddr_write(paddr_t addr, int len, word_t data) {
     return; 
     }
   // IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
-  // out_of_bound(addr);
+  out_of_bound(addr);
 }
