@@ -11,61 +11,12 @@ module ysyx_23060124_lsu(
 );
 reg [`ysyx_23060124_ISA_WIDTH - 1:0] read_res, store_res;
 
-//   wire ren = |load_opt;
-//   wire [`ysyx_23060124_OPT_WIDTH-1:0] raddr = alu_res;
-//   wire [32-1:0] rdata;
-//   always @(*) begin
-//     case (load_opt)
-//       `ysyx_23060124_OPT_LSU_LB:  lsu_res = {{24{rdata[ 7]}}, rdata[ 7:0]};
-//       `ysyx_23060124_OPT_LSU_LH:  lsu_res = {{16{rdata[15]}}, rdata[15:0]};
-//       `ysyx_23060124_OPT_LSU_LW:  lsu_res = rdata;
-//       `ysyx_23060124_OPT_LSU_LBU: lsu_res = {24'b0, rdata[ 7:0]};
-//       `ysyx_23060124_OPT_LSU_LHU: lsu_res = {16'b0, rdata[15:0]};
-//       default:  lsu_res = `ysyx_23060124_OPT_WIDTH'b0;
-//     endcase
-//   end
-
-//   reg  [7:0] mask;
-//   wire [7:0] wmask;
-//   wire [32-1:0] waddr,wdata;
-//   always @(*) begin
-//     case (store_opt)
-//       `ysyx_23060124_OPT_LSU_SB:  mask = 8'b0000_0001;
-//       `ysyx_23060124_OPT_LSU_SH:  mask = 8'b0000_0011;
-//       `ysyx_23060124_OPT_LSU_SW:  mask = 8'b0000_1111;
-//       default:  mask = 8'b0;
-//     endcase
-//   end
 
 import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int len);
 import "DPI-C" function void npc_pmem_write (input int waddr, input int wdata, input bit wen, input int len);
-//   always @(*) begin
-//     npc_pmem_write(waddr, wdata, 1, wmask);
-//     npc_pmem_read (raddr, rdata, ren, 4);
-//   end
-//store
 
-// always @(alu_res) begin
-//     case(store_opt)
-//     `ysyx_23060124_OPT_LSU_SB: begin store_res={24'b0, lsu_src2[7:0]}; end
-//     `ysyx_23060124_OPT_LSU_SH: begin store_res={16'b0, lsu_src2[15:0]}; end
-//     `ysyx_23060124_OPT_LSU_SW: begin store_res=lsu_src2; end
-//     endcase
-// end
 reg [`ysyx_23060124_ISA_WIDTH - 1 : 0] store_addr, store_src2;
 reg [`ysyx_23060124_OPT_WIDTH - 1 : 0] store_opt_next;
-
-//load
-// always @(alu_res) begin
-//     case(load_opt)
-//     `ysyx_23060124_OPT_LSU_LB: begin  npc_pmem_read(alu_res, read_res, |load_opt, 1); end
-//     `ysyx_23060124_OPT_LSU_LH: begin  npc_pmem_read(alu_res, read_res, |load_opt, 2); end
-//     `ysyx_23060124_OPT_LSU_LW: begin  npc_pmem_read(alu_res, read_res, |load_opt, 4); end
-//     `ysyx_23060124_OPT_LSU_LBU: begin  npc_pmem_read(alu_res, read_res, |load_opt, 1); end
-//     `ysyx_23060124_OPT_LSU_LHU: begin  npc_pmem_read(alu_res, read_res, |load_opt, 2); end
-//     default: begin read_res = `ysyx_23060124_ISA_WIDTH'b0; end
-//     endcase
-// end
 
 always @(*) begin
     case(load_opt)
@@ -93,9 +44,21 @@ always @(*) begin
     `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 4); end
     endcase
 end
+reg [1:0] load_shift;
 
 always @(*) begin
   npc_pmem_read(alu_res, read_res, |load_opt, 4);
+  if(|load_opt)begin
+    load_shift = alu_res - (alu_res & ~( 32'b11));
+  end
+  else load_shift = 0;
+  case(load_shift)
+    0: begin read_res = read_res; end
+    1: begin read_res = read_res >> 8; end
+    2: begin read_res = read_res >> 16; end
+    3: begin read_res = read_res >> 24; end
+    default: begin read_res = 0; end
+  endcase
 end
 
 endmodule
