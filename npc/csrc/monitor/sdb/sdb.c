@@ -133,7 +133,7 @@ void cpu_exec(uint64_t n){
     return;
 }
 
-bool hit_goodtrap(){
+int hit_goodtrap(){
   return (cpu.gpr[10] == 0 && instr == 0x100073);
 }
 
@@ -385,7 +385,7 @@ int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* v
 
   if (is_batch_mode) {
     cmd_c(NULL);
-    return;
+    return hit_goodtrap();
   }
   for (char *str; (str = rl_gets()) != NULL; ) {
 
