@@ -45,10 +45,11 @@ always @(*) begin
     endcase
 end
 reg [1:0] load_shift;
+
 always @(*) begin
   npc_pmem_read(alu_res, read_res, |load_opt, 4);
   if(|load_opt)begin
-    load_shift = alu_res - alu_res & (~ 32'b11);
+    load_shift = alu_res - (alu_res & ~( 32'b11));
   end
   else load_shift = 0;
   case(load_shift)
@@ -56,6 +57,7 @@ always @(*) begin
     1: begin read_res = read_res >> 8; end
     2: begin read_res = read_res >> 16; end
     3: begin read_res = read_res >> 24; end
+    default: begin read_res = 0; end
   endcase
 end
 
