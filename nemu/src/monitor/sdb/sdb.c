@@ -24,12 +24,17 @@
 static int is_batch_mode = false;
 
 void init_regex();
-void init_wp_pool();
+#ifdef CONFIG_WP
 void init_wp_pool();
 void wp_display();
 void wp_create(char *args, word_t res);
 void wp_delete(int num);
-
+#else 
+void init_wp_pool() {};
+void wp_display() {};
+void wp_create(char *args, word_t res) {};
+void wp_delete(int num) {};
+#endif
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -176,7 +181,6 @@ static int cmd_x(char *args) {
    
   return 0;
 }
-#ifdef CONFIG_WP
 static int cmd_w(char *args) {
   if(args == NULL){
     printf("lose parameters!\n");
@@ -203,7 +207,6 @@ static int cmd_w(char *args) {
       cmd_w(arg12);
     return 0;
  }
-#endif
 
 static int cmd_p(char *args) {
   if(args == NULL){
@@ -361,5 +364,5 @@ void init_sdb() {
   init_regex();
 
   /* Initialize the watchpoint pool. */
-  init_wp_pool();
+  IFDEF(CONFIG_WP, init_wp_pool());
 }
