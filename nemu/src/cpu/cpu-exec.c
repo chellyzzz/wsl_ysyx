@@ -114,6 +114,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+  printf("ITRACE ON\n");
 #ifdef CONFIG_ITRACE
   printf("ITRACE ON\n");
   char *p = s->logbuf;
