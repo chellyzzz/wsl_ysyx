@@ -24,6 +24,7 @@ void cpu_exec(uint64_t n);
 void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 void invalid_inst(vaddr_t thispc);
 
+#ifdef CONFIG_FTRACE
 typedef struct functab_node
 {
     char* name;
@@ -32,6 +33,7 @@ typedef struct functab_node
 } functab_node;
 
 extern functab_node* functab_head;
+#endif
 
 #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
 #define INV(thispc) invalid_inst(thispc)
