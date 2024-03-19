@@ -152,7 +152,12 @@ config ITRACE_COND
   default "true"
 
 config FTRACE
+  depends on TRACE
   bool "Enable function tracer"
+  default n
+
+ config WP
+  bool "Enable watchpoint tracer"
   default n
 
 config DIFFTEST

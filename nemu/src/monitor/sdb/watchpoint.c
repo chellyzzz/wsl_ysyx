@@ -15,6 +15,7 @@
 
 #include "sdb.h"
 #include "isa.h"
+#ifdef CONFIG_WP
 #define NR_WP 32
 
 typedef struct watchpoint {
@@ -154,3 +155,4 @@ void wp_delete(int num){
 }
 /* TODO: Implement the functionality of watchpoint */
 
+#endif
