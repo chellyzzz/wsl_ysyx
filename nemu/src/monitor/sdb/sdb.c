@@ -24,12 +24,17 @@
 static int is_batch_mode = false;
 
 void init_regex();
-void init_wp_pool();
+#ifdef CONFIG_WP
 void init_wp_pool();
 void wp_display();
 void wp_create(char *args, word_t res);
 void wp_delete(int num);
-
+#else 
+void init_wp_pool() {};
+void wp_display() {};
+void wp_create(char *args, word_t res) {};
+void wp_delete(int num) {};
+#endif
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -80,9 +85,11 @@ static int cmd_info(char *args) {
   if(strcmp(args,"r")==0) {
     isa_reg_display();
   }
+  #ifdef CONFIG_WP
   if(strcmp(args,"w")==0) {
     wp_display();
   } 
+  #endif
   return 0;
 }
 
@@ -141,24 +148,6 @@ static int cmd_t(char *args) {
     return 0;
 }
 
-static int cmd_w(char *args) {
-  if(args == NULL){
-    printf("lose parameters!\n");
-    return 0;
-  }
-  bool success= true;
-  word_t res = expr(args, &success);
-  if(!success){
-    printf("wrong expr!\n");
-    //assert(0);
-    return 0;
-  }
-  else {
-     wp_create(args, res);
-     return 0;
-  }
-}
-
 static int cmd_x(char *args) {
   if(args == NULL){
     printf("no memory parameters!\n");
@@ -192,6 +181,23 @@ static int cmd_x(char *args) {
    
   return 0;
 }
+static int cmd_w(char *args) {
+  if(args == NULL){
+    printf("lose parameters!\n");
+    return 0;
+  }
+  bool success= true;
+  word_t res = expr(args, &success);
+  if(!success){
+    printf("wrong expr!\n");
+    //assert(0);
+    return 0;
+  }
+  else {
+     wp_create(args, res);
+     return 0;
+  }
+}
 
  static int cmd_b(char *args) {
         char arg12[20];
@@ -201,7 +207,6 @@ static int cmd_x(char *args) {
       cmd_w(arg12);
     return 0;
  }
-
 
 static int cmd_p(char *args) {
   if(args == NULL){
@@ -276,11 +281,11 @@ static struct {
   { "si", "step program n times,default n=1", cmd_si },
   { "info", "Print -r Register Status -w monitor point", cmd_info },
   { "d", "delete monitor point n", cmd_d },
-  { "w", "create watchpoint", cmd_w },
+  { "w", "create watchpoint if CONFIG_WP enabled", cmd_w },
   { "x", "scan memory", cmd_x },
   { "p", "Expression evaluation", cmd_p },
   { "px", "Expression evaluation in hex", cmd_px },
-  { "b", "set breakpoint", cmd_b },
+  { "b", "set breakpoint if CONFIG_WP enabled", cmd_b },
   { "t", "test for expr", cmd_t },
 
   /* TODO: Add more commands */
@@ -359,5 +364,5 @@ void init_sdb() {
   init_regex();
 
   /* Initialize the watchpoint pool. */
-  init_wp_pool();
+  IFDEF(CONFIG_WP, init_wp_pool());
 }
