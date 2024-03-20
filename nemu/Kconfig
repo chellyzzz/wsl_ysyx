@@ -161,19 +161,8 @@ config DTRACE
   bool "Enable device tracer"
   default n
 
- config WP
-  bool "Enable watchpoint tracer"
-  default n
-
-config DIFFTEST
-  depends on TARGET_NATIVE_ELF
-  bool "Enable differential testing"
-  default n
-  help
-    Enable differential testing with a reference design.
-    Note that this will significantly reduce the performance of NEMU.
-
 config MTRACE
+  depends on TRACE
   bool "Enable mtracer"
   default n
 
@@ -191,6 +180,18 @@ config MTRACE_SIZE
   hex "Mtrace size"
   depends on MTRACE && MTRACE_SIZE_CONF
   default MSIZE
+
+config WP
+  bool "Enable watchpoint tracer"
+  default n
+
+config DIFFTEST
+  depends on TARGET_NATIVE_ELF
+  bool "Enable differential testing"
+  default n
+  help
+    Enable differential testing with a reference design.
+    Note that this will significantly reduce the performance of NEMU.
 
 choice
   prompt "Reference design"
