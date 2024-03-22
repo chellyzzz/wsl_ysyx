@@ -54,5 +54,5 @@ word_t isa_query_intr();
 // difftest
 bool diff_checkregs(CPU_state *ref_r, vaddr_t pc);
 void isa_difftest_attach();
-bool difftest_step(vaddr_t pc, vaddr_t npc);
+// bool difftest_step(vaddr_t pc, vaddr_t npc);
 #endif

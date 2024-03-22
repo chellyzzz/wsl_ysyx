@@ -13,30 +13,23 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#ifndef __CPU_TRACE_H__
-#define __CPU_TRACE_H__
+#ifndef __ISA_RISCV_H__
+#define __ISA_RISCV_H__
 
 #include <common.h>
-#include <device/map.h>
 
-#ifdef CONFIG_ITRACE
+typedef struct {
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
+  vaddr_t pc;
+} MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
-#define DASM_PRINTBUF_SIZE 128
-#define RingBuffSize 10
+// decode
+typedef struct {
+  union {
+    uint32_t val;
+  } inst;
+} MUXDEF(CONFIG_RV64, riscv64_ISADecodeInfo, riscv32_ISADecodeInfo);
 
-typedef struct
-{
-  char logbuf[DASM_PRINTBUF_SIZE];
-}RingBuff_Type;
-
-#endif
-
-void init_disasm(const char *triple);
-void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-
-#ifdef CONFIG_DTRACE
-void dtrace_read(paddr_t addr, int len, IOMap *map);
-void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map);
-#endif
+#define isa_mmu_check(vaddr, len, type) (MMU_DIRECT)
 
 #endif

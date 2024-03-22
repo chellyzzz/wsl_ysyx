@@ -47,7 +47,7 @@ compile:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "runing simulation for test module "
 	$(VERILATOR) $(C_FLAGS) $(VERILATOR_FLAGS) $(CSRCS) $(VSRCS) \
-	--Mdir $(OBJ_DIR) -o $(BUILD_DIR)/$(VNAME) -LDFLAGS "-lLLVM-14 -lreadline"
+	--Mdir $(OBJ_DIR) -o $(BUILD_DIR)/$(VNAME) -LDFLAGS "-lLLVM-14 -lreadline -lSDL2"
 
 sim: compile
 	$(BUILD_DIR)/$(VNAME) $(NPC_FLAGS)
