@@ -20,6 +20,8 @@
 
 #define IO_SPACE_MAX (2 * 1024 * 1024)
 
+extern CPU_state cpu;
+
 static uint8_t *io_space = NULL;
 static uint8_t *p_space = NULL;
 
