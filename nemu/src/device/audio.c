@@ -40,7 +40,6 @@ void init_audio() {
   add_pio_map ("audio", CONFIG_AUDIO_CTL_PORT, audio_base, space_size, audio_io_handler);
 #else
   add_mmio_map("audio", CONFIG_AUDIO_CTL_MMIO, audio_base, space_size, audio_io_handler);
-  // printf("CONFIG_AUDIO_CTL_MMIO:%x\n", CONFIG_AUDIO_CTL_MMIO);
 #endif
 
   sbuf = (uint8_t *)new_space(CONFIG_SB_SIZE);
