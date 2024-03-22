@@ -1,22 +1,21 @@
 #include <am.h>
 #include <nemu.h>
 
-// static uint64_t boot_time;
+static uint64_t boot_time;
 
-// uint64_t rtc_get_time() {
-//   uint64_t lo = inl(RTC_ADDR);
-//   uint64_t hi = inl(RTC_ADDR + 4);
-//   return (hi << 32) + lo - boot_time;
-// }
+uint64_t rtc_get_time() {
+  uint64_t lo = inl(RTC_ADDR);
+  uint64_t hi = inl(RTC_ADDR + 4);
+  return (hi << 32) + lo;
+}
 
 void __am_timer_init() {
-    // boot_time = rtc_get_time();
+    boot_time = rtc_get_time();
 }
 
 void __am_timer_uptime(AM_TIMER_UPTIME_T *uptime) {
-  uint32_t low = inl(RTC_ADDR);
-  uint32_t high = inl(RTC_ADDR+4);
-  uptime->us = (uint64_t)low + (((uint64_t)high) << 32);
+
+  uptime->us = rtc_get_time() - boot_time;
 
 }
 
