@@ -17,7 +17,7 @@
 #define __CPU_TRACE_H__
 
 #include <common.h>
-// #include <device/map.h>
+#include <device/map.h>
 
 #ifdef CONFIG_ITRACE
 

@@ -18,7 +18,7 @@ extern "C" void check_rst(bool rst_flag){
 
 extern "C" void npc_pmem_read(int raddr,int *rdata, int ren, int len){
   raddr = raddr & ~0x3u;  //clear low 2bit for 4byte align.
-  if (ren && raddr>=PMEM_LEFT && raddr<=PMEM_RIGHT){
+  if (ren){
     // printf("raddr: 0x%08x, len : %d\n", raddr, len);
     *rdata = paddr_read(raddr, 4);
   }
