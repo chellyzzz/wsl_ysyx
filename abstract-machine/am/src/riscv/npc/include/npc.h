@@ -2,6 +2,7 @@
 #define NPC_H__
 
 #include <klib-macros.h>
+#include <riscv/riscv.h>
 
 #define DEVICE_BASE 0xa0000000
 #define MMIO_BASE 0xa0000000
