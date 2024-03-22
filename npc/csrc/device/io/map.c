@@ -47,13 +47,16 @@ static void invoke_callback(io_callback_t c, paddr_t offset, int len, bool is_wr
 }
 
 void init_map() {
-  io_space = malloc(IO_SPACE_MAX);
+  io_space = (uint8_t *)malloc(IO_SPACE_MAX);
   assert(io_space);
   p_space = io_space;
 }
+
 #ifdef CONFIG_DTRACE
 #include <cpu/trace.h>
 #endif
+
+
 word_t map_read(paddr_t addr, int len, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
