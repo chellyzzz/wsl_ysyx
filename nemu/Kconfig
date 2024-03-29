@@ -181,6 +181,11 @@ config MTRACE_SIZE
   depends on MTRACE && MTRACE_SIZE_CONF
   default MSIZE
 
+config ETRACE
+  depends on TRACE
+  bool "Enable etracer"
+  default n
+
 config WP
   bool "Enable watchpoint tracer"
   default n

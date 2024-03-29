@@ -28,6 +28,33 @@ enum {
   TYPE_N, // none
 };
 
+static vaddr_t *CPU_CSRs(word_t imm) {
+  switch (imm)
+  {
+  case 0x341: return &(cpu.csr.mepc);
+  case 0x342: return &(cpu.csr.mcause);
+  case 0x300: return &(cpu.csr.mstatus);
+  case 0x305: return &(cpu.csr.mtvec);
+  default: panic("Unknown Csr");
+  }
+}
+
+#define CSR(i) *CPU_CSRs(i)
+#define ECALL(dnpc) \
+    do { \
+        bool success = true; \
+        int a7 = isa_reg_str2val("a7", &success); \
+        if (success) { \
+            dnpc = isa_raise_intr(a7, s->pc); \
+        } else { \
+            panic("a7 value error"); \
+        } \
+    } while (0)
+
+#define MRET(dnpc) do { dnpc = cpu.csr.mepc; } while (0)
+
+// #define ECALL(dnpc) { bool success; dnpc = (isa_raise_intr(isa_reg_str2val("a7", &success), s->pc)); }
+
 #define src1R() do { *src1 = R(rs1); } while (0)
 #define src2R() do { *src2 = R(rs2); } while (0)
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
@@ -113,8 +140,13 @@ static int decode_exec(Decode *s) {
     INSTPAT("0100000 ????? ????? 101 ????? 01100 11", sra    , R, R(rd) = (sword_t)src1 >> BITS(src2, 4, 0));
     INSTPAT("0000000 ????? ????? 101 ????? 01100 11", srl    , R, R(rd) = src1 >> BITS(src2, 4, 0));
     INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu  , R, R(rd) = ((uint64_t)src1 * (uint64_t)src2) >> 32);
+    //
+    INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, t = CSR(imm); CSR(imm) = src1; R(rd) = t);
+    INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, t = CSR(imm); CSR(imm) = src1 | t; R(rd) = t);
 
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
+    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, ECALL(s->dnpc));  //depend on a7
+    INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, MRET(s->dnpc));  //recover from epc
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
 
 

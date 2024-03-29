@@ -6,9 +6,19 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 #define PRESION_NUM 1000
-
 int inttostring(char *dst, int value){
-  
+    if (value == 0) {
+        dst[0] = '0';
+        dst[1] = '\0';
+        return 1;
+    }
+
+    int isNegative = 0;
+    if (value < 0) {
+        isNegative = 1;
+        value = -value; // convert to positive
+    }
+
     int digits = 0;
     int temp = value;
     while (temp != 0) {
@@ -16,12 +26,21 @@ int inttostring(char *dst, int value){
         digits++;
     }
 
-    char tempStr[digits];  
-    for (int i = digits - 1; i >= 0; i--) {
+    if (isNegative) {
+        digits++; // add space for '-' sign
+    }
+
+    char tempStr[digits + 1]; // add space for null terminator
+    if (isNegative) {
+        tempStr[0] = '-';
+    }
+
+    for (int i = digits - 1; i >= isNegative; i--) { // start from the end, skip '-' sign if present
         tempStr[i] = '0' + value % 10;
         value /= 10;
     }
-    strncpy(dst, tempStr, digits);
+    tempStr[digits] = '\0'; // add null terminator
+    strncpy(dst, tempStr, digits + 1);
     return digits;
 }
 
