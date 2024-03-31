@@ -51,7 +51,7 @@ static vaddr_t *CPU_CSRs(word_t imm) {
         } \
     } while (0)
 
-#define MRET(dnpc) do { dnpc = cpu.csr.mepc; } while (0)
+#define MRET(dnpc) do { dnpc = cpu.csr.mepc + 4; } while (0)
 
 // #define ECALL(dnpc) { bool success; dnpc = (isa_raise_intr(isa_reg_str2val("a7", &success), s->pc)); }
 
