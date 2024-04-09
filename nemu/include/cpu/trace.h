@@ -18,6 +18,7 @@
 
 #include <common.h>
 #include <device/map.h>
+#include <cpu/decode.h>
 
 #ifdef CONFIG_ITRACE
 
@@ -28,6 +29,9 @@ typedef struct
 {
   char logbuf[DASM_PRINTBUF_SIZE];
 }RingBuff_Type;
+
+int iringbuf_push(Decode *s);
+void iringbuf_print();
 
 #endif
 

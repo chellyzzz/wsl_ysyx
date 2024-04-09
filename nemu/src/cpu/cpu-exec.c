@@ -35,14 +35,6 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
-#ifdef CONFIG_ITRACE
-
-static RingBuff_Type iringbuf[RingBuffSize];
-static int ptr = 0;
-int iringbuf_push(Decode *s, RingBuff_Type *iringbuf, int ptr);
-void iringbuf_print(RingBuff_Type *iringbuf, int ptr);
-
-#endif
 
 #ifdef CONFIG_FTRACE
 
@@ -67,7 +59,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if(wp_check())  nemu_state.state = NEMU_STOP;
   #endif
 #ifdef CONFIG_ITRACE
-  ptr = iringbuf_push(_this, iringbuf, ptr);
+  iringbuf_push(_this);
 #endif
 
 #ifdef CONFIG_FTRACE
@@ -168,7 +160,7 @@ static void statistic() {
 
 void assert_fail_msg() {
   #ifdef CONFIG_ITRACE
-    iringbuf_print(iringbuf, ptr);
+    iringbuf_print();
   #endif
   isa_reg_display();
   statistic();

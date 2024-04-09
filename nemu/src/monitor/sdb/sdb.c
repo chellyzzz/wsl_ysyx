@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include <cpu/cpu.h>
+#include <cpu/trace.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
@@ -208,6 +209,10 @@ static int cmd_w(char *args) {
     return 0;
  }
 
+ static int cmd_i(char *args) {
+    iringbuf_print();
+    return 0;
+ }
 static int cmd_p(char *args) {
   if(args == NULL){
     printf("no expression parameters!\n");
@@ -287,6 +292,7 @@ static struct {
   { "px", "Expression evaluation in hex", cmd_px },
   { "b", "set breakpoint if CONFIG_WP enabled", cmd_b },
   { "t", "test for expr", cmd_t },
+  { "i", "print current instructions", cmd_i },
 
   /* TODO: Add more commands */
 

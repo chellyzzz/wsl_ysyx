@@ -117,17 +117,17 @@ void *memmove(void *dst, const void *src, size_t n) {
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-    assert(out != NULL && in != NULL);
+    // assert(out != NULL && in != NULL);
 
-    unsigned char *dst = out;
-    const unsigned char *src = in;
+    char *dst = out;
+    const  char *src = in;
 
     while (n-- > 0) {
         *dst++ = *src++;
     }
 
     return out;
-    }
+}
 
 int memcmp(const void *s1, const void *s2, size_t n) {
   assert(s1 != NULL && s2 != NULL);

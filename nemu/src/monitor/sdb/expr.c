@@ -308,9 +308,11 @@ word_t eval(int p, int q, bool *success) {
       }
       else if(tokens[p].type ==TK_REGISTER){
         if(strncmp(tokens[p].str+1, "pc", 2) == 0){
-          return cpu.pc; 
+          num = cpu.pc; 
         }
-        else  num = isa_reg_str2val(tokens[p].str , success);
+        else{
+          num = isa_reg_str2val(tokens[p].str+1 , success);
+        }
       }
       return num;
     }

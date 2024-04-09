@@ -21,13 +21,16 @@
 
 #ifdef CONFIG_ITRACE
 
-int iringbuf_push(Decode *s, RingBuff_Type *iringbuf, int ptr) {
+static RingBuff_Type iringbuf[RingBuffSize];
+static int ptr = 0;
+
+int iringbuf_push(Decode *s) {
   strcpy(iringbuf[ptr % RingBuffSize].logbuf, s->logbuf);
   ptr ++;
   return ptr;
 }
 
-void iringbuf_print(RingBuff_Type *iringbuf, int ptr) {
+void iringbuf_print() {
   int i;
   printf("---------- Instruction Trace ----------\n");
   if(ptr <= RingBuffSize){

@@ -6,6 +6,32 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 #define PRESION_NUM 1000
+
+int uinttostring(char *dst, unsigned int value) {
+    if (value == 0) {
+        dst[0] = '0';
+        dst[1] = '\0';
+        return 1;
+    }
+
+    int digits = 0;
+    unsigned int temp = value;
+    while (temp != 0) {
+        temp /= 10;
+        digits++;
+    }
+
+    char tempStr[digits + 1]; // add space for null terminator
+
+    for (int i = digits - 1; i >= 0; i--) { // start from the end
+        tempStr[i] = '0' + value % 10;
+        value /= 10;
+    }
+    tempStr[digits] = '\0'; // add null terminator
+    strncpy(dst, tempStr, digits + 1);
+    return digits;
+}
+
 int inttostring(char *dst, int value){
     if (value == 0) {
         dst[0] = '0';
@@ -81,6 +107,14 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
             int d = va_arg(ap, int);
             cnt += inttostring(out + cnt, d);
             break;
+        case 'x':              /* hexadecimal */
+            unsigned int x = va_arg(ap, unsigned int);
+            cnt += itohex(out + cnt, x);
+            break;
+        case 'u':              /* unsigned int */
+            unsigned int u = va_arg(ap, unsigned int);
+            cnt += uinttostring(out + cnt, u);  // You need to implement uinttostring function
+            break;    
         case 'c':
             char sb_s = (char)va_arg(ap, int);
             *(out + cnt) = sb_s;
@@ -127,7 +161,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 int printf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char tmp[1000];
+    char tmp[10000];
     int cnt = vsprintf(tmp, fmt, args);
     putstr(tmp);
     va_end(args);

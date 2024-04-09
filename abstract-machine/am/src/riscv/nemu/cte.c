@@ -23,7 +23,6 @@ extern void __am_asm_trap(void);
 
 bool cte_init(Context*(*handler)(Event, Context*)) {
   // initialize exception entry
-
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
 
   // register event handler
@@ -33,7 +32,7 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  Context *kctx = (Context *)(kstack.end-sizeof(Context));
+  Context *kctx = (Context *)(kstack.end - sizeof(Context));
   kctx->mepc=(uintptr_t) entry;
   kctx->gpr[10]=(uintptr_t) arg;
   return kctx;
@@ -46,9 +45,6 @@ void yield() {
 #else
 
   asm volatile("li a7, -1; ecall");
-  // asm volatile("li a7, -1;");
-  // printf("2\n");
-  //   asm volatile("ecall");
 
 #endif
 }
