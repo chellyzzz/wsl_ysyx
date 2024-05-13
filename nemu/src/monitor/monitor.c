@@ -69,6 +69,7 @@ static long load_img() {
 }
 
 void parse_elf(const char *elf_dst);
+// void print_funcnodes();
 
 static int parse_args(int argc, char *argv[]) {
   const struct option table[] = {
@@ -126,6 +127,7 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Initialize elf */
   IFDEF(CONFIG_FTRACE, parse_elf(elf_file));
+  // print_funcnodes();
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();

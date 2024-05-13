@@ -26,7 +26,7 @@
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 5
+#define MAX_INST_TO_PRINT 7
 #ifdef CONFIG_WP
 bool wp_check();
 #endif
@@ -43,7 +43,8 @@ void free_funcnodes();
 const char* get_function_name(vaddr_t addr);
 void ftrace_call(Decode *_this, int call_level);
 void ftrace_return(Decode *_this, int call_level);
-static int last_call_depth = 0;
+static int last_call_depth = 180;
+extern bool ftrace_enable;
 
 #endif
 
@@ -63,6 +64,9 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 
 #ifdef CONFIG_FTRACE
+  if(!ftrace_enable){
+    return ;
+  }
     word_t imm = (_this->isa.inst.val >> 20) & 0xFFF;
     word_t rd = (_this->isa.inst.val >> 7) & 0x1F;
     word_t opt = _this->isa.inst.val & 0x7F;
@@ -151,11 +155,11 @@ static void statistic() {
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
+  // #ifdef CONFIG_FTRACE
+  // print_funcnodes();
+  // free_funcnodes();
+  // #endif
 
-// #ifdef CONFIG_FTRACE
-//   print_funcnodes();
-//   free_funcnodes();
-// #endif
 }
 
 void assert_fail_msg() {
@@ -171,6 +175,7 @@ void cpu_exec(uint64_t n) {
   // #if CONFIG_DIFFTEST
   //   cpu.csr.mstatus = 0x1800;
   // #endif
+
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {
     case NEMU_END: case NEMU_ABORT:

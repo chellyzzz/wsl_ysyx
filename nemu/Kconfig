@@ -156,6 +156,11 @@ config FTRACE
   bool "Enable function tracer"
   default n
 
+config FTRACE_HALF_WAY
+  depends on FTRACE
+  bool "Modify function tracer half way, ftrace off if condition is true"
+  default n
+
 config DTRACE
   depends on TRACE
   bool "Enable device tracer"

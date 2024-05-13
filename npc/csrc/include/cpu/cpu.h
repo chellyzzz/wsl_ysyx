@@ -33,6 +33,7 @@ typedef struct functab_node
 } functab_node;
 
 extern functab_node* functab_head;
+extern bool ftrace_enable;
 #endif
 
 #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)

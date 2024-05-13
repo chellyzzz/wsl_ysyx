@@ -130,7 +130,7 @@ void *memcpy(void *out, const void *in, size_t n) {
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
-  assert(s1 != NULL && s2 != NULL);
+  // assert(s1 != NULL && s2 != NULL);
 
   const unsigned char *tmp1 = s1;
   const unsigned char *tmp2 = s2;

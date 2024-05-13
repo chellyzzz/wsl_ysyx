@@ -23,18 +23,26 @@
 
 
 static int is_batch_mode = false;
-
 void init_regex();
 #ifdef CONFIG_WP
 void init_wp_pool();
 void wp_display();
 void wp_create(char *args, word_t res);
 void wp_delete(int num);
+
 #else 
 void init_wp_pool() {};
 void wp_display() {};
 void wp_create(char *args, word_t res) {};
 void wp_delete(int num) {};
+#endif
+
+#ifdef CONFIG_FTRACE
+  #ifdef CONFIG_FTRACE_HALF_WAY
+    bool ftrace_enable = false;
+  #else
+    bool ftrace_enable = true;
+  #endif
 #endif
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
@@ -272,6 +280,43 @@ static int cmd_px(char *args) {
   return 0;
 }
 
+static int cmd_ft(char *args) {
+  #ifndef CONFIG_FTRACE
+    printf("ftrace is not enabled!\n");
+    return 0;
+  #endif
+  if(args == NULL){
+    printf("please enter on\\off!\n");
+    return 1;
+  }
+  if(strcmp(args,"on")==0) {
+    if(ftrace_enable){
+      printf("ftrace is already on!\n");
+      return 0;
+    }
+    else {
+      ftrace_enable = true;
+      printf("ftrace is on!\n");
+      return 0;
+    }
+  }
+  else if(strcmp(args,"off")==0) {
+    if(!ftrace_enable){
+      printf("ftrace is already off!\n");
+      return 0;
+    }
+    else {
+      ftrace_enable = false;
+      printf("ftrace is off!\n");
+      return 0;
+    }  
+  }
+  else {
+    printf("wrong para! please enter on\\off!\n");
+    return 1;
+  }
+}
+
 
 static int cmd_help(char *args);
 
@@ -293,7 +338,7 @@ static struct {
   { "b", "set breakpoint if CONFIG_WP enabled", cmd_b },
   { "t", "test for expr", cmd_t },
   { "i", "print current instructions", cmd_i },
-
+  { "f", "turn on or off fucntrace when running program halfway, always off by default", cmd_ft},  
   /* TODO: Add more commands */
 
 };
