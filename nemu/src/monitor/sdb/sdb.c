@@ -284,7 +284,7 @@ static int cmd_ft(char *args) {
   #ifndef CONFIG_FTRACE
     printf("ftrace is not enabled!\n");
     return 0;
-  #endif
+  #else
   if(args == NULL){
     printf("please enter on\\off!\n");
     return 1;
@@ -315,6 +315,7 @@ static int cmd_ft(char *args) {
     printf("wrong para! please enter on\\off!\n");
     return 1;
   }
+  #endif
 }
 
 
