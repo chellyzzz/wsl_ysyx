@@ -45,7 +45,7 @@ char *strncpy(char *dst, const char *src, size_t n) {
 
 char *strcat(char *dst, const char *src) {
   assert(src != NULL && dst != NULL);
-  strcpy(dst + strlen(src), src);
+  strcpy(dst + strlen(dst), src);
   return dst;
 }
 
@@ -117,7 +117,7 @@ void *memmove(void *dst, const void *src, size_t n) {
 }
 
 void *memcpy(void *out, const void *in, size_t n) {
-    assert(out != NULL && in != NULL);
+    // assert(out != NULL && in != NULL);
 
     char *dst = out;
     const  char *src = in;
@@ -130,19 +130,17 @@ void *memcpy(void *out, const void *in, size_t n) {
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
-  assert(s1 != NULL && s2 != NULL);
-
-  const unsigned char *tmp1 = s1;
-  const unsigned char *tmp2 = s2;
-  while (n > 0 && *tmp1 != '\0' && *tmp2 != '\0') {
-    if (*tmp1 != *tmp2) {
-        return (*tmp1 - *tmp2);
+    assert(s1 != NULL && s2 != NULL);
+    const unsigned char *tmp1 = s1, *tmp2 = s2;
+    while (n--) {
+        if (*tmp1 != *tmp2) {
+            return *tmp1 - *tmp2;
+        }
+        tmp1++;
+        tmp2++;
     }
-    tmp1++;
-    tmp2++;
-    n--;
-  }
-  return 0;
+    return 0;
 }
+
 
 #endif
