@@ -5,9 +5,7 @@
 #include <isa.h>
 
 void init_monitor(int, char *[]);
-bool difftest_check();
-void difftest_step();
-void print_regs();
+;
 int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb);
 
 bool rst_n_sync = false; // read from rtl by dpi-c.

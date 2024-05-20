@@ -99,6 +99,9 @@ static int cmd_info(char *args) {
     wp_display();
   } 
   #endif
+  if(strcmp(args,"csr")==0) {
+    isa_csr_display();
+  }  
   return 0;
 }
 
@@ -218,8 +221,12 @@ static int cmd_w(char *args) {
  }
 
  static int cmd_i(char *args) {
+  #ifdef CONFIG_ITRACE
     iringbuf_print();
     return 0;
+  #else
+    printf("itrace is not enabled!\n");
+  #endif
  }
 static int cmd_p(char *args) {
   if(args == NULL){
