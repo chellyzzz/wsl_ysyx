@@ -31,9 +31,6 @@ static void restart() {
   cpu.pc = RESET_VECTOR;
   /* The zero register is always 0. */
   cpu.gpr[0] = 0;
-  #if CONFIG_DIFFTEST
-    cpu.csr.mstatus = 0x00001800;
-  #endif
 }
 
 void init_isa() {

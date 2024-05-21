@@ -23,6 +23,8 @@
 #define Mr vaddr_read
 #define Mw vaddr_write
 
+
+
 enum {
   TYPE_I, TYPE_U, TYPE_S,TYPE_J,TYPE_B,TYPE_R,
   TYPE_N, // none
@@ -39,6 +41,7 @@ static vaddr_t *CPU_CSRs(word_t imm) {
   }
 }
 
+
 #define CSR(i) *CPU_CSRs(i)
 #define ECALL(dnpc) \
     do { \
@@ -51,10 +54,26 @@ static vaddr_t *CPU_CSRs(word_t imm) {
         } \
     } while (0)
 
-#define MRET(dnpc) do { dnpc = cpu.csr.mepc; } while (0)
+// set mie = mpie
+// set mpie = 1
+//set mpp to 0
+#define MSTATUS_MPP_MASK     (0x3 << 11)  
+#define MSTATUS_MPIE         (1 << 7)   
+#define MSTATUS_MIE          (1 << 3)
+
+#define MRET(dnpc) \
+    do { \
+        dnpc = cpu.csr.mepc; \
+        int mpie = BITS(cpu.csr.mstatus, 7, 7) << 7; \
+        cpu.csr.mstatus = (cpu.csr.mstatus | MSTATUS_MIE) & (mpie >> 4); \
+        cpu.csr.mstatus = (cpu.csr.mstatus & ~ MSTATUS_MPIE) | (MSTATUS_MPIE); \
+        cpu.csr.mstatus = (cpu.csr.mstatus & ~ MSTATUS_MPP_MASK);\
+    } while (0)
 
 // #define ECALL(dnpc) { bool success; dnpc = (isa_raise_intr(isa_reg_str2val("a7", &success), s->pc)); }
 
+
+        
 #define src1R() do { *src1 = R(rs1); } while (0)
 #define src2R() do { *src2 = R(rs2); } while (0)
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
