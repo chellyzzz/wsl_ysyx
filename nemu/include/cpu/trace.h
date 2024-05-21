@@ -41,7 +41,7 @@ void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map);
 #endif
 
 #ifdef CONFIG_ITRACE
-void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec);
+void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec, word_t mstatus);
 #endif
 
 #endif

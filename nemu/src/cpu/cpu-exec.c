@@ -172,10 +172,6 @@ void assert_fail_msg() {
 
 /* Simulate how the CPU works. */
 void cpu_exec(uint64_t n) {
-  printf("mtvec: %08x\n", cpu.csr.mtvec);
-  printf("mepc: %08x\n", cpu.csr.mepc);
-  printf("mstatus: %08x\n", cpu.csr.mstatus);
-  printf("mcause: %08x\n", cpu.csr.mcause);
 
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {
