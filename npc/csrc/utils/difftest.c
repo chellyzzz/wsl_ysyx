@@ -29,7 +29,6 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
   void *handle;
   handle = dlopen(ref_so_file, RTLD_LAZY);
   assert(handle);
-  // 将返回的 void* 指针显式转换为函数指针类型
   ref_difftest_memcpy = (DifftestMemcpyFunc)dlsym(handle, "difftest_memcpy");
   assert(ref_difftest_memcpy);
 
