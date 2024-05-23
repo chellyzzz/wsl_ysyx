@@ -57,9 +57,14 @@ void reg_update(){
   for(int i = 0; i < 32; i++){
     cpu.gpr[i] = top->rootp->top__DOT__regfile1__DOT__rf[i] ;
   }
-  cpu.pc = top->rootp->top__DOT__pc ;
+  cpu.csr.mcause = top->rootp->top__DOT__Csrs__DOT__mcause;
+  cpu.csr.mstatus = top->rootp->top__DOT__Csrs__DOT__mstatus;
+  cpu.csr.mepc = top->rootp->top__DOT__Csrs__DOT__mepc;
+  cpu.csr.mtvec = top->rootp->top__DOT__Csrs__DOT__mtvec;
+  cpu.pc = top->rootp->top__DOT__pc;
   return;
 }
+
 void disasm_pc(Decode* s){
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -174,8 +179,6 @@ static int cmd_si(char *args) {
   return 0;
 }
 
-
-
 static int cmd_info(char *args) {
 
   if(args==NULL){
@@ -185,9 +188,14 @@ static int cmd_info(char *args) {
   if(strcmp(args,"r")==0) {
     isa_reg_display();
   }
-  // if(strcmp(args,"w")==0) {
-  //   wp_display();
-  // } 
+  #ifdef CONFIG_WP
+  if(strcmp(args,"w")==0) {
+    wp_display();
+  } 
+  #endif
+  if(strcmp(args,"csr")==0) {
+    isa_csr_display();
+  }  
   return 0;
 }
 
@@ -271,51 +279,90 @@ static int cmd_x(char *args) {
  }
 
 
-static int cmd_p(char *args) {
+static int cmd_print(char *args, bool hex_format) {
   if(args == NULL){
     printf("no expression parameters!\n");
     return 1;
   }
-  bool success= true;
+
+  bool success = true;
   word_t res = expr(args, &success);
   if(!success){
     printf("wrong expr!\n");
     return 0;
-  }  
-  printf("%s = %u\n",args,res); 
+  }
+
+  if (hex_format) {
+    printf("%s = 0x%x\n", args, res);
+  } else {
+    printf("%s = %u\n", args, res);
+  }
+
   return 0;
+}
+
+static int cmd_p(char *args) {
+  return cmd_print(args, false);
 }
 
 static int cmd_px(char *args) {
-  if(args == NULL){
-    printf("no expression parameters!\n");
-    return 1;
-  }
-
-  bool success= true;
-  // if(arg_par2 == NULL){
-    printf("%s\n",args);
-    word_t res = expr(args, &success);
-    if(!success){
-      printf("wrong expr!\n");
-      return 0;
-      //assert(0);
-    }  
-    printf("%s = 0x%x\n",args,res); 
-  // }
-  // else if(strcmp(arg_par1,"x") == 0){
-  //  word_t res = expr(arg_par2, &success);
-  //   if(!success){
-  //     printf("wrong expr!\n");
-  //     //assert(0);
-  //     return 0;
-  //   }  
-  //       printf("%s = 0x%x\n",args,res);
-  
-  // }
-  return 0;
+  return cmd_print(args, true);
 }
 
+ static int cmd_i(char *args) {
+  #ifdef CONFIG_ITRACE
+    iringbuf_print();
+    return 0;
+  #else
+    printf("itrace is not enabled!\n");
+  #endif
+ }
+
+#ifdef CONFIG_FTRACE
+  #ifdef CONFIG_FTRACE_HALF_WAY
+    bool ftrace_enable = false;
+  #else
+    bool ftrace_enable = true;
+  #endif
+#endif
+
+static int cmd_ft(char *args) {
+  #ifndef CONFIG_FTRACE
+    printf("ftrace is not enabled!\n");
+    return 0;
+  #else
+  if(args == NULL){
+    printf("please enter on\\off!\n");
+    return 1;
+  }
+  if(strcmp(args,"on")==0) {
+    if(ftrace_enable){
+      printf("ftrace is already on!\n");
+      return 0;
+    }
+    else {
+      ftrace_enable = true;
+      printf("ftrace is on!\n");
+      return 0;
+    }
+  }
+  else if(strcmp(args,"off")==0) {
+    if(!ftrace_enable){
+      printf("ftrace is already off!\n");
+      return 0;
+    }
+    else {
+      ftrace_enable = false;
+      printf("ftrace is off!\n");
+      return 0;
+    }  
+  }
+  else {
+    printf("wrong para! please enter on\\off!\n");
+    return 1;
+  }
+  #endif
+}
 
 static int cmd_help(char *args);
 

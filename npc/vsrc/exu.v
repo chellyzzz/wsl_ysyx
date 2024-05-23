@@ -3,8 +3,10 @@
 module ysyx_23060124_exu(
   input clk,
   input i_rst_n,
+  input csr_src_sel,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src1,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src2,
+  input [`ysyx_23060124_ISA_WIDTH - 1:0] csr_src2,
   input if_unsigned,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] i_pc,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] imm,
@@ -17,9 +19,13 @@ module ysyx_23060124_exu(
   output o_zero
 );
 
+wire sel_src2;
+assign sel_src2 = csr_src_sel ? csr_src2 : src2;
+
 wire [`ysyx_23060124_ISA_WIDTH-1:0] alu_src1,alu_src2;
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] alu_res, lsu_res, brch_res;
 wire carry;
+
 ysyx_23060124_MuxKeyWithDefault #(1<<`ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_ISA_WIDTH) mux_src1 (alu_src1, i_src_sel, `ysyx_23060124_ISA_WIDTH'b0, {
     `ysyx_23060124_EXU_SEL_REG, src1,
     `ysyx_23060124_EXU_SEL_IMM, src1,
@@ -28,7 +34,7 @@ ysyx_23060124_MuxKeyWithDefault #(1<<`ysyx_23060124_EXU_SEL_WIDTH, `ysyx_2306012
   });
 
 ysyx_23060124_MuxKeyWithDefault #(1<<`ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_ISA_WIDTH) mux_src2 (alu_src2, i_src_sel, `ysyx_23060124_ISA_WIDTH'b0, {
-    `ysyx_23060124_EXU_SEL_REG, src2,
+    `ysyx_23060124_EXU_SEL_REG, sel_src2,
     `ysyx_23060124_EXU_SEL_IMM, imm,
     `ysyx_23060124_EXU_SEL_PC4, `ysyx_23060124_ISA_WIDTH'h4,
     `ysyx_23060124_EXU_SEL_PCI, imm
