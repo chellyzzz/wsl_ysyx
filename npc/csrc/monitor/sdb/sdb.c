@@ -373,13 +373,14 @@ static struct {
   { "si", "step program n times,default n=1", cmd_si },
   { "info", "Print -r Register Status -w monitor point", cmd_info },
   { "d", "delete monitor point n", cmd_d },
-  { "w", "create watchpoint", cmd_w },
+  { "w", "create watchpoint if CONFIG_WP enabled", cmd_w },
   { "x", "scan memory", cmd_x },
   { "p", "Expression evaluation", cmd_p },
   { "px", "Expression evaluation in hex", cmd_px },
-  { "b", "set breakpoint", cmd_b },
+  { "b", "set breakpoint if CONFIG_WP enabled", cmd_b },
+  { "i", "print current instructions", cmd_i },
+  { "f", "turn on or off fucntrace when running program halfway, always off by default", cmd_ft}, 
   /* TODO: Add more commands */
-
 };
 
 #define NR_CMD ARRLEN(cmd_table)

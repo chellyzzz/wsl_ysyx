@@ -30,7 +30,7 @@ C_FLAGS += -CFLAGS "-D__GUEST_ISA__=riscv32"
 
 IMAGE ?= $(NPC_HOME)/../am-kernels/tests/cpu-tests/build/dummy-riscv32e-npc.bin
 
-NPC_FLAGS += -b
+# NPC_FLAGS += -b
 ifdef CONFIG_DIFFTEST
 NPC_FLAGS += -d $(NEMU_HOME)/build/riscv32-nemu-interpreter-so 
 endif
