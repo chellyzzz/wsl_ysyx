@@ -52,7 +52,7 @@ begin
     `ysyx_23060124_TYPE_JALR:   begin o_imm = {{12{ins[31]}},ins[31:20]};       o_rs1 = rs1; o_rd = rd;              o_wen = 1'b1; end
     `ysyx_23060124_TYPE_B:      begin o_imm = {{20{ins[31]}},ins[7],ins[30:25],ins[11:8],1'b0}; o_rs1 = rs1; o_rs2 = rs2;  end
     `ysyx_23060124_TYPE_S:      begin o_imm = {{20{ins[31]}},ins[31:25],ins[11:7]}; o_rs1 = rs1; o_rs2 = rs2; end
-    `ysyx_23060124_TYPE_EBRK:   begin o_csr_addr = {{20{ins[31]}},ins[31:20]};       o_rd = rd; o_rs1 = rs1;             o_csr_wen = 1'b1; end
+    `ysyx_23060124_TYPE_EBRK:   begin o_csr_addr = {{20{ins[31]}},ins[31:20]};       o_rd = rd; o_rs1 = rs1;; end
     default: id_err[0] = i_rst_n ? 1'b1 : 1'b0; //opc_err
   endcase
 end
@@ -117,8 +117,8 @@ begin
     // CSR
     `ysyx_23060124_TYPE_EBRK: begin 
       case(func3) 
-        `ysyx_23060124_FUN3_CSRRW: begin o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM; end
-        `ysyx_23060124_FUN3_CSRRS: begin o_exu_opt = `ysyx_23060124_OPT_EXU_OR; o_src_sel = `ysyx_23060124_EXU_SEL_REG;end
+        `ysyx_23060124_FUN3_CSRRW: begin o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM;  o_csr_wen = 1'b1; end
+        `ysyx_23060124_FUN3_CSRRS: begin o_exu_opt = `ysyx_23060124_OPT_EXU_OR; o_src_sel = `ysyx_23060124_EXU_SEL_REG;  o_csr_wen = 1'b1; end
       endcase 
      end
   endcase

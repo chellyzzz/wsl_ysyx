@@ -43,13 +43,8 @@ static VerilatedVcdC* vcd;
 static uint32_t instr;
 
 #ifdef CONFIG_ITRACE
-
-static RingBuff_Type iringbuf[RingBuffSize];
-static int ptr = 0;
-int iringbuf_push(Decode *s, RingBuff_Type *iringbuf, int ptr);
-void iringbuf_print(RingBuff_Type *iringbuf, int ptr);
+int iringbuf_push(Decode *s);
 void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-
 #endif
 
 // cpu exec
@@ -93,7 +88,7 @@ void decode_pc(Decode* s){
   instr = s->isa.inst.val;
   #ifdef CONFIG_ITRACE
   disasm_pc(s);
-  ptr = iringbuf_push(s, iringbuf, ptr);
+  iringbuf_push(s);
   #endif
   return;
 }
@@ -315,6 +310,7 @@ static int cmd_px(char *args) {
     return 0;
   #else
     printf("itrace is not enabled!\n");
+    return 0;
   #endif
  }
 
@@ -418,7 +414,7 @@ void sdb_set_batch_mode() {
 void assert_fail_msg() {
   #ifdef CONFIG_ITRACE  
     if(!hit_goodtrap()){
-      iringbuf_print(iringbuf, ptr);
+      iringbuf_print();
       IFDEF(CONFIG_MTRACE, print_out_of_bound());
       isa_reg_display();
     }

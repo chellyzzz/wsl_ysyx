@@ -226,8 +226,10 @@ static int cmd_w(char *args) {
     return 0;
   #else
     printf("itrace is not enabled!\n");
+    return 0;
   #endif
  }
+
 static int cmd_print(char *args, bool hex_format) {
   if(args == NULL){
     printf("no expression parameters!\n");
