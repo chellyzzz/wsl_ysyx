@@ -19,12 +19,9 @@
 #include <sdb.h>
 #include <cpu/cpu.h>
 #include <cpu/trace.h>
-#include <cpu/decode.h>
 #include <memory/paddr.h>
-#include "Vtop.h"
-#include "Vtop___024root.h"
-#include "verilated.h"
-#include "verilated_vcd_c.h"
+// #include "verilated.h"
+// #include "verilated_vcd_c.h"
 
 static int is_batch_mode = false;
 
@@ -34,110 +31,6 @@ void init_wp_pool();
 void wp_display();
 void wp_create(char *args, word_t res);
 void wp_delete(int num);
-
-CPU_state cpu = {};
-
-static VerilatedContext* contextp;; 
-static Vtop* top;
-static VerilatedVcdC* vcd;
-static uint32_t instr;
-
-#ifdef CONFIG_ITRACE
-int iringbuf_push(Decode *s);
-void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-#endif
-
-// cpu exec
-void reg_update(){
-  for(int i = 0; i < 32; i++){
-    cpu.gpr[i] = top->rootp->top__DOT__regfile1__DOT__rf[i] ;
-  }
-  cpu.csr.mcause = top->rootp->top__DOT__Csrs__DOT__mcause;
-  cpu.csr.mstatus = top->rootp->top__DOT__Csrs__DOT__mstatus;
-  cpu.csr.mepc = top->rootp->top__DOT__Csrs__DOT__mepc;
-  cpu.csr.mtvec = top->rootp->top__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->top__DOT__pc;
-  return;
-}
-
-void disasm_pc(Decode* s){
-  char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-  int ilen = 4;
-  int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  for (i = ilen - 1; i >= 0; i --) {
-    p += snprintf(p, 4, " %02x", inst[i]);
-  } 
-  int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-  int space_len = ilen_max - ilen;
-  if (space_len < 0) space_len = 0;
-  space_len = space_len * 3 + 1;
-  memset(p, ' ', space_len);
-  p += space_len;
-
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
-}
-
-void decode_pc(Decode* s){
-  s->pc = top->rootp->top__DOT__pc;
-  s->snpc = top->rootp->top__DOT__pc + 4;
-  s->dnpc = top->rootp->top__DOT__pcu1__DOT__pc_next;
-  s->isa.inst.val = top->rootp->top__DOT__ins;
-  instr = s->isa.inst.val;
-  #ifdef CONFIG_ITRACE
-  disasm_pc(s);
-  iringbuf_push(s);
-  #endif
-  return;
-}
-
-void exec_once(Decode *s){
-    top->clk = 0;
-    top->eval();
-    contextp->timeInc(1);
-    vcd->dump(contextp->time());
-    top->clk = 1;
-    top->eval();
-    reg_update();
-    decode_pc(s);
-    contextp->timeInc(1);
-    vcd->dump(contextp->time());
-    return;
-}
-
-void cpu_exec(uint64_t n){
-    Decode s;
-    int one_print = 0;
-    if (n == -1) {
-        n = -1u;
-    }
-    else if (n == 1) {
-        one_print = 1;
-    }
-    for(; n > 0; n--){
-      if(contextp->gotFinish()){
-        printf("Program execution has ended. To restart the program, exit NPC and run again.\n");
-        break;
-      }
-        exec_once(&s);
-        #ifdef CONFIG_DIFFTEST
-          if(!difftest_step(s.pc, s.dnpc)) {
-            printf("%s\n",s.logbuf);
-            iringbuf_print();
-            isa_reg_display();
-            break;
-          }
-        #endif
-    }
-    if(one_print == 1) printf("%s\n",s.logbuf);
-    return;
-}
-
-int hit_goodtrap(){
-  return (cpu.gpr[10] == 0 && instr == 0x100073);
-}
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -223,7 +116,6 @@ static int cmd_w(char *args) {
   word_t res = expr(args, &success);
   if(!success){
     printf("wrong expr!\n");
-    //assert(0);
     return 0;
   }
   else {
@@ -425,14 +317,15 @@ void assert_fail_msg() {
 }
 
 int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb) {
-  contextp = contextp_sdb;
-  top = top_sdb;  
-  vcd = vcd_sdb;
+  //pass parameters to global variables
+  verilator_sync_init(contextp_sdb, top_sdb, vcd_sdb);
 
   if (is_batch_mode) {
     cmd_c(NULL);
+    assert_fail_msg();
     return hit_goodtrap();
   }
+  
   for (char *str; (str = rl_gets()) != NULL; ) {
 
     char *str_end = str + strlen(str);

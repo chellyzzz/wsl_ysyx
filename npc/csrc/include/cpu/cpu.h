@@ -17,12 +17,18 @@
 #define __CPU_CPU_H__
 
 #include <common.h>
+#include "verilated.h"
+#include "verilated_vcd_c.h"
+#include "Vtop.h"
 
 void cpu_exec(uint64_t n);
 
 
 void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 void invalid_inst(vaddr_t thispc);
+
+int hit_goodtrap();
+void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb);
 
 #ifdef CONFIG_FTRACE
 typedef struct functab_node
@@ -33,7 +39,6 @@ typedef struct functab_node
 } functab_node;
 
 extern functab_node* functab_head;
-extern bool ftrace_enable;
 #endif
 
 #define NEMUTRAP(thispc, code) set_nemu_state(NEMU_END, thispc, code)
