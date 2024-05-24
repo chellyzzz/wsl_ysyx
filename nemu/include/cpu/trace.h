@@ -40,8 +40,8 @@ void dtrace_read(paddr_t addr, int len, IOMap *map);
 void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map);
 #endif
 
-#ifdef CONFIG_ITRACE
-void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec);
+#ifdef CONFIG_ETRACE
+void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec, word_t mstatus);
 #endif
 
 #endif

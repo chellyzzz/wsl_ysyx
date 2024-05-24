@@ -39,6 +39,7 @@ void yield() {
   asm volatile("li a5, -1; ecall");
 #else
   asm volatile("li a7, -1; ecall");
+  // asm volatile("ecall");
 #endif
 }
 

@@ -98,6 +98,9 @@ static int cmd_info(char *args) {
     wp_display();
   } 
   #endif
+  if(strcmp(args,"csr")==0) {
+    isa_csr_display();
+  }  
   return 0;
 }
 
@@ -224,63 +227,35 @@ static int cmd_w(char *args) {
     #endif
     return 0;
  }
-static int cmd_p(char *args) {
+
+static int cmd_print(char *args, bool hex_format) {
   if(args == NULL){
     printf("no expression parameters!\n");
     return 1;
   }
-  // char *arg_par1 = strtok(args," ");
-  // char *arg_par2 = strtok(NULL," ");
-  bool success= true;
-  // if(arg_par2 == NULL){
-    word_t res = expr(args, &success);
-    if(!success){
-      printf("wrong expr!\n");
-      return 0;
-      //assert(0);
-    }  
-    printf("%s = %u\n",args,res); 
-  // }
-  // else if(strcmp(arg_par1,"x") == 0){
-  //  word_t res = expr(arg_par2, &success);
-  //   if(!success){
-  //     printf("wrong expr!\n");
-  //     //assert(0);
-  //     return 0;
-  //   }  
-  //       printf("%s = 0x%x\n",args,res);
-  
-  // }
+
+  bool success = true;
+  word_t res = expr(args, &success);
+  if(!success){
+    printf("wrong expr!\n");
+    return 0;
+  }
+
+  if (hex_format) {
+    printf("%s = 0x%x\n", args, res);
+  } else {
+    printf("%s = %u\n", args, res);
+  }
+
   return 0;
 }
 
-static int cmd_px(char *args) {
-  if(args == NULL){
-    printf("no expression parameters!\n");
-    return 1;
-  }
+static int cmd_p(char *args) {
+  return cmd_print(args, false);
+}
 
-  bool success= true;
-  // if(arg_par2 == NULL){
-    word_t res = expr(args, &success);
-    if(!success){
-      printf("wrong expr!\n");
-      return 0;
-      //assert(0);
-    }  
-    printf("%s = 0x%x\n",args,res); 
-  // }
-  // else if(strcmp(arg_par1,"x") == 0){
-  //  word_t res = expr(arg_par2, &success);
-  //   if(!success){
-  //     printf("wrong expr!\n");
-  //     //assert(0);
-  //     return 0;
-  //   }  
-  //       printf("%s = 0x%x\n",args,res);
-  
-  // }
-  return 0;
+static int cmd_px(char *args) {
+  return cmd_print(args, true);
 }
 
 static int cmd_ft(char *args) {

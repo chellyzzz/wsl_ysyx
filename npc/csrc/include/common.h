@@ -46,11 +46,4 @@ typedef uint16_t ioaddr_t;
 
 #include <debug.h>
 
-
-typedef struct {
-  uint32_t x[32];
-  uint32_t pc;
-} regfile;
-
-
 #endif

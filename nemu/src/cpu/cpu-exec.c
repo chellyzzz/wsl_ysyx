@@ -26,7 +26,7 @@
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 7
+#define MAX_INST_TO_PRINT 11
 #ifdef CONFIG_WP
 bool wp_check();
 #endif
@@ -43,7 +43,7 @@ void free_funcnodes();
 const char* get_function_name(vaddr_t addr);
 void ftrace_call(Decode *_this, int call_level);
 void ftrace_return(Decode *_this, int call_level);
-static int last_call_depth = 180;
+static int last_call_depth = 0;
 extern bool ftrace_enable;
 
 #endif
@@ -155,10 +155,6 @@ static void statistic() {
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
-  // #ifdef CONFIG_FTRACE
-  // print_funcnodes();
-  // free_funcnodes();
-  // #endif
 
 }
 
@@ -172,9 +168,6 @@ void assert_fail_msg() {
 
 /* Simulate how the CPU works. */
 void cpu_exec(uint64_t n) {
-  // #if CONFIG_DIFFTEST
-  //   cpu.csr.mstatus = 0x1800;
-  // #endif
 
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {

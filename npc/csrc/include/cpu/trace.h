@@ -18,6 +18,7 @@
 
 #include <common.h>
 #include <device/map.h>
+#include <cpu/decode.h>
 
 #ifdef CONFIG_ITRACE
 
@@ -29,6 +30,9 @@ typedef struct
   char logbuf[DASM_PRINTBUF_SIZE];
 }RingBuff_Type;
 
+int iringbuf_push(Decode *s);
+void iringbuf_print();
+
 #endif
 
 void init_disasm(const char *triple);
@@ -37,6 +41,10 @@ void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
 #ifdef CONFIG_DTRACE
 void dtrace_read(paddr_t addr, int len, IOMap *map);
 void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map);
+#endif
+
+#ifdef CONFIG_ETRACE
+void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec, word_t mstatus);
 #endif
 
 #endif

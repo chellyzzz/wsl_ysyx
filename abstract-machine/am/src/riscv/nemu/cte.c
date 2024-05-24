@@ -10,7 +10,7 @@ Context* __am_irq_handle(Context *c) {
     Event ev = {0};
     // if(c->mcause == -1) printf("c->mcause = %d\n", c->mcause);
     switch (c->mcause) {
-      case -1: ev.event = EVENT_YIELD; break;
+      case 11: ev.event = EVENT_YIELD; break;
       default: ev.event = EVENT_ERROR; break;
     }
     c = user_handler(ev, c);
@@ -33,6 +33,7 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   Context *kctx = (Context *)(kstack.end - sizeof(Context));
+  kctx->mstatus = 0x00001800;
   kctx->mepc=(uintptr_t) entry;
   kctx->gpr[10]=(uintptr_t) arg;
   return kctx;
@@ -44,7 +45,8 @@ void yield() {
   asm volatile("li a5, -1; ecall");
 #else
 
-  asm volatile("li a7, -1; ecall");
+  // asm volatile("li a7, -1; ecall");
+  asm volatile("li a7, 0xb; ecall");
 
 #endif
 }

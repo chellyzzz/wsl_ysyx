@@ -19,12 +19,9 @@
 #include <sdb.h>
 #include <cpu/cpu.h>
 #include <cpu/trace.h>
-#include <cpu/decode.h>
 #include <memory/paddr.h>
-#include "Vtop.h"
-#include "Vtop___024root.h"
-#include "verilated.h"
-#include "verilated_vcd_c.h"
+// #include "verilated.h"
+// #include "verilated_vcd_c.h"
 
 static int is_batch_mode = false;
 
@@ -34,108 +31,6 @@ void init_wp_pool();
 void wp_display();
 void wp_create(char *args, word_t res);
 void wp_delete(int num);
-
-CPU_state cpu = {};
-
-static VerilatedContext* contextp;; 
-static Vtop* top;
-static VerilatedVcdC* vcd;
-static uint32_t instr;
-
-#ifdef CONFIG_ITRACE
-
-static RingBuff_Type iringbuf[RingBuffSize];
-static int ptr = 0;
-int iringbuf_push(Decode *s, RingBuff_Type *iringbuf, int ptr);
-void iringbuf_print(RingBuff_Type *iringbuf, int ptr);
-void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-
-#endif
-
-// cpu exec
-void reg_update(){
-  for(int i = 0; i < 32; i++){
-    cpu.gpr[i] = top->rootp->top__DOT__regfile1__DOT__rf[i] ;
-  }
-  cpu.pc = top->rootp->top__DOT__pc ;
-  return;
-}
-void disasm_pc(Decode* s){
-  char *p = s->logbuf;
-  p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-  int ilen = 4;
-  int i;
-  uint8_t *inst = (uint8_t *)&s->isa.inst.val;
-  for (i = ilen - 1; i >= 0; i --) {
-    p += snprintf(p, 4, " %02x", inst[i]);
-  } 
-  int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
-  int space_len = ilen_max - ilen;
-  if (space_len < 0) space_len = 0;
-  space_len = space_len * 3 + 1;
-  memset(p, ' ', space_len);
-  p += space_len;
-
-  disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
-      MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
-}
-
-void decode_pc(Decode* s){
-  s->pc = top->rootp->top__DOT__pc;
-  s->snpc = top->rootp->top__DOT__pc + 4;
-  s->dnpc = top->rootp->top__DOT__pcu1__DOT__pc_next;
-  s->isa.inst.val = top->rootp->top__DOT__ins;
-  instr = s->isa.inst.val;
-  #ifdef CONFIG_ITRACE
-  disasm_pc(s);
-  ptr = iringbuf_push(s, iringbuf, ptr);
-  #endif
-  return;
-}
-
-void exec_once(Decode *s){
-    top->clk = 0;
-    top->eval();
-    contextp->timeInc(1);
-    vcd->dump(contextp->time());
-    top->clk = 1;
-    top->eval();
-    reg_update();
-    decode_pc(s);
-    contextp->timeInc(1);
-    vcd->dump(contextp->time());
-    return;
-}
-
-void cpu_exec(uint64_t n){
-    Decode s;
-    int one_print = 0;
-    if (n == -1) {
-        n = -1u;
-    }
-    else if (n == 1) {
-        one_print = 1;
-    }
-    for(; n > 0; n--){
-      if(contextp->gotFinish()){
-        printf("Program execution has ended. To restart the program, exit NPC and run again.\n");
-        break;
-      }
-        exec_once(&s);
-        #ifdef CONFIG_DIFFTEST
-          if(!difftest_step(s.pc, s.dnpc)) {
-            printf("%s\n",s.logbuf);
-            break;
-          }
-        #endif
-    }
-    if(one_print == 1) printf("%s\n",s.logbuf);
-    return;
-}
-
-int hit_goodtrap(){
-  return (cpu.gpr[10] == 0 && instr == 0x100073);
-}
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -174,8 +69,6 @@ static int cmd_si(char *args) {
   return 0;
 }
 
-
-
 static int cmd_info(char *args) {
 
   if(args==NULL){
@@ -185,9 +78,14 @@ static int cmd_info(char *args) {
   if(strcmp(args,"r")==0) {
     isa_reg_display();
   }
-  // if(strcmp(args,"w")==0) {
-  //   wp_display();
-  // } 
+  #ifdef CONFIG_WP
+  if(strcmp(args,"w")==0) {
+    wp_display();
+  } 
+  #endif
+  if(strcmp(args,"csr")==0) {
+    isa_csr_display();
+  }  
   return 0;
 }
 
@@ -218,7 +116,6 @@ static int cmd_w(char *args) {
   word_t res = expr(args, &success);
   if(!success){
     printf("wrong expr!\n");
-    //assert(0);
     return 0;
   }
   else {
@@ -271,51 +168,91 @@ static int cmd_x(char *args) {
  }
 
 
-static int cmd_p(char *args) {
+static int cmd_print(char *args, bool hex_format) {
   if(args == NULL){
     printf("no expression parameters!\n");
     return 1;
   }
-  bool success= true;
+
+  bool success = true;
   word_t res = expr(args, &success);
   if(!success){
     printf("wrong expr!\n");
     return 0;
-  }  
-  printf("%s = %u\n",args,res); 
+  }
+
+  if (hex_format) {
+    printf("%s = 0x%x\n", args, res);
+  } else {
+    printf("%s = %u\n", args, res);
+  }
+
   return 0;
+}
+
+static int cmd_p(char *args) {
+  return cmd_print(args, false);
 }
 
 static int cmd_px(char *args) {
-  if(args == NULL){
-    printf("no expression parameters!\n");
-    return 1;
-  }
-
-  bool success= true;
-  // if(arg_par2 == NULL){
-    printf("%s\n",args);
-    word_t res = expr(args, &success);
-    if(!success){
-      printf("wrong expr!\n");
-      return 0;
-      //assert(0);
-    }  
-    printf("%s = 0x%x\n",args,res); 
-  // }
-  // else if(strcmp(arg_par1,"x") == 0){
-  //  word_t res = expr(arg_par2, &success);
-  //   if(!success){
-  //     printf("wrong expr!\n");
-  //     //assert(0);
-  //     return 0;
-  //   }  
-  //       printf("%s = 0x%x\n",args,res);
-  
-  // }
-  return 0;
+  return cmd_print(args, true);
 }
 
+ static int cmd_i(char *args) {
+  #ifdef CONFIG_ITRACE
+    iringbuf_print();
+    return 0;
+  #else
+    printf("itrace is not enabled!\n");
+    return 0;
+  #endif
+ }
+
+#ifdef CONFIG_FTRACE
+  #ifdef CONFIG_FTRACE_HALF_WAY
+    bool ftrace_enable = false;
+  #else
+    bool ftrace_enable = true;
+  #endif
+#endif
+
+static int cmd_ft(char *args) {
+  #ifndef CONFIG_FTRACE
+    printf("ftrace is not enabled!\n");
+    return 0;
+  #else
+  if(args == NULL){
+    printf("please enter on\\off!\n");
+    return 1;
+  }
+  if(strcmp(args,"on")==0) {
+    if(ftrace_enable){
+      printf("ftrace is already on!\n");
+      return 0;
+    }
+    else {
+      ftrace_enable = true;
+      printf("ftrace is on!\n");
+      return 0;
+    }
+  }
+  else if(strcmp(args,"off")==0) {
+    if(!ftrace_enable){
+      printf("ftrace is already off!\n");
+      return 0;
+    }
+    else {
+      ftrace_enable = false;
+      printf("ftrace is off!\n");
+      return 0;
+    }  
+  }
+  else {
+    printf("wrong para! please enter on\\off!\n");
+    return 1;
+  }
+  #endif
+}
 
 static int cmd_help(char *args);
 
@@ -330,13 +267,14 @@ static struct {
   { "si", "step program n times,default n=1", cmd_si },
   { "info", "Print -r Register Status -w monitor point", cmd_info },
   { "d", "delete monitor point n", cmd_d },
-  { "w", "create watchpoint", cmd_w },
+  { "w", "create watchpoint if CONFIG_WP enabled", cmd_w },
   { "x", "scan memory", cmd_x },
   { "p", "Expression evaluation", cmd_p },
   { "px", "Expression evaluation in hex", cmd_px },
-  { "b", "set breakpoint", cmd_b },
+  { "b", "set breakpoint if CONFIG_WP enabled", cmd_b },
+  { "i", "print current instructions", cmd_i },
+  { "f", "turn on or off fucntrace when running program halfway, always off by default", cmd_ft}, 
   /* TODO: Add more commands */
-
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -371,7 +309,7 @@ void sdb_set_batch_mode() {
 void assert_fail_msg() {
   #ifdef CONFIG_ITRACE  
     if(!hit_goodtrap()){
-      iringbuf_print(iringbuf, ptr);
+      iringbuf_print();
       IFDEF(CONFIG_MTRACE, print_out_of_bound());
       isa_reg_display();
     }
@@ -379,14 +317,15 @@ void assert_fail_msg() {
 }
 
 int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb) {
-  contextp = contextp_sdb;
-  top = top_sdb;  
-  vcd = vcd_sdb;
+  //pass parameters to global variables
+  verilator_sync_init(contextp_sdb, top_sdb, vcd_sdb);
 
   if (is_batch_mode) {
     cmd_c(NULL);
+    assert_fail_msg();
     return hit_goodtrap();
   }
+  
   for (char *str; (str = rl_gets()) != NULL; ) {
 
     char *str_end = str + strlen(str);

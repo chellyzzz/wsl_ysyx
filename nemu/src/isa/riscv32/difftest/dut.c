@@ -42,6 +42,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   }
   if(ref_r->csr.mcause != cpu.csr.mcause){
       printf("mcause error at pc = 0x%08x\n", cpu.pc);
+      printf("ref_r->csr.mcause = 0x%08x, cpu.csr.mcause = 0x%08x\n", ref_r->csr.mcause, cpu.csr.mcause);      
       return false;
   }
   if(ref_r->csr.mtvec != cpu.csr.mtvec){

@@ -201,8 +201,8 @@ void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map) {
 #endif
 
 #ifdef CONFIG_ETRACE
-void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec) {
-  printf("Raise interrupt %d at epc = "FMT_PADDR"\t", NO, epc);
-  printf("mtvec = "FMT_WORD"\n", mtvec);  
+void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec, word_t mstatus) {
+  printf("\nRaise interrupt mcause  = %d at pc = "FMT_PADDR"\t", NO, epc);
+  printf("mtvec = "FMT_WORD", mstatus = "FMT_WORD"\n", mtvec, mstatus);  
 } 
 #endif

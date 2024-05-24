@@ -22,13 +22,16 @@
 
 #ifdef CONFIG_ITRACE
 
-int iringbuf_push(Decode *s, RingBuff_Type *iringbuf, int ptr) {
+static RingBuff_Type iringbuf[RingBuffSize];
+static int ptr = 0;
+
+int iringbuf_push(Decode *s) {
   strcpy(iringbuf[ptr % RingBuffSize].logbuf, s->logbuf);
   ptr ++;
   return ptr;
 }
 
-void iringbuf_print(RingBuff_Type *iringbuf, int ptr) {
+void iringbuf_print() {
   int i;
   printf("---------- Instruction Trace ----------\n");
   if(ptr <= RingBuffSize){
@@ -196,4 +199,11 @@ void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map) {
   printf("dtrace_write: %8s at %08x, data[len] = %08x [%d] \n", map->name, addr, data, len);
 }
 
+#endif
+
+#ifdef CONFIG_ETRACE
+void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec, word_t mstatus) {
+  printf("\nRaise interrupt mcause  = %d at pc = "FMT_PADDR"\t", NO, epc);
+  printf("mtvec = "FMT_WORD", mstatus = "FMT_WORD"\n", mtvec, mstatus);  
+} 
 #endif

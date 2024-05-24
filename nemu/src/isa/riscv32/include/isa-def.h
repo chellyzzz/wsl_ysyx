@@ -18,11 +18,12 @@
 
 #include <common.h>
 
+
 typedef struct {
-  vaddr_t mepc;
-  word_t mcause;
-  word_t mstatus;
   word_t mtvec;
+  word_t mepc;
+  word_t mstatus;
+  word_t mcause;
 } MUXDEF(CONFIG_RV64, riscv64_CSRs, riscv32_CSRs);
 
 typedef struct {
