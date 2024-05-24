@@ -5,7 +5,6 @@
 #include <isa.h>
 
 void init_monitor(int, char *[]);
-;
 int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb);
 
 bool rst_n_sync = false; // read from rtl by dpi-c.
@@ -45,19 +44,7 @@ int main(int argc,char *argv[]){
     Verilated::commandArgs(argc,argv);
     init_trace();
     init_monitor(argc, argv);
-    // while (!contextp->gotFinish())
-    // {
-    // top->clk = 0;
-    // top->eval();
-    // contextp->timeInc(1);
-    // vcd->dump(contextp->time());
-    // top->clk = 1;
-    // top->eval();
-    // contextp->timeInc(1);
-    // vcd->dump(contextp->time());     
-    // }
-    // end_wave();    
-    // return 0;
+
     int good = sdb_mainloop(contextp, top, vcd);
     end_wave();
     return !good;

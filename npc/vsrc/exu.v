@@ -19,7 +19,7 @@ module ysyx_23060124_exu(
   output o_zero
 );
 
-wire sel_src2;
+wire [`ysyx_23060124_ISA_WIDTH - 1:0] sel_src2;
 assign sel_src2 = csr_src_sel ? csr_src2 : src2;
 
 wire [`ysyx_23060124_ISA_WIDTH-1:0] alu_src1,alu_src2;

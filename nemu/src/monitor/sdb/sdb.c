@@ -21,7 +21,6 @@
 #include "sdb.h"
 #include <memory/paddr.h>
 
-
 static int is_batch_mode = false;
 void init_regex();
 #ifdef CONFIG_WP
@@ -221,13 +220,12 @@ static int cmd_w(char *args) {
  }
 
  static int cmd_i(char *args) {
-  #ifdef CONFIG_ITRACE
-    iringbuf_print();
+    #ifdef CONFIG_ITRACE
+      iringbuf_print(); 
+    #else
+      printf("itrace is not enabled!\n");
+    #endif
     return 0;
-  #else
-    printf("itrace is not enabled!\n");
-    return 0;
-  #endif
  }
 
 static int cmd_print(char *args, bool hex_format) {

@@ -33,6 +33,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   if(ref_r->csr.mepc != cpu.csr.mepc){
       printf("mepc error at pc = 0x%08x\n", cpu.pc);
       printf("ref_r->csr.mepc = 0x%08x, cpu.csr.mepc = 0x%08x\n", ref_r->csr.mepc, cpu.csr.mepc);
+      return false;
   }
   if(ref_r->csr.mstatus != cpu.csr.mstatus){
       printf("mstatus error at pc = 0x%08x\n", cpu.pc);

@@ -125,6 +125,8 @@ void cpu_exec(uint64_t n){
         #ifdef CONFIG_DIFFTEST
           if(!difftest_step(s.pc, s.dnpc)) {
             printf("%s\n",s.logbuf);
+            iringbuf_print();
+            isa_reg_display();
             break;
           }
         #endif
