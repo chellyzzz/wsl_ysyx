@@ -16,6 +16,8 @@ module ysyx_23060124_idu (
   output reg o_csr_wen,
   output reg [`ysyx_23060124_EXU_SEL_WIDTH-1:0] o_src_sel,
   output o_if_unsigned,
+  output o_mret,
+  output o_ecall,
   output o_brch,
   output o_jal,
   output o_jalr
@@ -124,6 +126,8 @@ begin
   endcase
 end
 
+assign o_mret = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_ECALL)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ? 1:0;
+assign o_ecall = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_MRET)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ?  1:0;
 //lsu
 always @(ins)begin
   o_load_opt = 0;
@@ -166,9 +170,10 @@ always @(ins)begin
     end
   endcase
 end
-assign o_brch = (opcode == `ysyx_23060124_TYPE_B)? 1:0;
-assign o_jal  = (opcode == `ysyx_23060124_TYPE_JAL)? 1:0;
-assign o_jalr = (opcode == `ysyx_23060124_TYPE_JALR)? 1:0;
+assign o_brch = (opcode == `ysyx_23060124_TYPE_B) ? 1:0;
+assign o_jal  = (opcode == `ysyx_23060124_TYPE_JAL) ? 1:0;
+assign o_jalr = (opcode == `ysyx_23060124_TYPE_JALR) ? 1:0;
+
 
 always@(ins)begin
     if(i_rst_n & |ins & id_err[0]) $display("\n----------ins decode error, ins = %x, opcode = %b---------------\n", ins, opcode);

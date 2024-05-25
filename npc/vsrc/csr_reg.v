@@ -4,9 +4,17 @@ module ysyx_23060124_csr_RegisterFile (
   input clk,
   input rst,
   input csr_wen,
+  input i_ecall,
+  input i_mret,
+  input i_pc,
   input [`ysyx_23060124_CSR_ADDR-1:0] csr_addr,
   input [`ysyx_23060124_ISA_WIDTH-1:0] csr_wdata,
-  output reg [`ysyx_23060124_ISA_WIDTH-1:0] csr_rdata,
+  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mret_a7,
+  output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mcasue,
+  output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mstatus,
+  output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mepc,
+  output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mtvec,
+  output reg [`ysyx_23060124_ISA_WIDTH-1:0] csr_rdata
 );
 
 reg [`ysyx_23060124_ISA_WIDTH-1:0] mcause, mstatus, mepc, mtvec;
@@ -20,7 +28,19 @@ always @(posedge clk) begin
             `ysyx_23060124_CSR_ADDR'h305: mtvec <= csr_wdata;
         // default: $finish
         endcase
-        end 
+    end
+    if(i_ecall)begin
+        mepc <= i_pc;
+        mcause <= i_mret_a7;
+        mstatus[7] <= mstatus[3];
+        mstatus[12:11] <= 2'b11;
+        mstatus[3] <= 1'b0;
+    end
+    if(i_mret)begin
+        mstatus[3] <= mstatus[7];
+        mstatus[7] <= 1'b0;
+        mstatus[12:11] <= 2'b0;
+    end
 end
 
 always @(csr_addr) begin
@@ -33,10 +53,10 @@ always @(csr_addr) begin
     endcase
 end
 
-// assign mcause_wen = csr_wen && (csr_addr == 0x342);
-// assign mstatus_wen = csr_wen && (csr_addr == 0x300);
-// assign mepc_wen = csr_wen && (csr_addr == 0x341);
-// assign mtvec_wen = csr_wen && (csr_addr == 0x305);
+assign o_mcause = i_ecall ? mcause : 0;
+assign o_mstatus = i_ecall || i_mret ? mstatus : 0;
+assign o_mepc = i_ecall || i_mret ? mepc : 0;
+assign o_mtvec = i_ecall ? mtvec : 0;
 
 // ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, 0) mepc(
 //   .clk(clk),

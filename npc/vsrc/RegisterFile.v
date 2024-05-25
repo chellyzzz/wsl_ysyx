@@ -2,12 +2,14 @@
 
 module ysyx_23060124_RegisterFile (
   input clk,
+  input i_mret,
   input [`ysyx_23060124_ISA_WIDTH-1:0] wdata,
   input [`ysyx_23060124_REG_ADDR-1:0] waddr,
   input [`ysyx_23060124_REG_ADDR-1:0] raddr1,
   input [`ysyx_23060124_REG_ADDR-1:0] raddr2,
   output [`ysyx_23060124_ISA_WIDTH-1:0] rdata1,
   output [`ysyx_23060124_ISA_WIDTH-1:0] rdata2,
+  output [`ysyx_23060124_ISA_WIDTH-1:0] o_mret_a7,
   input wen,
   output a0_zero
 );
@@ -19,5 +21,6 @@ module ysyx_23060124_RegisterFile (
   assign rdata1 = (raddr1 == 0) ? 0 : rf[raddr1];
   assign rdata2 = (raddr2 == 0) ? 0 : rf[raddr2];
   assign a0_zero = ~|rf[10]; 
+  assign o_mret_a7 = i_mret ? rf[17] : 0;
   
 endmodule
