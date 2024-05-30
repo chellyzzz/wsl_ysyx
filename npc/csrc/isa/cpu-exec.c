@@ -52,7 +52,7 @@ void reg_update(){
   cpu.csr.mstatus = top->rootp->top__DOT__Csrs__DOT__mstatus;
   cpu.csr.mepc = top->rootp->top__DOT__Csrs__DOT__mepc;
   cpu.csr.mtvec = top->rootp->top__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->top__DOT__pc;
+  cpu.pc = top->rootp->top__DOT__ifu1__DOT____Vcellout__pc_reg__dout;
   return;
 }
 
@@ -83,9 +83,9 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, Verilate
 }
 
 void decode_pc(Decode* s){
-  s->pc = top->rootp->top__DOT__pc;
-  s->snpc = top->rootp->top__DOT__pc + 4;
-  s->dnpc = top->rootp->top__DOT__pcu1__DOT__pc_next;
+  s->pc = top->rootp->top__DOT__ifu1__DOT____Vcellout__pc_reg__dout;
+  s->snpc = top->rootp->top__DOT__ifu1__DOT____Vcellout__pc_reg__dout + 4;
+  s->dnpc = top->rootp->top__DOT__pc_next;
   s->isa.inst.val = top->rootp->top__DOT__ins;
   instr = s->isa.inst.val;
   return;

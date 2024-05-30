@@ -22,7 +22,7 @@ wire [`ysyx_23060124_ISA_WIDTH-1:0] mcause, mstatus, mepc, mtvec, mret_a7;
 
 wire [`ysyx_23060124_OPT_WIDTH-1:0] exu_opt, load_opt, store_opt, brch_opt;
 wire wen, csr_wen;
-wire [`ysyx_23060124_ISA_WIDTH-1:0] pc;
+wire [`ysyx_23060124_ISA_WIDTH-1:0] pc, pc_next;
 wire [`ysyx_23060124_EXU_SEL_WIDTH-1:0] i_src_sel;
 wire brch,jal,jalr;                    // idu -> pcu.
 wire ecall,mret;                       // idu -> pcu.
@@ -49,6 +49,7 @@ ysyx_23060124_csr_RegisterFile Csrs(
   .csr_wen(csr_wen),
   .i_ecall(ecall),
   .i_mret(mret),
+  .i_pc(pc),
   .csr_addr(csr_addr),
   .csr_wdata(rd),
   .i_mret_a7(mret_a7),
@@ -60,8 +61,10 @@ ysyx_23060124_csr_RegisterFile Csrs(
 );
 
 ysyx_23060124_ifu ifu1(
-  .pc(pc),
+  .pc_next(pc_next),
+  .clk(clk),
   .ifu_rst(rst_n_sync),
+  .o_pc(pc),
   .o_ins(ins)
 );
 
@@ -117,12 +120,13 @@ ysyx_23060124_pcu pcu1(
   .i_mret(mret),
   .i_ecall(ecall),
   .i_zero(0),
+  .i_pc(pc),
   .i_mepc(mepc),
   .i_mtvec(mtvec),
   .i_rs1(rs1),
   .i_imm(imm),
   .i_res(res),
-  .pc(pc),
+  .o_pc_next(pc_next),
   .o_rd(rd)
 );
 
