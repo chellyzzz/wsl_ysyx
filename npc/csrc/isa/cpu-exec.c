@@ -26,6 +26,10 @@ CPU_state cpu = {};
 
 #define MAX_INST_TO_PRINT 11
 
+#ifdef CONFIG_WP
+bool wp_check();
+#endif
+
 static VerilatedContext* contextp;; 
 static Vtop* top;
 static VerilatedVcdC* vcd;
@@ -52,7 +56,7 @@ void reg_update(){
   cpu.csr.mstatus = top->rootp->top__DOT__Csrs__DOT__mstatus;
   cpu.csr.mepc = top->rootp->top__DOT__Csrs__DOT__mepc;
   cpu.csr.mtvec = top->rootp->top__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->top__DOT__ifu1__DOT____Vcellout__pc_reg__dout;
+  cpu.pc = top->rootp->top__DOT__pc_next;
   return;
 }
 
@@ -83,8 +87,8 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, Verilate
 }
 
 void decode_pc(Decode* s){
-  s->pc = top->rootp->top__DOT__ifu1__DOT____Vcellout__pc_reg__dout;
-  s->snpc = top->rootp->top__DOT__ifu1__DOT____Vcellout__pc_reg__dout + 4;
+  s->pc = top->rootp->top__DOT__pc_next;
+  s->snpc = top->rootp->top__DOT__pc_next + 4;
   s->dnpc = top->rootp->top__DOT__pc_next;
   s->isa.inst.val = top->rootp->top__DOT__ins;
   instr = s->isa.inst.val;
@@ -109,15 +113,17 @@ void exec_once(Decode *s){
     return;
 }
 
-static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
-
+static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
+        int flag = 0;
         #ifdef CONFIG_DIFFTEST
-          if(!difftest_step(s.pc, s.dnpc)) {
-            printf("%s\n",s.logbuf);
-            iringbuf_print();
-            isa_reg_display();
-            break;
+          if(!difftest_step(s->pc, s->dnpc)) {
+            flag = 1;
           }
+        #endif
+        #ifdef CONFIG_WP
+        if(wp_check()){
+          flag = 1;
+        }
         #endif
         #ifdef CONFIG_FTRACE
         if(!ftrace_enable){
@@ -159,7 +165,9 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
                 }
             }
         #endif
+        return flag;
 }
+
 void cpu_exec(uint64_t n){
     Decode s;
     int g_print_step = n <= MAX_INST_TO_PRINT && n >= 0 ? n : 0;
@@ -178,7 +186,9 @@ void cpu_exec(uint64_t n){
           g_print_step --;
         }
         #endif
-        trace_and_difftest(&s, s.dnpc);
+        if(trace_and_difftest(&s, s.dnpc)){
+          break;
+        }
     }
     return;
 }

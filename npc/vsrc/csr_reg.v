@@ -6,7 +6,7 @@ module ysyx_23060124_csr_RegisterFile (
   input csr_wen,
   input i_ecall,
   input i_mret,
-  input i_pc,
+  input [`ysyx_23060124_ISA_WIDTH-1:0] i_pc,
   input [`ysyx_23060124_CSR_ADDR-1:0] csr_addr,
   input [`ysyx_23060124_ISA_WIDTH-1:0] csr_wdata,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mret_a7,

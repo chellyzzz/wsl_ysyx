@@ -46,37 +46,38 @@ void isa_csr_display(){
 
 bool diff_checkregs(CPU_state *ref_r, vaddr_t pc) {
   int reg_num = ARRLEN(cpu.gpr);
+  bool flag = true;
   for (int i = 0; i < reg_num; i++) {
     if (ref_r->gpr[i] != cpu.gpr[i]) {
-       printf("error at pc = 0x%08x, ref[%2d]=0x%08x, dut[%2d]=0x%08x\n", cpu.pc, i, ref_r->gpr[i], i, cpu.gpr[i]);
-      return false;
+      printf("error at pc = 0x%08x, ref[%2d]=0x%08x, dut[%2d]=0x%08x\n", cpu.pc, i, ref_r->gpr[i], i, cpu.gpr[i]);
+      flag = false;
     }
   }
   if(ref_r->pc != cpu.pc){
       printf("error at pc = 0x%08x, ref_pc = 0x%08x\n", cpu.pc, ref_r->pc);
-      return false;
+      flag = false;
   }
     if(ref_r->csr.mepc != cpu.csr.mepc){
       printf("mepc error at pc = 0x%08x\n", cpu.pc);
       printf("ref_r->csr.mepc = 0x%08x, cpu.csr.mepc = 0x%08x\n", ref_r->csr.mepc, cpu.csr.mepc);
-      return false;
+      flag = false;
   }
   if(ref_r->csr.mstatus != cpu.csr.mstatus){
       printf("mstatus error at pc = 0x%08x\n", cpu.pc);
       printf("ref_r->csr.mstatus = 0x%08x, cpu.csr.mstatus = 0x%08x\n", ref_r->csr.mstatus, cpu.csr.mstatus);
-      return false;
+      flag = false;
   }
   if(ref_r->csr.mcause != cpu.csr.mcause){
       printf("mcause error at pc = 0x%08x\n", cpu.pc);
       printf("ref_r->csr.mcause = 0x%08x, cpu.csr.mcause = 0x%08x\n", ref_r->csr.mcause, cpu.csr.mcause);      
-      return false;
+      flag = false;
   }
   if(ref_r->csr.mtvec != cpu.csr.mtvec){
       printf("mtvec error at pc = 0x%08x\n", cpu.pc);
       printf("ref_r->csr.mtvec = 0x%08x, cpu.csr.mtvec = 0x%08x\n", ref_r->csr.mtvec, cpu.csr.mtvec);
-      return false;
+      flag = false;
   }
-  return true;
+  return flag;
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {

@@ -14,6 +14,7 @@ module ysyx_23060124_idu (
   output reg [`ysyx_23060124_OPT_WIDTH-1:0] o_brch_opt,
   output reg o_wen,
   output reg o_csr_wen,
+  output reg o_csrr,
   output reg [`ysyx_23060124_EXU_SEL_WIDTH-1:0] o_src_sel,
   output o_if_unsigned,
   output o_mret,
@@ -42,6 +43,7 @@ begin
   o_rd  = `ysyx_23060124_REG_ADDR'b0;
   o_wen = 1'b0;
   o_csr_wen = 1'b0;
+  o_csrr =  1'b0;
   id_err = 3'b0;
   o_if_unsigned = 1'b0;
   case(opcode)
@@ -119,15 +121,15 @@ begin
     // CSR
     `ysyx_23060124_TYPE_EBRK: begin 
       case(func3) 
-        `ysyx_23060124_FUN3_CSRRW: begin o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM;  o_csr_wen = 1'b1; end
-        `ysyx_23060124_FUN3_CSRRS: begin o_exu_opt = `ysyx_23060124_OPT_EXU_OR; o_src_sel = `ysyx_23060124_EXU_SEL_REG;  o_csr_wen = 1'b1; end
+        `ysyx_23060124_FUN3_CSRRW: begin o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM;  o_csr_wen = 1'b1; o_wen = 1'b1; end
+        `ysyx_23060124_FUN3_CSRRS: begin o_exu_opt = `ysyx_23060124_OPT_EXU_OR; o_src_sel = `ysyx_23060124_EXU_SEL_REG;  o_csr_wen = 1'b1; o_wen = 1'b1; end
       endcase 
      end
   endcase
 end
 
-assign o_mret = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_ECALL)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ? 1:0;
-assign o_ecall = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_MRET)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ?  1:0;
+assign o_ecall = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_ECALL)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ? 1:0;
+assign o_mret = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_MRET)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ?  1:0;
 //lsu
 always @(ins)begin
   o_load_opt = 0;
