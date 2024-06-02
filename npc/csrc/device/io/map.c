@@ -34,8 +34,9 @@ uint8_t* new_space(int size) {
   return p;
 }
 
-static void check_bound(IOMap *map, paddr_t addr) {
+static void check_bound(IOMap *map, paddr_t addr, int is_write) {
   if (map == NULL) {
+    printf("is_write: %s\n", is_write ? "write":"read");
     Assert(map != NULL, "address (" FMT_PADDR ") is out of bound at pc = " FMT_WORD, addr, cpu.pc);
   } else {
     Assert(addr <= map->high && addr >= map->low,
@@ -61,7 +62,7 @@ void init_map() {
 
 word_t map_read(paddr_t addr, int len, IOMap *map) {
   assert(len >= 1 && len <= 8);
-  check_bound(map, addr);
+  check_bound(map, addr, 0);
   paddr_t offset = addr - map->low;
   // printf("\npc: "FMT_PADDR" offset:%d\n", cpu.pc, offset);
   invoke_callback(map->callback, offset, len, false); // prepare data to read
@@ -72,7 +73,7 @@ word_t map_read(paddr_t addr, int len, IOMap *map) {
 
 void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   assert(len >= 1 && len <= 8);
-  check_bound(map, addr);
+  check_bound(map, addr, 1);
   paddr_t offset = addr - map->low;
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);

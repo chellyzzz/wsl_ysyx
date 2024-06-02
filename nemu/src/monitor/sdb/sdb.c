@@ -100,7 +100,12 @@ static int cmd_info(char *args) {
   #endif
   if(strcmp(args,"csr")==0) {
     isa_csr_display();
-  }  
+  }
+  #ifdef CONFIG_MTRACE
+  if(strcmp(args,"m")==0) {
+    print_out_of_bound();
+  }
+  #endif
   return 0;
 }
 
@@ -308,7 +313,7 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "step program n times,default n=1", cmd_si },
-  { "info", "Print -r Register Status -w monitor point", cmd_info },
+  { "info", "Print -r Register Status -w monitor point -m memory trace", cmd_info },
   { "d", "delete monitor point n", cmd_d },
   { "w", "create watchpoint if CONFIG_WP enabled", cmd_w },
   { "x", "scan memory", cmd_x },

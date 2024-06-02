@@ -35,3 +35,5 @@ bool log_enable() {
          (g_nr_guest_inst <= CONFIG_TRACE_END), false);
 }
 #endif
+
+//TODO:

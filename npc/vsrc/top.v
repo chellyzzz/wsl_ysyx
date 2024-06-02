@@ -144,10 +144,10 @@ begin
   check_rst(rst_n_sync);
   if(if_ebrk(ins))begin  //ins == ebreak.
     if(a0_zero)begin
-      $display("\n\033[32mHIT GOOD TRAP at pc = 0x%h\033[0m\n", pc_next); // 输出绿色文本
+      $display("\n\033[32mHIT GOOD TRAP at pc = 0x%h\033[0m\n", pc_next); // 输出绿色
     end
     else begin
-      $display("\n\033[31mHIT BAD TRAP at pc = 0x%h\033[0m\n", pc_next); // 输出红色文本
+      $display("\n\033[31mHIT BAD TRAP at pc = 0x%h\033[0m\n", pc_next); // 输出红色
     end
     $finish;
   end

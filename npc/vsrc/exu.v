@@ -19,6 +19,12 @@ module ysyx_23060124_exu(
   output o_zero
 );
 
+// always @(src1 or src2) begin
+//   $display("src1 = 0x%h", src1);
+//   $display("src2 = 0x%h", src2);
+//   $display("src_sel  = 0x%h", i_src_sel);
+// end
+
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] sel_src2;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] alu_src1,alu_src2;
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] alu_res, lsu_res, brch_res;
@@ -39,6 +45,12 @@ ysyx_23060124_MuxKeyWithDefault #(1<<`ysyx_23060124_EXU_SEL_WIDTH, `ysyx_2306012
     `ysyx_23060124_EXU_SEL_PC4, `ysyx_23060124_ISA_WIDTH'h4,
     `ysyx_23060124_EXU_SEL_PCI, imm
 });
+
+// always @(alu_src1 or alu_src2 or imm) begin
+//   $display("alu_src1 = 0x%h at 0x%h", alu_src1, i_pc);
+//   $display("alu_src2 = 0x%h at 0x%h", alu_src2, i_pc);
+//   $display("imm = 0x%h at 0x%h", imm, i_pc);
+// end
 
 ysyx_23060124_alu exu_alu(
   .src1(alu_src1),

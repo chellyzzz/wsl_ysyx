@@ -57,7 +57,7 @@ bool diff_checkregs(CPU_state *ref_r, vaddr_t pc) {
       printf("error at pc = 0x%08x, ref_pc = 0x%08x\n", cpu.pc, ref_r->pc);
       flag = false;
   }
-    if(ref_r->csr.mepc != cpu.csr.mepc){
+  if(ref_r->csr.mepc != cpu.csr.mepc){
       printf("mepc error at pc = 0x%08x\n", cpu.pc);
       printf("ref_r->csr.mepc = 0x%08x, cpu.csr.mepc = 0x%08x\n", ref_r->csr.mepc, cpu.csr.mepc);
       flag = false;

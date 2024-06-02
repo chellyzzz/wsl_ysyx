@@ -47,6 +47,7 @@ end
 reg [1:0] load_shift;
 
 always @(*) begin
+  // $display("\nREAD DATA at ADDR = 0x%h", alu_res);
   npc_pmem_read(alu_res, read_res, |load_opt, 4);
   if(|load_opt)begin
     load_shift = alu_res - (alu_res & ~( 32'b11));
