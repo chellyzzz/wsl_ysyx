@@ -63,7 +63,7 @@ word_t paddr_read(paddr_t addr, int len) {
   word_t data;
   if (likely(in_pmem(addr))) {
     data = pmem_read(addr, len);
-    // IFDEF(CONFIG_MTRACE,mtrace_push(addr, len, data, false));
+
     #ifdef CONFIG_MTRACE
       if(addr != cpu.pc + 4) mtrace_push(addr, len, cpu.pc, false, 0);
     #endif
@@ -81,6 +81,7 @@ void paddr_write(paddr_t addr, int len, word_t data) {
     pmem_write(addr, len, data); 
     return; 
     }
-  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
+  IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data);return);
+
   out_of_bound(addr);
 }

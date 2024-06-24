@@ -89,9 +89,11 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, Verilate
 void decode_pc(Decode* s){
   s->pc = top->rootp->top__DOT__pc_next;
   s->snpc = top->rootp->top__DOT__pc_next + 4;
-  s->dnpc = top->rootp->top__DOT__pc_next;
-  s->isa.inst.val = top->rootp->top__DOT__ins;
+  s->dnpc = top->rootp->top__DOT__pcu1__DOT__pc_next;
+  s->isa.inst.val = top->rootp->top__DOT__ifu1__DOT__ins;
   instr = s->isa.inst.val;
+  // printf("pc: %lx\n", s->pc); 
+  // printf("dnpc: %lx\n", s->dnpc);
   return;
 }
 
@@ -114,6 +116,10 @@ void exec_once(Decode *s){
 }
 
 static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
+        if(cpu.pc == 0x8000097c){
+          isa_reg_display();
+          printf("//\n");
+        }
         int flag = 0;
         #ifdef CONFIG_DIFFTEST
           if(!difftest_step(s->pc, s->dnpc)) {

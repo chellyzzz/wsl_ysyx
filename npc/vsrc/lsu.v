@@ -14,7 +14,8 @@ reg [`ysyx_23060124_ISA_WIDTH - 1:0] read_res, store_res;
 
 import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int len);
 import "DPI-C" function void npc_pmem_write (input int waddr, input int wdata, input bit wen, input int len);
-
+import "DPI-C" function void store_skip (input int addr);
+ 
 reg [`ysyx_23060124_ISA_WIDTH - 1 : 0] store_addr, store_src2;
 reg [`ysyx_23060124_OPT_WIDTH - 1 : 0] store_opt_next;
 
@@ -27,6 +28,12 @@ always @(*) begin
     `ysyx_23060124_OPT_LSU_LHU: begin lsu_res = {{16'b0}, read_res[15:0]}; end
     default: begin lsu_res = `ysyx_23060124_ISA_WIDTH'b0; end
     endcase
+end
+
+always @(*) begin
+  if(|store_opt) begin 
+      store_skip(alu_res);
+  end
 end
 
 ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH + `ysyx_23060124_ISA_WIDTH + `ysyx_23060124_OPT_WIDTH,  0) lsu_reg(

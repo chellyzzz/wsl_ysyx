@@ -372,6 +372,9 @@ int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* v
 
     if (i == NR_CMD) { printf("Unknown command '%s'\n", cmd); }
   }
+  //should not reach here;
+  assert(0);
+  return 0;
 }
 
 void init_sdb() {

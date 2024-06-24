@@ -9,8 +9,12 @@ module ysyx_23060124_ifu (
 
 import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int rsize);
 
+reg [`ysyx_23060124_ISA_WIDTH - 1:0] ins;
+
 always @(*) begin
-  npc_pmem_read (pc_next, o_ins, ifu_rst, 4);
+  npc_pmem_read (pc_next, ins, ifu_rst, 4);
 end
+
+assign o_ins = ins; 
 
 endmodule

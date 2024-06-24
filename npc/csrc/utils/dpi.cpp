@@ -1,5 +1,6 @@
 #include "verilated_dpi.h"
 #include <memory/paddr.h>
+#include <cpu/difftest.h>
 
 extern "C" int if_ebrk(int ins) {
   if(ins == 0x100073) //ebreak;
@@ -36,4 +37,14 @@ extern "C" void npc_pmem_write(int waddr, int wdata, int wen, int len){
   }
   // printf("waddr: 0x%08x\n", waddr);
   return ;
+}
+extern "C" void store_skip(int addr){
+  #ifdef CONFIG_DIFFTEST
+  if(!in_pmem(addr))
+    difftest_skip_ref();
+    return ;
+  #else
+    return ;
+  #endif
+
 }

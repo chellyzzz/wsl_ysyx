@@ -22,6 +22,7 @@ static IOMap maps[NR_MAP] = {};
 static int nr_map = 0;
 
 static IOMap* fetch_mmio_map(paddr_t addr) {
+  // printf("trigger fetch_mmio_map at 0x%x\n", cpu.pc);
   int mapid = find_mapid_by_addr(maps, nr_map, addr);
   return (mapid == -1 ? NULL : &maps[mapid]);
 }

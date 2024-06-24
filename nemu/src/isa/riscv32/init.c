@@ -18,13 +18,22 @@
 
 // this is not consistent with uint8_t
 // but it is ok since we do not access the array directly
+// static const uint32_t img [] = {
+//   0x00000297,  // auipc t0,0
+//   0x00028823,  // sb  zero,16(t0)
+//   0x0102c503,  // lbu a0,16(t0)
+//   0x00100073,  // ebreak (used as nemu_trap)
+//   0xdeadbeef,  // some data
+// };
+
 static const uint32_t img [] = {
-  0x00000297,  // auipc t0,0
-  0x00028823,  // sb  zero,16(t0)
-  0x0102c503,  // lbu a0,16(t0)
+  0xfff78793,  // addi a5, a5, 0xfff
+  0x02000713,  // addi a4, zero, 32
+  0x00e7d7b3,  // srl	a5,a5,a4
   0x00100073,  // ebreak (used as nemu_trap)
   0xdeadbeef,  // some data
 };
+
 
 static void restart() {
   /* Set the initial program counter. */
