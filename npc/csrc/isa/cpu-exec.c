@@ -116,10 +116,6 @@ void exec_once(Decode *s){
 }
 
 static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
-        if(cpu.pc == 0x8000097c){
-          isa_reg_display();
-          printf("//\n");
-        }
         int flag = 0;
         #ifdef CONFIG_DIFFTEST
           if(!difftest_step(s->pc, s->dnpc)) {

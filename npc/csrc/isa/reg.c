@@ -37,11 +37,11 @@ void isa_reg_display() {
 }
 
 void isa_csr_display(){
-  // for(int i = 0;i < sizeof(csrs)/sizeof(csrs[0]); i++){
-  //   word_t *ptr = (word_t *)&cpu.csr + i;
-  //   printf("%3s: 0x%08x\t", csrs[i], *ptr);
-  //   if((i+1) % 4 == 0) printf("\n");
-  // }
+  for(int i = 0;i < sizeof(csrs)/sizeof(csrs[0]); i++){
+    word_t *ptr = (word_t *)&cpu.csr + i;
+    printf("%3s: 0x%08x\t", csrs[i], *ptr);
+    if((i+1) % 4 == 0) printf("\n");
+  }
 }
 
 bool diff_checkregs(CPU_state *ref_r, vaddr_t pc) {
@@ -52,22 +52,7 @@ bool diff_checkregs(CPU_state *ref_r, vaddr_t pc) {
       printf("error at pc = 0x%08x, ref[%2d]=0x%08x, dut[%2d]=0x%08x\n", cpu.pc, i, ref_r->gpr[i], i, cpu.gpr[i]);
       flag = false;
     }
-  //   if(ref_r->pc == 0x8000003c){
-  //     printf("a0 = 0x%08x\n", cpu.gpr[10]);
-  // }
   }
-    if(ref_r->pc == 0x80000038){
-      printf("pc = 0x%08x\n", cpu.pc);
-      printf("cpu a0 = 0x%08x\n", cpu.gpr[10]);
-      printf("ref a0 = 0x%08x\n", ref_r->gpr[10]);
-      printf("\n\n");
-    }
-        if(ref_r->pc == 0x8000003c){
-      printf("pc = 0x%08x\n", cpu.pc);
-      printf("cpu a0 = 0x%08x\n", cpu.gpr[10]);
-      printf("ref a0 = 0x%08x\n", ref_r->gpr[10]);
-      printf("\n\n");
-    }
   if(ref_r->pc != cpu.pc){
       printf("error at pc = 0x%08x, ref_pc = 0x%08x\n", cpu.pc, ref_r->pc);
       flag = false;

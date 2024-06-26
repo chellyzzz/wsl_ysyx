@@ -277,7 +277,7 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "step program n times,default n=1", cmd_si },
-  { "info", "Print -r Register Status -w monitor point -m memory trace", cmd_info },
+  { "info", "Print -r Register Status -w monitor point -m memory trace -csr csr regs", cmd_info },
   { "d", "delete monitor point n", cmd_d },
   { "w", "create watchpoint if CONFIG_WP enabled", cmd_w },
   { "x", "scan memory", cmd_x },
@@ -324,6 +324,7 @@ void assert_fail_msg() {
       iringbuf_print();
       IFDEF(CONFIG_MTRACE, print_out_of_bound());
       isa_reg_display();
+      isa_csr_display();
     }
   #endif
 }
