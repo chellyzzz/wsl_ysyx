@@ -9,7 +9,7 @@ module ysyx_23060124_csr_RegisterFile (
   input [`ysyx_23060124_ISA_WIDTH-1:0] i_pc,
   input [`ysyx_23060124_CSR_ADDR-1:0] csr_addr,
   input [`ysyx_23060124_ISA_WIDTH-1:0] csr_wdata,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mret_a7,
+  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mret_a5,
   output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mcasue,
   output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mstatus,
   output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mepc,
@@ -31,14 +31,14 @@ always @(posedge clk) begin
     end
     if(i_ecall)begin
         mepc <= i_pc;
-        mcause <= i_mret_a7;
+        mcause <= i_mret_a5;
         mstatus[7] <= mstatus[3];
         mstatus[12:11] <= 2'b11;
         mstatus[3] <= 1'b0;
     end
     if(i_mret)begin
         mstatus[3] <= mstatus[7];
-        mstatus[7] <= 1'b0;
+        mstatus[7] <= 1'b1;
         mstatus[12:11] <= 2'b0;
     end
 end

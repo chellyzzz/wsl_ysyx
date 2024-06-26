@@ -22,7 +22,7 @@ wire [`ysyx_23060124_ISA_WIDTH-1:0]csr_rd;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] res;
 //mret ecall
 wire [`ysyx_23060124_ISA_WIDTH-1:0] csr_rs2;
-wire [`ysyx_23060124_ISA_WIDTH-1:0] mcause, mstatus, mepc, mtvec, mret_a7;
+wire [`ysyx_23060124_ISA_WIDTH-1:0] mcause, mstatus, mepc, mtvec, mret_a5;
 wire [`ysyx_23060124_OPT_WIDTH-1:0] exu_opt, load_opt, store_opt, brch_opt;
 wire wen, csr_wen;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] pc_next;
@@ -43,7 +43,7 @@ ysyx_23060124_RegisterFile regfile1(
   .raddr2(addr_rs2),
   .rdata1(rs1),
   .rdata2(rs2),
-  .o_mret_a7(mret_a7),
+  .o_mret_a5(mret_a5),
   .wen(wen),
   .a0_zero(a0_zero)
 );
@@ -57,7 +57,7 @@ ysyx_23060124_csr_RegisterFile Csrs(
   .i_pc(pc_next),
   .csr_addr(csr_addr),
   .csr_wdata(csr_rd),
-  .i_mret_a7(mret_a7),
+  .i_mret_a5(mret_a5),
   .o_mcasue(mcause),
   .o_mstatus(mstatus),
   .o_mepc(mepc),

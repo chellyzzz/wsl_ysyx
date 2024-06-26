@@ -54,6 +54,26 @@ static vaddr_t *CPU_CSRs(word_t imm) {
         } \
     } while (0)
 
+void ecall(vaddr_t* dnpc, vaddr_t pc) {
+  bool success = true;
+  #ifdef CONFIG_TARGET_SHARE
+    int a5 = isa_reg_str2val("a5", &success);
+    if (success) {
+        *dnpc = isa_raise_intr(a5, pc);
+    } else {
+            panic("a5 value error");
+    }
+  #else
+    int a7 = isa_reg_str2val("a7", &success);
+    if (success) {
+        *dnpc = isa_raise_intr(a7, pc);
+    } else {
+            panic("a7 value error");
+    }
+  #endif
+
+}
+
 // set mie = mpie
 // set mpie = 1
 //set mpp to 0
@@ -164,7 +184,7 @@ static int decode_exec(Decode *s) {
     INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, t = CSR(imm); CSR(imm) = src1 | t; R(rd) = t);
 
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, ECALL(s->dnpc));  //depend on a7
+    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, ecall(&s->dnpc, s->pc));  //depend on a7 or a5
     INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, MRET(s->dnpc));  //recover from epc
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
 
