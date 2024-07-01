@@ -26,11 +26,18 @@
 static int is_batch_mode = false;
 
 void init_regex();
-void init_wp_pool();
+#ifdef CONFIG_WP
 void init_wp_pool();
 void wp_display();
 void wp_create(char *args, word_t res);
 void wp_delete(int num);
+
+#else 
+void init_wp_pool() {};
+void wp_display() {};
+void wp_create(char *args, word_t res) {};
+void wp_delete(int num) {};
+#endif
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -70,7 +77,6 @@ static int cmd_si(char *args) {
 }
 
 static int cmd_info(char *args) {
-
   if(args==NULL){
     printf("no info parameters!\n");
     return 1;
@@ -85,9 +91,15 @@ static int cmd_info(char *args) {
   #endif
   if(strcmp(args,"csr")==0) {
     isa_csr_display();
-  }  
+  }
+  #ifdef CONFIG_MTRACE
+  if(strcmp(args,"m")==0) {
+    print_out_of_bound();
+  }
+  #endif
   return 0;
 }
+
 
 static int cmd_d(char *args) {
   
@@ -265,7 +277,7 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si", "step program n times,default n=1", cmd_si },
-  { "info", "Print -r Register Status -w monitor point", cmd_info },
+  { "info", "Print -r Register Status -w monitor point -m memory trace -csr csr regs", cmd_info },
   { "d", "delete monitor point n", cmd_d },
   { "w", "create watchpoint if CONFIG_WP enabled", cmd_w },
   { "x", "scan memory", cmd_x },
@@ -312,6 +324,7 @@ void assert_fail_msg() {
       iringbuf_print();
       IFDEF(CONFIG_MTRACE, print_out_of_bound());
       isa_reg_display();
+      isa_csr_display();
     }
   #endif
 }
@@ -360,6 +373,9 @@ int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* v
 
     if (i == NR_CMD) { printf("Unknown command '%s'\n", cmd); }
   }
+  //should not reach here;
+  assert(0);
+  return 0;
 }
 
 void init_sdb() {

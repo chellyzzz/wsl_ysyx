@@ -31,8 +31,12 @@ static inline bool in_pmem(paddr_t addr) {
   return addr - CONFIG_MBASE < CONFIG_MSIZE;
 }
 
+static inline bool in_mem_npc(paddr_t addr) {
+  paddr_t addr1 = addr - CONFIG_MBASE;
+  return addr1 < CONFIG_MSIZE && addr1 >= 0; 
+}
+
 word_t paddr_read(paddr_t addr, int len);
 void paddr_write(paddr_t addr, int len, word_t data);
-void print_out_of_bound();
 
 #endif

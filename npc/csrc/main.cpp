@@ -15,18 +15,24 @@ VerilatedVcdC* vcd = new VerilatedVcdC;
 
 
 void init_trace(){
+    #ifdef CONFIG_WAVE
     Verilated::traceEverOn(true);
     top->trace(vcd, 0);
     vcd->open("build/wave.vcd"); // 设置输出的文件
+    #endif
     top->i_rst_n = !0;
     top->clk = 0;
     top->eval();
+    #ifdef CONFIG_WAVE
     contextp->timeInc(1);
     vcd->dump(contextp->time());
+    #endif
     top->clk = 1;
     top->eval();
+    #ifdef CONFIG_WAVE
     contextp->timeInc(1);
     vcd->dump(contextp->time());
+    #endif
 }
 
 void end_wave(){

@@ -25,7 +25,7 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    * Then return the address of the interrupt/exception vector.
    */
   //set mpie = mie
-  //set mpp = M mode
+  //set mpp = M mode M mode = 11
   //set mie = 0
   int mie = cpu.csr.mstatus & MSTATUS_MIE;
   cpu.csr.mstatus = (cpu.csr.mstatus | MSTATUS_MPIE) & (mie << 4); 

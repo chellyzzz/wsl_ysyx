@@ -47,4 +47,9 @@ void dtrace_write(paddr_t addr, int len, word_t data, IOMap *map);
 void etrace_print(word_t NO, vaddr_t epc, vaddr_t mtvec, word_t mstatus);
 #endif
 
+#ifdef CONFIG_MTRACE
+void print_out_of_bound();
+void mtrace_push(paddr_t addr, int len, paddr_t pc, bool is_write, word_t wdata);
+#endif
+
 #endif

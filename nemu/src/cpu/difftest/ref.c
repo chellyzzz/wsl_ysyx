@@ -26,19 +26,24 @@ __EXPORT void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction)
   } 
 }
 
-__EXPORT void difftest_regcpy(void *dut, bool direction) {
+__EXPORT void difftest_regcpy(void *dut, bool direction, vaddr_t skip_addr) {
   CPU_state *dut_reg = (CPU_state*) dut;
-
   if(direction == DIFFTEST_TO_REF) {
     for(int i = 0; i < 32; i++){
       cpu.gpr[i] = dut_reg->gpr[i];
     }
-    cpu.pc = dut_reg->pc;
     cpu.csr.mtvec = dut_reg->csr.mtvec;
     cpu.csr.mepc = dut_reg->csr.mepc;
     cpu.csr.mstatus = dut_reg->csr.mstatus;
     cpu.csr.mcause = dut_reg->csr.mcause;
-  } 
+    if(skip_addr != 0){
+      // printf("regcpy skip target addr: %x at 0x%x\n", skip_addr, cpu.pc);
+      cpu.pc = skip_addr;
+    }
+    else {
+      cpu.pc = dut_reg->pc;
+    }
+  }
   else {
     for(int i = 0; i < 32; i++){
       dut_reg->gpr[i] = cpu.gpr[i];

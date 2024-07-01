@@ -14,8 +14,11 @@ module ysyx_23060124_idu (
   output reg [`ysyx_23060124_OPT_WIDTH-1:0] o_brch_opt,
   output reg o_wen,
   output reg o_csr_wen,
+  output reg o_csrr,
   output reg [`ysyx_23060124_EXU_SEL_WIDTH-1:0] o_src_sel,
   output o_if_unsigned,
+  output o_mret,
+  output o_ecall,
   output o_brch,
   output o_jal,
   output o_jalr
@@ -40,6 +43,7 @@ begin
   o_rd  = `ysyx_23060124_REG_ADDR'b0;
   o_wen = 1'b0;
   o_csr_wen = 1'b0;
+  o_csrr =  1'b0;
   id_err = 3'b0;
   o_if_unsigned = 1'b0;
   case(opcode)
@@ -52,7 +56,7 @@ begin
     `ysyx_23060124_TYPE_JALR:   begin o_imm = {{12{ins[31]}},ins[31:20]};       o_rs1 = rs1; o_rd = rd;              o_wen = 1'b1; end
     `ysyx_23060124_TYPE_B:      begin o_imm = {{20{ins[31]}},ins[7],ins[30:25],ins[11:8],1'b0}; o_rs1 = rs1; o_rs2 = rs2;  end
     `ysyx_23060124_TYPE_S:      begin o_imm = {{20{ins[31]}},ins[31:25],ins[11:7]}; o_rs1 = rs1; o_rs2 = rs2; end
-    `ysyx_23060124_TYPE_EBRK:   begin o_csr_addr = {{20{ins[31]}},ins[31:20]};       o_rd = rd; o_rs1 = rs1;; end
+    `ysyx_23060124_TYPE_EBRK:   begin o_csr_addr = ins[31:20];       o_rd = rd; o_rs1 = rs1;; end
     default: id_err[0] = i_rst_n ? 1'b1 : 1'b0; //opc_err
   endcase
 end
@@ -117,13 +121,15 @@ begin
     // CSR
     `ysyx_23060124_TYPE_EBRK: begin 
       case(func3) 
-        `ysyx_23060124_FUN3_CSRRW: begin o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM;  o_csr_wen = 1'b1; end
-        `ysyx_23060124_FUN3_CSRRS: begin o_exu_opt = `ysyx_23060124_OPT_EXU_OR; o_src_sel = `ysyx_23060124_EXU_SEL_REG;  o_csr_wen = 1'b1; end
+        `ysyx_23060124_FUN3_CSRRW: begin o_exu_opt = `ysyx_23060124_OPT_EXU_ADD; o_src_sel = `ysyx_23060124_EXU_SEL_IMM;  o_csr_wen = 1'b1; o_wen = 1'b1; end
+        `ysyx_23060124_FUN3_CSRRS: begin o_exu_opt = `ysyx_23060124_OPT_EXU_OR; o_src_sel = `ysyx_23060124_EXU_SEL_REG;  o_csr_wen = 1'b1; o_wen = 1'b1; end
       endcase 
      end
   endcase
 end
 
+assign o_ecall = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_ECALL)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ? 1:0;
+assign o_mret = (opcode == `ysyx_23060124_TYPE_EBRK)&&(rs2 == `ysyx_23060124_RS2_MRET)&&(func3 == `ysyx_23060124_FUN3_EXCPT) ?  1:0;
 //lsu
 always @(ins)begin
   o_load_opt = 0;
@@ -166,9 +172,10 @@ always @(ins)begin
     end
   endcase
 end
-assign o_brch = (opcode == `ysyx_23060124_TYPE_B)? 1:0;
-assign o_jal  = (opcode == `ysyx_23060124_TYPE_JAL)? 1:0;
-assign o_jalr = (opcode == `ysyx_23060124_TYPE_JALR)? 1:0;
+assign o_brch = (opcode == `ysyx_23060124_TYPE_B) ? 1:0;
+assign o_jal  = (opcode == `ysyx_23060124_TYPE_JAL) ? 1:0;
+assign o_jalr = (opcode == `ysyx_23060124_TYPE_JALR) ? 1:0;
+
 
 always@(ins)begin
     if(i_rst_n & |ins & id_err[0]) $display("\n----------ins decode error, ins = %x, opcode = %b---------------\n", ins, opcode);

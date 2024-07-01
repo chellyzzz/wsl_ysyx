@@ -54,6 +54,26 @@ static vaddr_t *CPU_CSRs(word_t imm) {
         } \
     } while (0)
 
+void ecall(vaddr_t* dnpc, vaddr_t pc) {
+  bool success = true;
+  #ifdef CONFIG_TARGET_SHARE
+    int a5 = isa_reg_str2val("a5", &success);
+    if (success) {
+        *dnpc = isa_raise_intr(a5, pc);
+    } else {
+            panic("a5 value error");
+    }
+  #else
+    int a7 = isa_reg_str2val("a7", &success);
+    if (success) {
+        *dnpc = isa_raise_intr(a7, pc);
+    } else {
+            panic("a7 value error");
+    }
+  #endif
+
+}
+
 // set mie = mpie
 // set mpie = 1
 //set mpp to 0
@@ -157,14 +177,14 @@ static int decode_exec(Decode *s) {
     INSTPAT("0000000 ????? ????? 111 ????? 01100 11", and    , R, R(rd) = src1 & src2);
     INSTPAT("0000000 ????? ????? 010 ????? 01100 11", slt    , R, R(rd) = ((sword_t)src1 < (sword_t)src2));
     INSTPAT("0100000 ????? ????? 101 ????? 01100 11", sra    , R, R(rd) = (sword_t)src1 >> BITS(src2, 4, 0));
-    INSTPAT("0000000 ????? ????? 101 ????? 01100 11", srl    , R, R(rd) = src1 >> BITS(src2, 4, 0));
+    INSTPAT("0000000 ????? ????? 101 ????? 01100 11", srl    , R, R(rd) = (word_t)src1 >> BITS(src2, 4, 0));
     INSTPAT("0000001 ????? ????? 011 ????? 01100 11", mulhu  , R, R(rd) = ((uint64_t)src1 * (uint64_t)src2) >> 32);
     //
     INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, t = CSR(imm); CSR(imm) = src1; R(rd) = t);
     INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, t = CSR(imm); CSR(imm) = src1 | t; R(rd) = t);
 
     INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
-    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, ECALL(s->dnpc));  //depend on a7
+    INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , N, ecall(&s->dnpc, s->pc));  //depend on a7 or a5
     INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, MRET(s->dnpc));  //recover from epc
     INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
 

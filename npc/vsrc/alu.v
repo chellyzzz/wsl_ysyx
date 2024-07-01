@@ -23,9 +23,9 @@ always @(src1 or src2 or opt) begin
     `ysyx_23060124_OPT_EXU_AND: begin res = src1 & src2; end
     `ysyx_23060124_OPT_EXU_OR:  begin res = src1 | src2; end  
     `ysyx_23060124_OPT_EXU_XOR: begin res = src1 ^ src2; end
-    `ysyx_23060124_OPT_EXU_SLL: begin res = src1 << src2[5:0]; end
-    `ysyx_23060124_OPT_EXU_SRL: begin res = src1 >> src2[5:0]; end
-    `ysyx_23060124_OPT_EXU_SRA: begin res = {{{32{src1[31]}},src1} >> src2[5:0]}[31:0]; end
+    `ysyx_23060124_OPT_EXU_SLL: begin res = src1 << src2[4:0]; end
+    `ysyx_23060124_OPT_EXU_SRL: begin res = src1 >> src2[4:0]; end
+    `ysyx_23060124_OPT_EXU_SRA: begin res = {{{32{src1[31]}},src1} >> src2[4:0]}[31:0]; end
     `ysyx_23060124_OPT_EXU_SLT: begin 
       if(if_unsigned) begin
         res = ({1'b0,src1} < {1'b0,src2}) ? 1'b1 : 1'b0; end

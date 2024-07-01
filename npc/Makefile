@@ -28,7 +28,7 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 C_FLAGS += -CFLAGS "$(INCFLAGS)"
 C_FLAGS += -CFLAGS "-D__GUEST_ISA__=riscv32"
 
-IMAGE ?= $(NEMU_HOME)/am-kernels/tests/cpu-tests/build/dummy-riscv32e-npc.bin
+IMAGE ?= $(NEMU_HOME)/../am-kernels/tests/cpu-tests/build/dummy-riscv32e-npc.bin
 
 # Read the CONFIG_DIFFTEST definition from autoconf.h
 CONFIG_DIFFTEST := $(shell grep -E '^#define CONFIG_DIFFTEST[ \t]+1' $(NPC_HOME)/csrc/include/generated/autoconf.h | awk '{print $$3}')
@@ -38,8 +38,8 @@ ifeq ($(CONFIG_DIFFTEST), 1)
     NPC_FLAGS += -d $(NEMU_HOME)/build/riscv32-nemu-interpreter-so 
 endif
 
-# NPC_FLAGS += -b
-NEMUFLAGS += -e $(IMAGE).elf
+NPC_FLAGS += -b
+# NPC_FLAGS += -e $(IMAGE).elf
 NPC_FLAGS += -i $(IMAGE)
 NPC_FLAGS += -l $(BUILD_DIR)/npc-log.txt
 
