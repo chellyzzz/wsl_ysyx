@@ -218,7 +218,7 @@ typedef struct {
     bool is_write;  
 } MemoryTrace;
 
-#define MTRACE_SIZE 5
+#define MTRACE_SIZE 10
 static MemoryTrace memory_traces[MTRACE_SIZE];
 static int num_traces = 0;
 
@@ -241,29 +241,29 @@ void print_out_of_bound() {
   if(num_traces <= MTRACE_SIZE){
     for(i = 0; i < num_traces; i++){
       if(i == num_traces - 1){
-        printf("--> %s: " FMT_PADDR ",Wdata = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);        
+        printf("--> %s: " FMT_PADDR ", data = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);        
       }
-      else printf("    %s: " FMT_PADDR ",Wdata = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
+      else printf("    %s: " FMT_PADDR ", data = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
     }
   }
   else {
     if(num_traces % MTRACE_SIZE == 0){
       for(i = num_traces % MTRACE_SIZE; i < MTRACE_SIZE-1; i++){
-        printf("    %s: " FMT_PADDR ",Wdata = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
+        printf("    %s: " FMT_PADDR ", data = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
       }
-        printf("--> %s: " FMT_PADDR ",Wdata = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
+        printf("--> %s: " FMT_PADDR ", data = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
 
     }
     else{
       for(i = num_traces % MTRACE_SIZE; i < MTRACE_SIZE; i++){
-        printf("    %s: " FMT_PADDR ",Wdata = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
+        printf("    %s: " FMT_PADDR ", data = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
       }
 
       for(i = 0; i < num_traces % MTRACE_SIZE; i++){
         if(i == num_traces % MTRACE_SIZE - 1){
-          printf("--> %s: " FMT_PADDR ",Wdata = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
+          printf("--> %s: " FMT_PADDR ", data = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
         }
-        else printf("    %s: " FMT_PADDR ",Wdata = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
+        else printf("    %s: " FMT_PADDR ", data = "FMT_WORD" Length %d at 0x%x\n", memory_traces[i].is_write ? "Waddr" : "Raddr", memory_traces[i].addr, memory_traces[i].wdata, memory_traces[i].len, memory_traces[i].pc);
       }
     }
   }

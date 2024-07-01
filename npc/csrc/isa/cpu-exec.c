@@ -100,8 +100,10 @@ void decode_pc(Decode* s){
 void exec_once(Decode *s){
     top->clk = 0;
     top->eval();
+    #ifdef CONFIG_WAVE
     contextp->timeInc(1);
     vcd->dump(contextp->time());
+    #endif  
     top->clk = 1;
     top->eval();
     reg_update();
@@ -110,8 +112,10 @@ void exec_once(Decode *s){
         disasm_pc(s);
         iringbuf_push(s);
     #endif
+    #ifdef CONFIG_WAVE
     contextp->timeInc(1);
     vcd->dump(contextp->time());
+    #endif
     return;
 }
 

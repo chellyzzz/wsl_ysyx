@@ -18,7 +18,7 @@ extern "C" void check_rst(bool rst_flag){
 }
 
 extern "C" void npc_pmem_read(int raddr,int *rdata, int ren, int len){
-  raddr = raddr & ~0x3u;  //clear low 2bit for 4byte align.
+  // raddr = raddr & ~0x3u;  //clear low 2bit for 4byte align.
   if (ren){
     // printf("raddr: 0x%08x, len : %d\n", raddr, len);
     *rdata = paddr_read(raddr, 4);
@@ -40,7 +40,7 @@ extern "C" void npc_pmem_write(int waddr, int wdata, int wen, int len){
 }
 extern "C" void store_skip(int addr){
   #ifdef CONFIG_DIFFTEST
-  if(!in_pmem(addr))
+  if(!in_mem_npc(addr))
     difftest_skip_ref();
     return ;
   #else

@@ -10,7 +10,7 @@ Context* __am_irq_handle(Context *c) {
     Event ev = {0};
     // if(c->mcause == -1) printf("c->mcause = %d\n", c->mcause);
     switch (c->mcause) {
-      case 11: ev.event = EVENT_YIELD; break;
+      case 11: ev.event = EVENT_YIELD; c->mepc +=4; break;
       default: ev.event = EVENT_ERROR; break;
     }
     c = user_handler(ev, c);
@@ -41,8 +41,8 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 
 void yield() {
 
-#ifdef __riscv_e
-  asm volatile("li a5, -1; ecall");
+#if defined(__riscv_e) || defined(CONFIG_TARGET_SHARE)
+  asm volatile("li a5, 0xb; ecall");
 #else
 
   // asm volatile("li a7, -1; ecall");

@@ -8,9 +8,8 @@ Context* __am_irq_handle(Context *c) {
   // printf("c gpr[0] = %d\n", c->gpr[0]);
   if (user_handler) {
     Event ev = {0};
-    // if(c->mcause == -1) printf("c->mcause = %d\n", c->mcause);
     switch (c->mcause) {
-      case 11: ev.event = EVENT_YIELD; break;
+      case 11: ev.event = EVENT_YIELD; c->mepc +=4; break;
       default: ev.event = EVENT_ERROR; break;
     }
     c = user_handler(ev, c);

@@ -2,6 +2,7 @@
 
 module ysyx_23060124_RegisterFile (
   input clk,
+  input i_ecall,
   input i_mret,
   input [`ysyx_23060124_ISA_WIDTH-1:0] wdata,
   input [`ysyx_23060124_REG_ADDR-1:0] waddr,
@@ -23,7 +24,7 @@ module ysyx_23060124_RegisterFile (
   assign rdata2 = (raddr2 == 0) ? 0 : rf[raddr2];
 
   assign a0_zero = ~|rf[10]; 
-  assign o_mret_a5 = i_mret ? rf[15] : 0;
+  assign o_mret_a5 = i_ecall ? rf[15] : 0;
 
   // always @(raddr1 or raddr2) begin
   //   $display("raddr1 = 0x%h", raddr1);

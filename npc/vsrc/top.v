@@ -36,6 +36,7 @@ wire if_csrr;  // if csrrw or csrrs, then 1;
 
 ysyx_23060124_RegisterFile regfile1(
   .clk(clk),
+  .i_ecall(ecall),
   .i_mret(mret),
   .waddr(addr_rd),
   .wdata(rd),

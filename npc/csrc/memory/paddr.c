@@ -65,7 +65,7 @@ word_t paddr_read(paddr_t addr, int len) {
     data = pmem_read(addr, len);
 
     #ifdef CONFIG_MTRACE
-      if(addr != cpu.pc + 4) mtrace_push(addr, len, cpu.pc, false, 0);
+      if(addr != cpu.pc + 4) mtrace_push(addr, len, cpu.pc, false, data);
     #endif
     return data;
 

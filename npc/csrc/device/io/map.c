@@ -17,6 +17,7 @@
 #include <memory/host.h>
 #include <memory/vaddr.h>
 #include <device/map.h>
+#include <cpu/trace.h>
 
 #define IO_SPACE_MAX (2 * 1024 * 1024)
 
@@ -36,6 +37,7 @@ uint8_t* new_space(int size) {
 
 static void check_bound(IOMap *map, paddr_t addr, int is_write) {
   if (map == NULL) {
+    print_out_of_bound();
     printf("is_write: %s\n", is_write ? "write":"read");
     Assert(map != NULL, "address (" FMT_PADDR ") is out of bound at pc = " FMT_WORD, addr, cpu.pc);
   } else {
