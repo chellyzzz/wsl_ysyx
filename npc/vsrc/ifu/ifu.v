@@ -7,7 +7,7 @@ module ysyx_23060124_ifu (
   input i_post_ready,
   output [`ysyx_23060124_ISA_WIDTH-1:0] o_ins,
   output [`ysyx_23060124_ISA_WIDTH-1:0] o_pc_next,
-  output o_post_valid
+  output reg o_post_valid
 );
 
 reg [`ysyx_23060124_ISA_WIDTH - 1:0] ins;
@@ -17,27 +17,30 @@ reg [`ysyx_23060124_ISA_WIDTH - 1:0] ins;
 //   npc_pmem_read (i_pc, ins, ifu_rst, 4);
 // end
 reg [`ysyx_23060124_ISA_WIDTH-1:0] reg_pc_next;
+
 SRAM ifu_sram (
     .clk(clk),
     .reset(ifu_rst),
     .raddr(i_pc),
     .ren(~o_post_valid),
-    .valid(o_post_valid),
-    .rdata(ins),
-    .o_pc(reg_pc_next)
+    .rdata(ins)
 );
 
-// ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) ifu2idu_pc_next(
-//   .clk(clk),
-//   .rst(ifu_rst),
-//   .din(i_pc),
-//   .dout(reg_pc_next),
-//   .wen(o_post_valid)
-// );
+always @(posedge clk or negedge ifu_rst) begin
+    if (~ifu_rst) begin
+        reg_pc_next <= 32'h80000000;
+        o_post_valid <= 1'b0;
+    end else begin
+        if(~o_post_valid) begin
+            reg_pc_next <= i_pc;    
+            o_post_valid <= 1'b1;        
+        end
+        else begin
+            o_post_valid <= 1'b0;
+        end
+    end
+end
 
 assign o_ins = i_post_ready && o_post_valid ? ins : o_ins;
-// assign o_pc_next = i_post_ready & o_post_valid ? reg_pc_next : 
-//                    (~ifu_rst ? 32'h80000000 : o_pc_next);
 assign o_pc_next = reg_pc_next;
-// assign o_ins = ins;
 endmodule
