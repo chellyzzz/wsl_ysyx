@@ -3,6 +3,10 @@
 module ysyx_23060124_exu(
   input clk,
   input i_rst_n,
+  //
+  input i_post_ready,
+  input i_pre_valid,
+  //
   input csr_src_sel,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src1,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src2,
@@ -16,7 +20,10 @@ module ysyx_23060124_exu(
   input [`ysyx_23060124_OPT_WIDTH - 1:0] brch_opt,
   input [`ysyx_23060124_EXU_SEL_WIDTH - 1:0] i_src_sel,
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_res,
-  output o_zero
+  output o_zero,
+  //
+  output o_post_valid,
+  output o_pre_ready
 );
 
 // always @(src1 or src2) begin
@@ -24,11 +31,13 @@ module ysyx_23060124_exu(
 //   $display("src2 = 0x%h", src2);
 //   $display("src_sel  = 0x%h", i_src_sel);
 // end
+assign o_pre_ready = i_post_ready;
+assign o_post_valid = i_pre_valid;
 
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] sel_src2;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] alu_src1,alu_src2;
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] alu_res, lsu_res, brch_res;
-wire carry;
+wire [`ysyx_23060124_ISA_WIDTH - 1:0] alu_res, lsu_res;
+wire carry, brch_res;
 
 assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
 

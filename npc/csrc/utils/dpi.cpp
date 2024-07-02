@@ -23,6 +23,7 @@ extern "C" void npc_pmem_read(int raddr,int *rdata, int ren, int len){
     // printf("raddr: 0x%08x, len : %d\n", raddr, len);
     *rdata = paddr_read(raddr, 4);
   }
+  else *rdata = 0;
   return ;
 }
 

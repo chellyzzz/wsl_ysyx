@@ -1,9 +1,11 @@
 `include "para_defines.v"
 
-module top(clk, i_rst_n);
+module top
+(
+  input clk,
+  input i_rst_n
+);
 
-input clk;
-input i_rst_n;
 wire rst_n_sync;
 
 ysyx_23060124_stdrst u_stdrst(
@@ -25,7 +27,7 @@ wire [`ysyx_23060124_ISA_WIDTH-1:0] csr_rs2;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] mcause, mstatus, mepc, mtvec, mret_a5;
 wire [`ysyx_23060124_OPT_WIDTH-1:0] exu_opt, load_opt, store_opt, brch_opt;
 wire wen, csr_wen;
-wire [`ysyx_23060124_ISA_WIDTH-1:0] pc_next;
+wire [`ysyx_23060124_ISA_WIDTH-1:0] pc_next, ifu_pc_next;
 wire [`ysyx_23060124_EXU_SEL_WIDTH-1:0] i_src_sel;
 wire brch,jal,jalr;                    // idu -> pcu.
 wire ecall,mret;                       // idu -> pcu.
@@ -33,6 +35,11 @@ wire zero;                             // exu -> pcu.
 wire a0_zero;                           //  if a0 is zero, a0_zero == 1
 wire if_unsigned;                      // if_unsigned == 1, unsigned; else signed.
 wire if_csrr;  // if csrrw or csrrs, then 1;
+
+//
+wire ifu2idu_valid, idu2ifu_ready;
+wire idu2exu_valid, exu2idu_ready;
+wire exu2wbu_valid, wbu2exu_ready;
 
 ysyx_23060124_RegisterFile regfile1(
   .clk(clk),
@@ -45,7 +52,7 @@ ysyx_23060124_RegisterFile regfile1(
   .rdata1(rs1),
   .rdata2(rs2),
   .o_mret_a5(mret_a5),
-  .wen(wen),
+  .wen(wen & ifu2idu_valid),
   .a0_zero(a0_zero)
 );
 
@@ -55,11 +62,11 @@ ysyx_23060124_csr_RegisterFile Csrs(
   .csr_wen(csr_wen),
   .i_ecall(ecall),
   .i_mret(mret),
-  .i_pc(pc_next),
+  .i_pc(ifu_pc_next),
   .csr_addr(csr_addr),
   .csr_wdata(csr_rd),
   .i_mret_a5(mret_a5),
-  .o_mcasue(mcause),
+  .o_mcause(mcause),
   .o_mstatus(mstatus),
   .o_mepc(mepc),
   .o_mtvec(mtvec),
@@ -67,15 +74,20 @@ ysyx_23060124_csr_RegisterFile Csrs(
 );
 
 ysyx_23060124_ifu ifu1(
-  .pc_next(pc_next),
+  .i_pc(pc_next),
   .clk(clk),
   .ifu_rst(rst_n_sync),
-  .o_ins(ins)
+  .o_ins(ins),
+  .i_post_ready(idu2ifu_ready),
+  .o_post_valid(ifu2idu_valid),
+  .o_pc_next(ifu_pc_next)
 );
 
 ysyx_23060124_idu idu1(
   .ins(ins),
   .i_rst_n(rst_n_sync),
+  .i_pre_valid(ifu2idu_valid),
+  .i_post_ready(exu2idu_ready),
   .o_imm(imm),
   .o_rd(addr_rd),
   .o_rs1(addr_rs1),
@@ -94,18 +106,22 @@ ysyx_23060124_idu idu1(
   .o_mret(mret),
   .o_brch(brch),
   .o_jal(jal),
-  .o_jalr(jalr)
+  .o_jalr(jalr),
+  .o_pre_ready(idu2ifu_ready),
+  .o_post_valid(idu2exu_valid)
 );
 
 ysyx_23060124_exu exu1(
   .clk(clk),
   .i_rst_n(rst_n_sync),
+  .i_pre_valid(idu2exu_valid),
+  .i_post_ready(wbu2exu_ready),
   .csr_src_sel(csr_wen),
   .src1(rs1),
   .src2(rs2),
   .csr_rs2(csr_rs2),
   .if_unsigned(if_unsigned),
-  .i_pc(pc_next),
+  .i_pc(ifu_pc_next),
   .imm(imm),
   .exu_opt(exu_opt),
   .load_opt(load_opt),
@@ -113,13 +129,16 @@ ysyx_23060124_exu exu1(
   .brch_opt(brch_opt),
   .i_src_sel(i_src_sel),
   .o_res(res),
-  .o_zero(zero)
+  .o_zero(zero),
+  .o_post_valid(exu2wbu_valid),
+  .o_pre_ready(exu2idu_ready)
 );
 
 
-ysyx_23060124_pcu pcu1(
+ysyx_23060124_wbu wbu1(
   .clk(clk),
   .i_rst_pcu(rst_n_sync),
+  .i_pre_valid(exu2wbu_valid),
   .i_brch(brch),
   .i_jal(jal),
   .i_jalr(jalr),
@@ -131,11 +150,13 @@ ysyx_23060124_pcu pcu1(
   .i_mtvec(mtvec),
   .i_csrr_rd(csr_rs2),
   .i_rs1(rs1),
+  .i_pc(ifu_pc_next),
   .i_imm(imm),
   .i_res(res),
   .o_pc_next(pc_next),
   .o_rd(rd),
-  .o_csr_rd(csr_rd)
+  .o_csr_rd(csr_rd),
+  .o_pre_ready(wbu2exu_ready)
 );
 
 import "DPI-C" function bit if_ebrk(input int ins);

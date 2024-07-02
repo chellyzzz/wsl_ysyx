@@ -23,6 +23,7 @@
 // #include "verilated_vcd_c.h"
 
 CPU_state cpu = {};
+int cycles = 0;
 
 #define MAX_INST_TO_PRINT 11
 
@@ -89,7 +90,7 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, Verilate
 void decode_pc(Decode* s){
   s->pc = top->rootp->top__DOT__pc_next;
   s->snpc = top->rootp->top__DOT__pc_next + 4;
-  s->dnpc = top->rootp->top__DOT__pcu1__DOT__pc_next;
+  s->dnpc = top->rootp->top__DOT__wbu1__DOT__pc_next;
   s->isa.inst.val = top->rootp->top__DOT__ifu1__DOT__ins;
   instr = s->isa.inst.val;
   // printf("pc: %lx\n", s->pc); 
@@ -98,6 +99,7 @@ void decode_pc(Decode* s){
 }
 
 void exec_once(Decode *s){
+    cycles ++;
     top->clk = 0;
     top->eval();
     #ifdef CONFIG_WAVE
@@ -200,5 +202,6 @@ void cpu_exec(uint64_t n){
 }
 
 int hit_goodtrap(){
+  // printf("\n train cycles: %d\n", cycles);
   return (cpu.gpr[10] == 0 && instr == 0x100073);
 }

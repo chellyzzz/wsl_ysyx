@@ -3,6 +3,8 @@
 module ysyx_23060124_idu (
   input [`ysyx_23060124_ISA_WIDTH-1:0] ins,
   input i_rst_n, //for sim
+  input i_pre_valid,
+  input i_post_ready,
   output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_imm,
   output reg [`ysyx_23060124_REG_ADDR-1:0] o_rd,
   output reg [`ysyx_23060124_REG_ADDR-1:0] o_rs1,
@@ -21,8 +23,13 @@ module ysyx_23060124_idu (
   output o_ecall,
   output o_brch,
   output o_jal,
-  output o_jalr
+  output o_jalr,
+  output o_pre_ready,
+  output o_post_valid
 );
+
+assign o_pre_ready = i_post_ready;
+assign o_post_valid = i_pre_valid;
 
 wire [2:0] func3  = ins[14:12];
 wire [6:0] opcode  = ins[6:0];

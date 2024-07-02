@@ -24,7 +24,6 @@
 // #include "verilated_vcd_c.h"
 
 static int is_batch_mode = false;
-
 void init_regex();
 #ifdef CONFIG_WP
 void init_wp_pool();

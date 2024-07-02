@@ -1,9 +1,9 @@
 `include "para_defines.v"
 
-module ysyx_23060124_pcu (
+module ysyx_23060124_wbu (
   input clk,
   input i_rst_pcu,
-  input i_clk,
+  input i_pre_valid,
   input i_brch,
   input i_jal,
   input i_jalr,
@@ -11,6 +11,7 @@ module ysyx_23060124_pcu (
   input i_mret,
   input i_ecall,
   input i_zero,
+  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_pc,
   // ecall and mret
   input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mepc,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mtvec,
@@ -22,33 +23,19 @@ module ysyx_23060124_pcu (
   output reg [`ysyx_23060124_ISA_WIDTH - 1:0] o_pc_next,
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_rd,
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_csr_rd,
+  output o_pre_ready
+
 );
 
+// reg tmp_ready;
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] pc_next;
-assign o_rd = i_jal || i_jalr ? o_pc_next + 4 : i_res;
+assign o_rd = i_jal || i_jalr ? i_pc + 4 : i_res;
 assign o_csr_rd = i_res;
-// assign pc_next = o_pc_next + 4;
-assign pc_next = i_jal ? (o_pc_next + i_imm) : (i_jalr ? (i_rs1 + i_imm) : (i_brch && i_res ? o_pc_next + i_imm : (i_ecall ? i_mtvec :(i_mret ? i_mepc : o_pc_next + 4) )));
-// always @(*) begin
-//     if (i_jal) begin
-//         pc_next = i_pc + i_imm;
-//     end 
-//     else if (i_jalr) begin
-//         pc_next = i_rs1 + i_imm;
-//     end 
-//     else if(i_ecall) begin
-//         pc_next = i_mtvec;
-//     end
-//     else if(i_mret) begin
-//         pc_next = i_mepc;
-//     end
-//     else if (i_brch && i_res) begin
-//         pc_next = i_pc + i_imm;
-//     end 
-//     else begin
-//         pc_next = i_pc + 4;
-//     end
-// end
+assign pc_next =    i_jal ? (i_pc + i_imm) : 
+                    (i_jalr ? (i_rs1 + i_imm) : 
+                    (i_brch && i_res ? i_pc + i_imm : 
+                    (i_ecall ? i_mtvec :
+                    (i_mret ? i_mepc : i_pc + 4))));
 
 ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_reg(
   .clk(clk),
@@ -57,5 +44,20 @@ ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_r
   .dout(o_pc_next),
   .wen(1)
 );
+
+// always @(posedge clk or negedge i_rst_pcu) begin
+//     if (~i_rst_pcu) begin
+//         tmp_ready <= 1'b1;
+//     end else begin
+//         if(~tmp_ready) begin
+//             tmp_ready <= 1'b1;            
+//         end
+//         else begin
+//             tmp_ready <= 1'b0;
+//         end
+//     end
+// end
+
+assign o_pre_ready = 1'b1;
 
 endmodule

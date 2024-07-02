@@ -9,7 +9,7 @@ module ysyx_23060124_lsu(
   input [`ysyx_23060124_OPT_WIDTH - 1:0] store_opt,
   output reg [`ysyx_23060124_ISA_WIDTH - 1:0] lsu_res
 );
-reg [`ysyx_23060124_ISA_WIDTH - 1:0] tmp_read_res, read_res, store_res;
+reg [`ysyx_23060124_ISA_WIDTH - 1:0] read_res, store_res;
 
 
 import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int len);
@@ -51,27 +51,25 @@ always @(*) begin
     `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 4); end
     endcase
 end
-reg [1:0] load_shift;
 
 always @(*) begin
   // $display("\nREAD DATA at ADDR = 0x%h", alu_res);
   npc_pmem_read(alu_res, read_res, |load_opt, 4);
-  if(|load_opt)begin
-    load_shift = alu_res - (alu_res & ~( 32'b11));
-  end
-  else load_shift = 0;
-  
-  // if(load_shift) begin
-  //   $display("\n-------load address error, addr = %x, load_opt = %b---------\n", alu_res, load_opt);
-  //   $finish;
-  // end
-  // case(load_shift)
-  //   0: begin read_res = tmp_read_res; end
-  //   1: begin read_res = tmp_read_res >> 8; end
-  //   2: begin read_res = tmp_read_res >> 16; end
-  //   3: begin read_res = tmp_read_res >> 24; end
-  //   default: begin read_res = 0; end
-  // endcase
 end
+
+// RegisterFilefortest mem_read(
+//   .clk(i_clk),
+//   .i_ecall(0),
+//   .i_mret(0),
+//   .wdata(lsu_src2),
+//   .waddr(alu_res),
+//   .raddr1(alu_res),
+//   .raddr2(0),
+//   .rdata1(read_res),
+//   .rdata2(0),
+//   .o_mret_a5(0),
+//   .wen(|store_addr),
+//   .a0_zero(0)
+// );
 
 endmodule
