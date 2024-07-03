@@ -35,7 +35,7 @@ wire zero;                             // exu -> pcu.
 wire a0_zero;                           //  if a0 is zero, a0_zero == 1
 wire if_unsigned;                      // if_unsigned == 1, unsigned; else signed.
 wire if_csrr;  // if csrrw or csrrs, then 1;
-
+wire pc_update_en;
 //
 wire ifu2idu_valid, idu2ifu_ready;
 wire idu2exu_valid, exu2idu_ready;
@@ -77,6 +77,7 @@ ysyx_23060124_ifu ifu1(
   .i_pc(pc_next),
   .clk(clk),
   .ifu_rst(rst_n_sync),
+  .i_pc_update(pc_update_en),
   .o_ins(ins),
   .i_post_ready(idu2ifu_ready),
   .o_post_valid(ifu2idu_valid),
@@ -154,6 +155,7 @@ ysyx_23060124_wbu wbu1(
   .i_imm(imm),
   .i_res(res),
   .o_pc_next(pc_next),
+  .o_pc_update(pc_update_en),
   .o_rd(rd),
   .o_csr_rd(csr_rd),
   .o_pre_ready(wbu2exu_ready)
@@ -174,4 +176,5 @@ begin
     $finish;
   end
 end
+
 endmodule

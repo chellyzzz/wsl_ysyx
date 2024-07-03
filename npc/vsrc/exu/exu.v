@@ -31,7 +31,7 @@ module ysyx_23060124_exu(
 //   $display("src2 = 0x%h", src2);
 //   $display("src_sel  = 0x%h", i_src_sel);
 // end
-assign o_pre_ready = i_post_ready;
+assign o_pre_ready = 1'b1;
 assign o_post_valid = i_pre_valid;
 
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] sel_src2;

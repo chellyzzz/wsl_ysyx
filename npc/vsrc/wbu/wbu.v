@@ -23,11 +23,12 @@ module ysyx_23060124_wbu (
   output reg [`ysyx_23060124_ISA_WIDTH - 1:0] o_pc_next,
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_rd,
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_csr_rd,
-  output o_pre_ready
-
+  output o_pre_ready,
+  output o_pc_update
 );
 
 // reg tmp_ready;
+wire wen2ifu;
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] pc_next;
 assign o_rd = i_jal || i_jalr ? i_pc + 4 : i_res;
 assign o_csr_rd = i_res;
@@ -45,19 +46,7 @@ ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_r
   .wen(1)
 );
 
-// always @(posedge clk or negedge i_rst_pcu) begin
-//     if (~i_rst_pcu) begin
-//         tmp_ready <= 1'b1;
-//     end else begin
-//         if(~tmp_ready) begin
-//             tmp_ready <= 1'b1;            
-//         end
-//         else begin
-//             tmp_ready <= 1'b0;
-//         end
-//     end
-// end
-
+assign o_pc_update = (pc_next == o_pc_next);
 assign o_pre_ready = 1'b1;
 
 endmodule

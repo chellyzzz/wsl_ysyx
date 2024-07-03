@@ -9,6 +9,7 @@ module ysyx_23060124_lsu(
   input [`ysyx_23060124_OPT_WIDTH - 1:0] store_opt,
   output reg [`ysyx_23060124_ISA_WIDTH - 1:0] lsu_res
 );
+
 reg [`ysyx_23060124_ISA_WIDTH - 1:0] read_res, store_res;
 
 
@@ -56,20 +57,16 @@ always @(*) begin
   // $display("\nREAD DATA at ADDR = 0x%h", alu_res);
   npc_pmem_read(alu_res, read_res, |load_opt, 4);
 end
-
-// RegisterFilefortest mem_read(
-//   .clk(i_clk),
-//   .i_ecall(0),
-//   .i_mret(0),
-//   .wdata(lsu_src2),
-//   .waddr(alu_res),
-//   .raddr1(alu_res),
-//   .raddr2(0),
-//   .rdata1(read_res),
-//   .rdata2(0),
-//   .o_mret_a5(0),
-//   .wen(|store_addr),
-//   .a0_zero(0)
+// SRAM4LSU LSU_SRAM(
+//     .clk(i_clk),
+//     .rst(i_rst_n),
+//     .raddr(alu_res),
+//     .waddr(store_addr),
+//     .wdata(store_src2),
+//     .ren(|load_opt),
+//     .wen(|store_opt_next),
+//     .rdata(read_res),
+//     .o_post_valid()
 // );
 
 endmodule
