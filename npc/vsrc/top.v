@@ -26,7 +26,7 @@ wire [`ysyx_23060124_ISA_WIDTH-1:0] res;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] csr_rs2;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] mcause, mstatus, mepc, mtvec, mret_a5;
 wire [`ysyx_23060124_OPT_WIDTH-1:0] exu_opt, load_opt, store_opt, brch_opt;
-wire wen, csr_wen;
+wire idu_wen, wbu_wen, csr_wen;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] pc_next, ifu_pc_next;
 wire [`ysyx_23060124_EXU_SEL_WIDTH-1:0] i_src_sel;
 wire brch,jal,jalr;                    // idu -> pcu.
@@ -52,7 +52,7 @@ ysyx_23060124_RegisterFile regfile1(
   .rdata1(rs1),
   .rdata2(rs2),
   .o_mret_a5(mret_a5),
-  .wen(wen & ifu2idu_valid),
+  .wen(wbu_wen),
   .a0_zero(a0_zero)
 );
 
@@ -74,7 +74,7 @@ ysyx_23060124_csr_RegisterFile Csrs(
 );
 
 ysyx_23060124_ifu ifu1(
-  .i_pc(pc_next),
+  .i_pc_next(pc_next),
   .clk(clk),
   .ifu_rst(rst_n_sync),
   .i_pc_update(pc_update_en),
@@ -98,7 +98,7 @@ ysyx_23060124_idu idu1(
   .o_load_opt(load_opt),
   .o_store_opt(store_opt),
   .o_brch_opt(brch_opt),
-  .o_wen(wen),
+  .o_wen(idu_wen),
   .o_csr_wen(csr_wen),
   .o_csrr(if_csrr),
   .o_src_sel(i_src_sel),
@@ -142,11 +142,11 @@ ysyx_23060124_wbu wbu1(
   .i_pre_valid(exu2wbu_valid),
   .i_brch(brch),
   .i_jal(jal),
+  .i_wen(idu_wen),
   .i_jalr(jalr),
   .i_csrr(if_csrr),
   .i_mret(mret),
   .i_ecall(ecall),
-  .i_zero(0),
   .i_mepc(mepc),
   .i_mtvec(mtvec),
   .i_csrr_rd(csr_rs2),
@@ -156,16 +156,15 @@ ysyx_23060124_wbu wbu1(
   .i_res(res),
   .o_pc_next(pc_next),
   .o_pc_update(pc_update_en),
-  .o_rd(rd),
+  .o_rd_wdata(rd),
   .o_csr_rd(csr_rd),
+  .o_wbu_wen(wbu_wen),
   .o_pre_ready(wbu2exu_ready)
 );
 
 import "DPI-C" function bit if_ebrk(input int ins);
-import "DPI-C" function void check_rst(input bit rst_flag);
-always@(*)
+always@(posedge clk)
 begin
-  check_rst(rst_n_sync);
   if(if_ebrk(ins))begin  //ins == ebreak.
     if(a0_zero)begin
       $display("\n\033[32mHIT GOOD TRAP at pc = 0x%h\033[0m\n", pc_next); // 输出绿色

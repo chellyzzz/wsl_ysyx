@@ -38,7 +38,7 @@ ifeq ($(CONFIG_DIFFTEST), 1)
     NPC_FLAGS += -d $(NEMU_HOME)/build/riscv32-nemu-interpreter-so 
 endif
 
-# NPC_FLAGS += -b
+NPC_FLAGS += -b
 # NPC_FLAGS += -e $(IMAGE).elf
 NPC_FLAGS += -i $(IMAGE)
 NPC_FLAGS += -l $(BUILD_DIR)/npc-log.txt

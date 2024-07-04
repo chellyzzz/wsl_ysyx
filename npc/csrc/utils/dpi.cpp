@@ -9,14 +9,6 @@ extern "C" int if_ebrk(int ins) {
     return 0;
 }
 
-extern bool rst_n_sync;
-extern "C" void check_rst(bool rst_flag){
-  if(rst_flag)
-    rst_n_sync = true;
-  else 
-    rst_n_sync = false;
-}
-
 extern "C" void npc_pmem_read(int raddr,int *rdata, int ren, int len){
   // raddr = raddr & ~0x3u;  //clear low 2bit for 4byte align.
   if (ren){

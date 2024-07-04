@@ -26,13 +26,10 @@ module ysyx_23060124_exu(
   output o_pre_ready
 );
 
-// always @(src1 or src2) begin
-//   $display("src1 = 0x%h", src1);
-//   $display("src2 = 0x%h", src2);
-//   $display("src_sel  = 0x%h", i_src_sel);
-// end
+wire lsu_post_valid;  
+
 assign o_pre_ready = 1'b1;
-assign o_post_valid = i_pre_valid;
+assign o_post_valid = lsu_post_valid;
 
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] sel_src2;
 wire [`ysyx_23060124_ISA_WIDTH-1:0] alu_src1,alu_src2;
@@ -77,7 +74,9 @@ ysyx_23060124_lsu exu_lsu(
   .alu_res(alu_res),
   .load_opt(load_opt),
   .store_opt(store_opt),
-  .lsu_res(lsu_res)
+  .lsu_res(lsu_res),
+  .i_pre_valid(i_pre_valid),
+  .o_post_valid(lsu_post_valid)
 );
 
 // always @(*)begin
