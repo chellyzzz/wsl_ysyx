@@ -2,7 +2,7 @@
 
 module SRAM (
     input clk,
-    input rst,
+    input rst_n,
     input [`ysyx_23060124_ISA_WIDTH - 1:0] raddr,
     input ren,
     output reg [`ysyx_23060124_ISA_WIDTH - 1:0] rdata,
@@ -12,8 +12,8 @@ reg [`ysyx_23060124_ISA_WIDTH - 1:0] read_data;
 
 import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int rsize);
 
-always @(posedge clk or negedge rst) begin
-    if (~rst) begin
+always @(posedge clk or negedge rst_n) begin
+    if (~rst_n) begin
         rdata <= read_data;
     end else begin
         if(ren) begin
@@ -24,7 +24,7 @@ always @(posedge clk or negedge rst) begin
 end
 
 always @(*) begin
-    npc_pmem_read (raddr, read_data, rst, 4);
+    npc_pmem_read (raddr, read_data, rst_n, 4);
 end
 endmodule
 

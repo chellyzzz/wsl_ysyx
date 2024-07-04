@@ -88,11 +88,15 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, Verilate
 }
 
 void decode_pc(Decode* s){
-  s->pc = top->rootp->top__DOT__pc_next;
-  s->snpc = top->rootp->top__DOT__pc_next + 4;
+  s->pc = top->rootp->top__DOT__wbu1__DOT__pc;
+  s->snpc = top->rootp->top__DOT__wbu1__DOT__pc + 4;
   s->dnpc = top->rootp->top__DOT__wbu1__DOT__pc_next;
   s->isa.inst.val = top->rootp->top__DOT__ifu1__DOT__ins;
   instr = s->isa.inst.val;
+  #ifdef CONFIG_ITRACE
+      disasm_pc(s);
+      iringbuf_push(s);
+  #endif
   // printf("pc: %lx\n", s->pc); 
   // printf("dnpc: %lx\n", s->dnpc);
   return;
@@ -108,12 +112,12 @@ void exec_once(Decode *s){
     #endif  
     top->clk = 1;
     top->eval();
-    reg_update();
-    decode_pc(s);
-    #ifdef CONFIG_ITRACE
-        disasm_pc(s);
-        iringbuf_push(s);
-    #endif
+    if(top->rootp->top__DOT__ifu1__DOT__next_pc_updated){
+      reg_update();
+    }
+    if(top->rootp->top__DOT__exu1__DOT__lsu_post_valid){
+      decode_pc(s);
+    }
     #ifdef CONFIG_WAVE
     contextp->timeInc(1);
     vcd->dump(contextp->time());
@@ -124,9 +128,11 @@ void exec_once(Decode *s){
 static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
         int flag = 0;
         #ifdef CONFIG_DIFFTEST
+        if(top->rootp->top__DOT__ifu1__DOT__next_pc_updated){
           if(!difftest_step(s->pc, s->dnpc)) {
             flag = 1;
           }
+        }
         #endif
         #ifdef CONFIG_WP
         if(wp_check()){

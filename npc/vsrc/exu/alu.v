@@ -9,8 +9,7 @@ module ysyx_23060124_alu (
 );
 
 
-always @(src1 or src2 or opt) begin
-  res = `ysyx_23060124_ISA_WIDTH'b0;
+always @(*) begin
   case(opt) 
     `ysyx_23060124_OPT_EXU_ADD: begin res = src1 + src2;   end
     `ysyx_23060124_OPT_EXU_SUB: begin 
