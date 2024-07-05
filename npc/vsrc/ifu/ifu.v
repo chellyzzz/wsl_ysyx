@@ -27,13 +27,22 @@ ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_r
   .wen(i_pc_update)
 );
 
-SRAM ifu_sram (
+SRAM ifu_sram(
     .clk(clk),
     .rst_n(ifu_rst),
     .raddr(pc_next),
-    .ren(1),
-    .rdata(ins)
+    .waddr(0),
+    .wdata(0),
+    .ren(ifu_rst),
+    .wen(0),
+    .store_opt(0),
+    .rdata(ins),
+    .i_pre_valid(0),
+    .o_post_valid(void_wire)
 );
+
+wire void_wire;
+
 always @(posedge clk or negedge ifu_rst) begin
   if(~ifu_rst) begin
     o_post_valid <= 1'b1;
@@ -44,11 +53,7 @@ always @(posedge clk or negedge ifu_rst) begin
     o_post_valid <= next_pc_updated;
   end
 end
-// always @(posedge clk or negedge ifu_rst) begin
-//     ins_tmp <= ins;
-// end
 
-// assign o_post_valid = ins != ins_tmp;
 assign o_ins = i_post_ready && o_post_valid ? ins : o_ins;
 assign o_pc_next =  i_post_ready && o_post_valid ? pc_next : o_pc_next;
 

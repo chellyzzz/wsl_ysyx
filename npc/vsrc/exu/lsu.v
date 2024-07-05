@@ -22,7 +22,8 @@ import "DPI-C" function void store_skip (input int addr);
 reg [`ysyx_23060124_ISA_WIDTH - 1 : 0] store_addr, store_src2;
 reg [`ysyx_23060124_OPT_WIDTH - 1 : 0] store_opt_next;
 
-always @(read_res or load_opt) begin
+always @(posedge i_clk) begin
+// always @(read_res or load_opt) begin
     case(load_opt)
     `ysyx_23060124_OPT_LSU_LB: begin lsu_res = {{24{read_res[7]}}, read_res[7:0]}; end
     `ysyx_23060124_OPT_LSU_LH: begin lsu_res = {{16{read_res[15]}}, read_res[15:0]}; end
@@ -38,6 +39,20 @@ always @(*) begin
       store_skip(alu_res);
   end
 end
+
+SRAM LSU_SRAM(
+    .clk(i_clk),
+    .rst_n(i_rst_n),
+    .raddr(alu_res),
+    .waddr(alu_res),
+    .wdata(lsu_src2),
+    .ren(|load_opt & i_pre_valid),
+    .wen(|store_opt),
+    .store_opt(store_opt),
+    .rdata(read_res),
+    .i_pre_valid(i_pre_valid),
+    .o_post_valid(o_post_valid)
+);
 
 // ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH + `ysyx_23060124_ISA_WIDTH + `ysyx_23060124_OPT_WIDTH,  0) lsu_reg(
 //   .clk(i_clk),
@@ -59,19 +74,5 @@ end
 //     `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 4); end
 //     endcase
 // end
-
-SRAM4LSU LSU_SRAM(
-    .clk(i_clk),
-    .rst(i_rst_n),
-    .raddr(alu_res),
-    .waddr(alu_res),
-    .wdata(lsu_src2),
-    .ren(|load_opt & i_pre_valid),
-    .wen(|store_opt),
-    .store_opt(store_opt),
-    .rdata(read_res),
-    .i_pre_valid(i_pre_valid),
-    .o_post_valid(o_post_valid)
-);
 
 endmodule
