@@ -21,7 +21,7 @@ reg [`ysyx_23060124_ISA_WIDTH-1:0] pc_next;
 
 ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_reg(
   .clk(clk),
-  .rst_n(ifu_rst),
+  .rst(ifu_rst),
   .din(i_pc_next),
   .dout(pc_next),
   .wen(i_pc_update)
@@ -29,7 +29,7 @@ ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_r
 
 SRAM ifu_sram (
     .clk(clk),
-    .rst(ifu_rst),
+    .rst_n(ifu_rst),
     .raddr(pc_next),
     .ren(1),
     .rdata(ins)
