@@ -51,13 +51,13 @@ extern bool ftrace_enable;
 // cpu exec
 void reg_update(){
   for(int i = 0; i < 32; i++){
-    cpu.gpr[i] = top->rootp->top__DOT__regfile1__DOT__rf[i] ;
+    cpu.gpr[i] = top->rootp->top__DOT__CPU__DOT__regfile1__DOT__rf[i] ;
   }
-  cpu.csr.mcause = top->rootp->top__DOT__Csrs__DOT__mcause;
-  cpu.csr.mstatus = top->rootp->top__DOT__Csrs__DOT__mstatus;
-  cpu.csr.mepc = top->rootp->top__DOT__Csrs__DOT__mepc;
-  cpu.csr.mtvec = top->rootp->top__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->top__DOT__pc_next;
+  cpu.csr.mcause = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mcause;
+  cpu.csr.mstatus = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mstatus;
+  cpu.csr.mepc = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mepc;
+  cpu.csr.mtvec = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mtvec;
+  cpu.pc = top->rootp->top__DOT__CPU__DOT__pc_next;
   return;
 }
 
@@ -88,10 +88,10 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, Verilate
 }
 
 void decode_pc(Decode* s){
-  s->pc = top->rootp->top__DOT__wbu1__DOT__pc;
-  s->snpc = top->rootp->top__DOT__wbu1__DOT__pc + 4;
-  s->dnpc = top->rootp->top__DOT__wbu1__DOT__pc_next;
-  s->isa.inst.val = top->rootp->top__DOT__ifu1__DOT__ins;
+  s->pc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc;
+  s->snpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc + 4;
+  s->dnpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc_next;
+  s->isa.inst.val = top->rootp->top__DOT__CPU__DOT__ifu1__DOT__ifu_sram__DOT__rdata;
   instr = s->isa.inst.val;
   #ifdef CONFIG_ITRACE
       disasm_pc(s);
@@ -112,10 +112,10 @@ void exec_once(Decode *s){
     #endif  
     top->clk = 1;
     top->eval();
-    if(top->rootp->top__DOT__ifu1__DOT__next_pc_updated){
+    // if(top->rootp->top__DOT__CPU__DOT__ifu1__DOT__next_pc_updated){
       reg_update();
-    }
-    if(top->rootp->top__DOT__exu1__DOT__lsu_post_valid){
+    // }
+    if(top->rootp->top__DOT__CPU__DOT__exu1__DOT__lsu_post_valid){
       decode_pc(s);
     }
     #ifdef CONFIG_WAVE

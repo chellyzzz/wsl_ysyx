@@ -40,9 +40,9 @@ always @(*) begin
   end
 end
 
-SRAM LSU_SRAM(
-    .clk(i_clk),
-    .rst_n(i_rst_n),
+SRAM_lsu LSU_SRAM(
+    .S_AXI_ACLK(i_clk),
+    .S_AXI_ARESETN(i_rst_n),
     .raddr(alu_res),
     .waddr(alu_res),
     .wdata(lsu_src2),
