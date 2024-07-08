@@ -116,7 +116,7 @@ SRAM_lsu LSU_SRAM(
     // Read ready. This signal indicates that the master can accept the read data and response information.
     wire  M_AXI_RREADY;
 
-assign M_AXI_ARESETN = ifu_rst; 
+assign M_AXI_ARESETN = i_rst_n; 
 assign M_AXI_ACLK = i_clk;
 // AXI4LITE signals
 reg  	axi_awvalid;
@@ -174,7 +174,7 @@ assign M_AXI_AWVALID	= axi_awvalid;
 //Write Data(W)
 assign M_AXI_WVALID	= axi_wvalid;
 //Set all byte strobes in this example
-assign M_AXI_WSTRB	= 4'b1111;
+assign M_AXI_WSTRB	= load_opt;
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
 //Read Address (AR)
@@ -184,11 +184,10 @@ assign M_AXI_ARREADY = s_axi_arready;
 assign M_AXI_ARPROT	= 3'b001;
 //Read and Read Response (R)
 assign M_AXI_RREADY	= axi_rready;
-assign M_AXI_RVALID = s_axi_rvalid;
 assign M_AXI_RDATA = axi_rdata;
 //Example design I/O
-assign init_txn_pulse	= ~ifu_rst ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
-// assign INIT_AXI_TXN = ~ifu_rst ? 1'b1 : i_pc_update;
+assign init_txn_pulse	= ~i_rst_n ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
+// assign INIT_AXI_TXN = ~i_rst_n ? 1'b1 : i_pc_update;
 
 always @(posedge M_AXI_ACLK)										      
     begin                                                                        
@@ -221,6 +220,87 @@ always @(posedge M_AXI_ACLK)
         init_txn_ff2 <= init_txn_ff;                                                                 
         end                                                                      
     end     
+	//--------------------
+	//Write Address Channel
+	//--------------------
+	  always @(posedge M_AXI_ACLK)										      
+	  begin                                                                        
+	    //Only VALID signals must be deasserted during reset per AXI spec          
+	    //Consider inverting then registering active-low reset for higher fmax     
+	    if (M_AXI_ARESETN == 0)                                                   
+	      begin                                                                    
+	        axi_awvalid <= 1'b0;                                                   
+	      end                                                                      
+	      //Signal a new address/data command is available by user logic           
+	    else                                                                       
+	      begin                                                                    
+	        if (init_txn_pulse == 1'b1)                                                
+	          begin                                                                
+	            axi_awvalid <= 1'b1;                                               
+	          end                                                                  
+	     //Address accepted by interconnect/slave (issue of M_AXI_AWREADY by slave)
+	        else if (M_AXI_AWREADY && axi_awvalid)                                 
+	          begin                                                                
+	            axi_awvalid <= 1'b0;                                               
+	          end                                                                  
+	      end                                                                      
+	  end      
+
+	//--------------------
+	//Write Data Channel
+	//--------------------
+
+	//The write data channel is for transfering the actual data.
+	//The data generation is speific to the example design, and 
+	//so only the WVALID/WREADY handshake is shown here
+
+	   always @(posedge M_AXI_ACLK)                                        
+	   begin                                                                         
+	     if (M_AXI_ARESETN == 0)                                                    
+	       begin                                                                     
+	         axi_wvalid <= 1'b0;                                                     
+	       end                                                                       
+	     //Signal a new address/data command is available by user logic              
+	     else if (init_txn_pulse == 1'b1)                                                
+	       begin                                                                     
+	         axi_wvalid <= 1'b1;                                                     
+	       end                                                                       
+	     //Data accepted by interconnect/slave (issue of M_AXI_WREADY by slave)      
+	     else if (M_AXI_WREADY && axi_wvalid)                                        
+	       begin                                                                     
+	        axi_wvalid <= 1'b0;                                                      
+	       end                                                                       
+	   end                                                                           
+
+	//----------------------------
+	//Write Response (B) Channel
+	//----------------------------
+
+	  always @(posedge M_AXI_ACLK)                                    
+	  begin                                                                
+	    if (M_AXI_ARESETN == 0)                                           
+	      begin                                                            
+	        axi_bready <= 1'b0;                                            
+	      end                                                              
+	    // accept/acknowledge bresp with axi_bready by the master          
+	    // when M_AXI_BVALID is asserted by slave                          
+	    else if (M_AXI_BVALID && ~axi_bready)                              
+	      begin                                                            
+	        axi_bready <= 1'b1;                                            
+	      end                                                              
+	    // deassert after one clock cycle                                  
+	    else if (axi_bready)                                               
+	      begin                                                            
+	        axi_bready <= 1'b0;                                            
+	      end                                                              
+	    // retain the previous value                                       
+	    else                                                               
+	      axi_bready <= axi_bready;                                        
+	  end                                                                  
+	                                                                       
+	//Flag write errors                                                    
+	assign write_resp_error = (axi_bready & M_AXI_BVALID & M_AXI_BRESP[1]);
+
 
 //----------------------------
 //Read Address Channel
@@ -310,33 +390,31 @@ assign read_resp_error = (axi_rready & M_AXI_RVALID & M_AXI_RRESP[1]);
 // wire [`ysyx_23060124_ISA_WIDTH-1 : 0] s_axi_rdata;
 // reg [`ysyx_23060124_ISA_WIDTH-1:0] axi_rdata;
 
-
-assign s_axi_rready = 1;
 SRAM_lsuaxi lsu_AXI_sram(
     .S_AXI_ACLK(i_clk),
     .S_AXI_ARESETN(i_rst_n),
     //read data channel
-    .S_AXI_RDATA(s_axi_rdata),
-    .S_AXI_RRESP(s_axi_rresp),
-    .S_AXI_RVALID(s_axi_rvalid),
-    .S_AXI_RREADY(s_axi_rready),
+    .S_AXI_RDATA(M_AXI_RDATA),
+    .S_AXI_RRESP(M_AXI_RRESP),
+    .S_AXI_RVALID(M_AXI_RVALID),
+    .S_AXI_RREADY(M_AXI_RREADY),
     //read adress channel
     .S_AXI_ARADDR(alu_res),
-    .S_AXI_ARVALID(|load_opt),
+    .S_AXI_ARVALID(M_AXI_ARVALID),
     .S_AXI_ARREADY(s_axi_arready),
     //write back channel
-    .S_AXI_BRESP(s_axi_bresp),
-    .S_AXI_BVALID(s_axi_bvalid),
-    .S_AXI_BREADY(1),
+    .S_AXI_BRESP(M_AXI_BRESP),
+    .S_AXI_BVALID(M_AXI_BVALID),
+    .S_AXI_BREADY(M_AXI_BREADY),
     //write address channel  
     .S_AXI_AWADDR(alu_res),
-    .S_AXI_AWVALID(1),
-    .S_AXI_AWREADY(s_axi_awready),
+    .S_AXI_AWVALID(M_AXI_AWVALID),
+    .S_AXI_AWREADY(M_AXI_AWREADY),
     //write data channel
     .S_AXI_WDATA(lsu_src2),
-    .S_AXI_WSTRB(store_opt),
-    .S_AXI_WVALID(|store_opt),
-    .S_AXI_WREADY(s_axi_wready)
+    .S_AXI_WSTRB(M_AXI_WSTRB),
+    .S_AXI_WVALID(M_AXI_WVALID),
+    .S_AXI_WREADY(M_AXI_WREADY)
 );
 
 

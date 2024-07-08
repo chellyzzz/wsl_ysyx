@@ -252,7 +252,7 @@ assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
 
 always @(posedge S_AXI_ACLK)
 begin
-    npc_pmem_read (S_AXI_ARADDR, reg_data_out, S_AXI_ARVALID & axi_arready, 4);
+    npc_pmem_read (S_AXI_ARADDR, reg_data_out, slv_reg_rden, 4);
 end
 
 // Output register or memory read data
