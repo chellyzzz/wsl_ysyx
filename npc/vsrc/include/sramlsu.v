@@ -55,7 +55,7 @@ always @(posedge clk) begin
     npc_pmem_read (raddr, read_data, ren, 4);
 end
 
-always @(*) begin
+always @(posedge clk) begin
     case(store_opt_next)
     `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 1); end
     `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 2); end

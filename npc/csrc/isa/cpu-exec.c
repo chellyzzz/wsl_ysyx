@@ -91,14 +91,12 @@ void decode_pc(Decode* s){
   s->pc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc;
   s->snpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc + 4;
   s->dnpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc_next;
-  s->isa.inst.val = top->rootp->top__DOT__CPU__DOT__ifu1__DOT__ifu_sram__DOT__rdata;
+  s->isa.inst.val = top->rootp->top__DOT__CPU__DOT__ins;
   instr = s->isa.inst.val;
   #ifdef CONFIG_ITRACE
       disasm_pc(s);
       iringbuf_push(s);
   #endif
-  // printf("pc: %lx\n", s->pc); 
-  // printf("dnpc: %lx\n", s->dnpc);
   return;
 }
 

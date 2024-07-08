@@ -10,8 +10,6 @@ module ysyx_23060124_ifu (
   output [`ysyx_23060124_ISA_WIDTH-1:0] o_pc_next,
   output reg o_post_valid
 );
-  wire [`ysyx_23060124_ISA_WIDTH-1:0] s_ins_test_axi;
-  reg [`ysyx_23060124_ISA_WIDTH-1:0] ins_test_axi;
 
     // Initiate AXI transactions
     reg  INIT_AXI_TXN;
@@ -120,6 +118,8 @@ wire  	init_txn_pulse;
 wire s_axi_rvalid, s_axi_rready, s_axi_bvalid, s_axi_bready,s_axi_arready;
 wire s_axi_awready, s_axi_wready;
 wire [1:0] s_axi_rresp, s_axi_bresp;
+wire [`ysyx_23060124_ISA_WIDTH-1 : 0] s_axi_rdata;
+reg [`ysyx_23060124_ISA_WIDTH-1:0] axi_rdata;
 
 //Adding the offset address to the base addr of the slave
 // assign M_AXI_AWADDR	= C_M_TARGET_SLAVE_BASE_ADDR + axi_awaddr;
@@ -141,7 +141,7 @@ assign M_AXI_ARPROT	= 3'b001;
 //Read and Read Response (R)
 assign M_AXI_RREADY	= axi_rready;
 assign M_AXI_RVALID = s_axi_rvalid;
-assign M_AXI_RDATA = ins_test_axi;
+assign M_AXI_RDATA = axi_rdata;
 //Example design I/O
 assign init_txn_pulse	= ~ifu_rst ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
 // assign INIT_AXI_TXN = ~ifu_rst ? 1'b1 : i_pc_update;
@@ -180,25 +180,7 @@ always @(posedge M_AXI_ACLK)
 
 //----------------------------
 //Read Address Channel
-//----------------------------
-
-//start_single_read triggers a new read transaction. read_index is a counter to
-//keep track with number of read transaction issued/initiated
-
-    // always @(posedge M_AXI_ACLK)                                                     
-    // begin                                                                            
-    // if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)                                                       
-    //     begin                                                                        
-    //     read_index <= 0;                                                           
-    //     end                                                                          
-    // // Signals a new read address is                                               
-    // // available by user logic                                                     
-    // else if (start_single_read)                                                    
-    //     begin                                                                        
-    //     read_index <= read_index + 1;                                              
-    //     end                                                                          
-    // end                    
-
+//----------------------------       
     // A new axi_arvalid is asserted when there is a valid read address              
     // available by the master. start_single_read triggers a new read                
     // transaction                                                                   
@@ -259,13 +241,13 @@ always @(posedge M_AXI_ACLK)
     begin
         if ( M_AXI_ARESETN == 1'b0 )
         begin
-            ins_test_axi  <= 0;
+            axi_rdata  <= 0;
         end 
         else
         begin    
             if (M_AXI_RVALID && ~axi_rready)
             begin
-                ins_test_axi <= s_ins_test_axi;     // register read data
+                axi_rdata <= s_axi_rdata;     // register read data
             end   
         end
     end    
@@ -296,12 +278,11 @@ ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_r
 // wire s_axi_rvalid, s_axi_rready, s_axi_bvalid, s_axi_bready,s_axi_arready;
 // wire s_axi_awready, s_axi_wready;
 // wire [1:0] s_axi_rresp, s_axi_bresp;
-SRAM ifu_sram(
+SRAM_ifu ifu_sram(
     .S_AXI_ACLK(clk),
     .S_AXI_ARESETN(ifu_rst),
     //read data channel
-    .out_ins(ins),
-    .S_AXI_RDATA(s_ins_test_axi),
+    .S_AXI_RDATA(s_axi_rdata),
     .S_AXI_RRESP(rresp),
     .S_AXI_RVALID(s_axi_rvalid),
     .S_AXI_RREADY(M_AXI_RREADY),
@@ -333,7 +314,7 @@ always @(posedge clk or negedge ifu_rst) begin
   end
 end
 
-assign o_ins = i_post_ready && o_post_valid ? ins : o_ins;
+assign o_ins = i_post_ready && o_post_valid ? axi_rdata : o_ins;
 assign o_pc_next =  i_post_ready && o_post_valid ? pc_next : o_pc_next;
 
 endmodule
