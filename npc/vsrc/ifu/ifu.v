@@ -40,6 +40,13 @@ module ysyx_23060124_ifu (
     wire  M_AXI_ACLK;
     // AXI active low reset signal
     wire  M_AXI_ARESETN;
+//should not send write signal
+assign M_AXI_AWVALID = 1'b0;
+assign M_AXI_WVALID = 1'b0;
+assign M_AXI_BREADY = 1'b0;
+assign M_AXI_WDATA = `ysyx_23060124_ISA_WIDTH'b0;
+assign M_AXI_WSTRB = `ysyx_23060124_OPT_WIDTH'b0;   
+assign M_AXI_AWADDR = `ysyx_23060124_ISA_ADDR_WIDTH'b0;
 
 assign M_AXI_ARESETN = ifu_rst; 
 assign M_AXI_ACLK = clk;
@@ -60,10 +67,6 @@ reg  	init_txn_edge;
 wire  	init_txn_pulse;
 
 // I/O Connections assignments
-wire s_axi_rvalid, s_axi_rready, s_axi_bvalid, s_axi_bready,s_axi_arready;
-wire s_axi_awready, s_axi_wready;
-wire [1:0] s_axi_rresp, s_axi_bresp;
-wire [`ysyx_23060124_ISA_WIDTH-1 : 0] s_axi_rdata;
 reg [`ysyx_23060124_ISA_WIDTH-1:0] axi_rdata;
 
 //Adding the offset address to the base addr of the slave
@@ -195,8 +198,6 @@ always @(posedge M_AXI_ACLK)
 //----------------------------
 //Reserved Read Address Channel
 //----------------------------
-
-reg [`ysyx_23060124_ISA_WIDTH - 1:0] ins, ins_tmp;
 // import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int rsize);
 // always @(*) begin
 //   npc_pmem_read (i_pc, ins, ifu_rst, 4);
@@ -210,36 +211,6 @@ ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_r
   .dout(pc_next),
   .wen(i_pc_update)
 );
-// wire s_axi_rvalid, s_axi_rready, s_axi_bvalid, s_axi_bready,s_axi_arready;
-// wire s_axi_awready, s_axi_wready;
-// wire [1:0] s_axi_rresp, s_axi_bresp;
-
-// SRAM_ifu ifu_sram(
-//     .S_AXI_ACLK(clk),
-//     .S_AXI_ARESETN(ifu_rst),
-//     //read data channel
-//     .S_AXI_RDATA(s_axi_rdata),
-//     .S_AXI_RRESP(rresp),
-//     .S_AXI_RVALID(s_axi_rvalid),
-//     .S_AXI_RREADY(M_AXI_RREADY),
-//     //read adress channel
-//     .S_AXI_ARADDR(pc_next),
-//     .S_AXI_ARVALID(M_AXI_ARVALID),
-//     .S_AXI_ARREADY(s_axi_arready),
-//     //write back channel
-//     .S_AXI_BRESP(s_axi_bresp),
-//     .S_AXI_BVALID(s_axi_bvalid),
-//     .S_AXI_BREADY(1),
-//     //write address channel  
-//     .S_AXI_AWADDR(0),
-//     .S_AXI_AWVALID(0),
-//     .S_AXI_AWREADY(s_axi_awready),
-//     //write data channel
-//     .S_AXI_WDATA(0),
-//     .S_AXI_WSTRB(0),
-//     .S_AXI_WVALID(0),
-//     .S_AXI_WREADY(s_axi_wready)
-// );
 
 always @(posedge clk or negedge ifu_rst) begin
   if(~ifu_rst) begin

@@ -96,21 +96,34 @@ ysyx_23060124_lsu exu_lsu(
   .load_opt(load_opt),
   .store_opt(store_opt),
   .lsu_res(lsu_res),
+  //lsu ->exu sram axi
+  //write address channel  
+  .M_AXI_AWADDR(M_AXI_AWADDR),
+  .M_AXI_AWVALID(M_AXI_AWVALID),
+  .M_AXI_AWREADY(M_AXI_AWREADY),
+  //write data channel
+  .M_AXI_WVALID(M_AXI_WVALID),
+  .M_AXI_WREADY(M_AXI_WREADY),
+  .M_AXI_WDATA(M_AXI_WDATA),
+  .M_AXI_WSTRB(M_AXI_WSTRB),
+  //read data channel
+  .M_AXI_RDATA(M_AXI_RDATA),
+  .M_AXI_RRESP(M_AXI_RRESP),
+  .M_AXI_RVALID(M_AXI_RVALID),
+  .M_AXI_RREADY(M_AXI_RREADY),
+  //read adress channel
+  .M_AXI_ARADDR(M_AXI_ARADDR),
+  .M_AXI_ARVALID(M_AXI_ARVALID),
+  .M_AXI_ARREADY(M_AXI_ARREADY),
+  //write back channel
+  .M_AXI_BRESP(M_AXI_BRESP),
+  .M_AXI_BVALID(M_AXI_BVALID),
+  .M_AXI_BREADY(M_AXI_BREADY),
+  //handshake
   .i_pre_valid(i_pre_valid),
   .o_post_valid(lsu_post_valid)
 );
 
-// always @(*)begin
-//   case(brch_opt)
-//   `ysyx_23060124_OPT_BRCH_BGE: brch_res = (alu_res == 0) ? 1'b1 : 1'b0;
-//   `ysyx_23060124_OPT_BRCH_BNE: brch_res = (alu_res != 0) ? 1'b1 : 1'b0;
-//   `ysyx_23060124_OPT_BRCH_BLT: brch_res =  (alu_res[31] == 1'b1);
-//   `ysyx_23060124_OPT_BRCH_BGE: brch_res =  (alu_res[31] == 1'b0);
-//   `ysyx_23060124_OPT_BRCH_BLTU: brch_res = (carry == 1'b1) ? 1'b1 : 1'b0;
-//   `ysyx_23060124_OPT_BRCH_BGEU: brch_res = (carry == 1'b0) ? 1'b1 : 1'b0;
-//   default: brch_res = 1'b0;
-//   endcase
-// end
 assign brch_res = (brch_opt == `ysyx_23060124_OPT_BRCH_BEQ) ? ((alu_res == 0)) :
                   (brch_opt == `ysyx_23060124_OPT_BRCH_BNE) ? ((alu_res != 0)) :
                   (brch_opt == `ysyx_23060124_OPT_BRCH_BLT) ? (carry == 1'b1) :

@@ -4,31 +4,31 @@ module SRAM(
     input S_AXI_ACLK,
     input S_AXI_ARESETN,
     //read data channel
-    output wire [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_RDATA,
-    output wire [1 : 0] S_AXI_RRESP,
-    output wire  S_AXI_RVALID,
-    input wire  S_AXI_RREADY,
+    output  [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_RDATA,
+    output  [1 : 0] S_AXI_RRESP,
+    output   S_AXI_RVALID,
+    input    S_AXI_RREADY,
 
     //read adress channel
-    input wire [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_ARADDR,
-    input wire  S_AXI_ARVALID,
-    output wire  S_AXI_ARREADY,
+    input   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_ARADDR,
+    input    S_AXI_ARVALID,
+    output   S_AXI_ARREADY,
 
     //write back channel
-    output wire [1 : 0] S_AXI_BRESP,
-    output wire  S_AXI_BVALID,
-    input wire  S_AXI_BREADY,
+    output  [1 : 0] S_AXI_BRESP,
+    output   S_AXI_BVALID,
+    input    S_AXI_BREADY,
 
     //write address channel  
-    input wire [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_AWADDR,
-    input wire  S_AXI_AWVALID,
-    output wire  S_AXI_AWREADY,
+    input   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_AWADDR,
+    input    S_AXI_AWVALID,
+    output   S_AXI_AWREADY,
 
     //write data channel
-    input wire [`ysyx_23060124_ISA_WIDTH-1:0] S_AXI_WDATA,
-    input wire [`ysyx_23060124_OPT_WIDTH-1 : 0] S_AXI_WSTRB,
-    input wire  S_AXI_WVALID,
-    output wire  S_AXI_WREADY,  
+    input   [`ysyx_23060124_ISA_WIDTH-1:0] S_AXI_WDATA,
+    input   [`ysyx_23060124_OPT_WIDTH-1 : 0] S_AXI_WSTRB,
+    input    S_AXI_WVALID,
+    output   S_AXI_WREADY,  
 );
 
 ///*******
@@ -109,9 +109,9 @@ end
 
 always @(posedge S_AXI_ACLK) begin
     case(S_AXI_WSTRB)
-    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(S_AXI_AWADDR, S_AXI_WDATA, axi_awready && axi_wready, 1); end
-    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(S_AXI_AWADDR, S_AXI_WDATA, axi_awready && axi_wready, 2); end
-    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(S_AXI_AWADDR, S_AXI_WDATA, axi_awready && axi_wready, 4); end
+    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 1); end
+    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 2); end
+    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 4); end
     endcase
 end
 // Implement axi_awaddr latching
@@ -250,7 +250,7 @@ assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
 
 always @(posedge S_AXI_ACLK)
 begin
-    npc_pmem_read (S_AXI_ARADDR, reg_data_out, slv_reg_rden, 4);
+    npc_pmem_read (axi_araddr, reg_data_out, slv_reg_rden, 4);
 end
 
 // Output register or memory read data
