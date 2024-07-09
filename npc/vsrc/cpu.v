@@ -106,6 +106,33 @@ ysyx_23060124_csr_RegisterFile Csrs(
   .csr_rdata(csr_rs2)
 );
 
+SRAM_ifu ifu_sram(
+    .S_AXI_ACLK(clk),
+    .S_AXI_ARESETN(ifu_rst),
+    //read data channel
+    .S_AXI_RDATA(s_axi_rdata),
+    .S_AXI_RRESP(rresp),
+    .S_AXI_RVALID(s_axi_rvalid),
+    .S_AXI_RREADY(M_AXI_RREADY),
+    //read adress channel
+    .S_AXI_ARADDR(pc_next),
+    .S_AXI_ARVALID(M_AXI_ARVALID),
+    .S_AXI_ARREADY(s_axi_arready),
+    //write back channel
+    .S_AXI_BRESP(s_axi_bresp),
+    .S_AXI_BVALID(s_axi_bvalid),
+    .S_AXI_BREADY(1),
+    //write address channel  
+    .S_AXI_AWADDR(0),
+    .S_AXI_AWVALID(0),
+    .S_AXI_AWREADY(s_axi_awready),
+    //write data channel
+    .S_AXI_WDATA(0),
+    .S_AXI_WSTRB(0),
+    .S_AXI_WVALID(0),
+    .S_AXI_WREADY(s_axi_wready)
+);
+
 ysyx_23060124_ifu ifu1(
   .i_pc_next(pc_next),
   .clk(clk),

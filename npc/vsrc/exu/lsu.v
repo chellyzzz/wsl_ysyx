@@ -22,41 +22,14 @@ import "DPI-C" function void store_skip (input int addr);
 reg [`ysyx_23060124_ISA_WIDTH - 1 : 0] store_addr, store_src2;
 reg [`ysyx_23060124_OPT_WIDTH - 1 : 0] store_opt_next;
 
-always @(posedge i_clk) begin
-// always @(read_res or load_opt) begin
-    case(load_opt)
-    `ysyx_23060124_OPT_LSU_LB: begin lsu_res = {{24{read_res[7]}}, read_res[7:0]}; end
-    `ysyx_23060124_OPT_LSU_LH: begin lsu_res = {{16{read_res[15]}}, read_res[15:0]}; end
-    `ysyx_23060124_OPT_LSU_LW: begin lsu_res = read_res; end
-    `ysyx_23060124_OPT_LSU_LBU: begin lsu_res = {24'b0, read_res[7:0]}; end
-    `ysyx_23060124_OPT_LSU_LHU: begin lsu_res = {{16'b0}, read_res[15:0]}; end
-    default: begin lsu_res = `ysyx_23060124_ISA_WIDTH'b0; end
-    endcase
-end
-
 always @(*) begin
   if(|store_opt) begin 
       store_skip(alu_res);
   end
 end
 
-SRAM_lsu LSU_SRAM(
-    .S_AXI_ACLK(i_clk),
-    .S_AXI_ARESETN(i_rst_n),
-    .raddr(alu_res),
-    .waddr(alu_res),
-    .wdata(lsu_src2),
-    .ren(|load_opt & i_pre_valid),
-    .wen(|store_opt & i_pre_valid),
-    .store_opt(store_opt),
-    .rdata(read_res),
-    .i_pre_valid(i_pre_valid),
-    .o_post_valid(o_post_valid)
-);
-
-
     // Initiate AXI transactions
-    reg  INIT_AXI_TXN;
+    wire  INIT_AXI_TXN;
     // Asserts when ERROR is detected
     reg  ERROR;
     // Asserts when AXI transactions is complete
@@ -82,7 +55,7 @@ SRAM_lsu LSU_SRAM(
     // Write strobes. 
     // This signal indicates which byte lanes hold valid data.
     // There is one write strobe bit for each eight bits of the write data bus.
-    wire [`ysyx_23060124_ISA_WIDTH/8-1 : 0] M_AXI_WSTRB;
+    wire [`ysyx_23060124_OPT_WIDTH-1 : 0] M_AXI_WSTRB;
     // Write valid. This signal indicates that valid write data and strobes are available.
     wire  M_AXI_WVALID;
     // Write ready. This signal indicates that the slave can accept the write data.
@@ -131,18 +104,6 @@ reg [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] 	axi_araddr;
 wire  	write_resp_error;
 //Asserts when there is a read response error
 wire  	read_resp_error;
-//A pulse to initiate a write transaction
-reg  	start_single_write;
-//A pulse to initiate a read transaction
-reg  	start_single_read;
-//Asserts when a single beat write transaction is issued and remains asserted till the completion of write trasaction.
-reg  	write_issued;
-//Asserts when a single beat read transaction is issued and remains asserted till the completion of read trasaction.
-reg  	read_issued;
-//flag that marks the completion of write trasactions. The number of write transaction is user selected by the parameter C_M_TRANSACTIONS_NUM.
-reg  	writes_done;
-//flag that marks the completion of read trasactions. The number of read transaction is user selected by the parameter C_M_TRANSACTIONS_NUM
-reg  	reads_done;
 //The error register is asserted when any of the write response error, read response error or the data mismatch flags are asserted.
 reg  	error_reg;
 //Flag marks the completion of comparison of the read data with the expected read data
@@ -160,7 +121,6 @@ wire  	init_txn_pulse;
 
 // I/O Connections assignments
 wire s_axi_rvalid, s_axi_rready, s_axi_bvalid, s_axi_bready,s_axi_arready;
-wire s_axi_awready, s_axi_wready;
 wire [1:0] s_axi_rresp, s_axi_bresp;
 wire [`ysyx_23060124_ISA_WIDTH-1 : 0] s_axi_rdata;
 reg [`ysyx_23060124_ISA_WIDTH-1:0] axi_rdata;
@@ -187,23 +147,47 @@ assign M_AXI_RREADY	= axi_rready;
 assign M_AXI_RDATA = axi_rdata;
 //Example design I/O
 assign init_txn_pulse	= ~i_rst_n ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
-// assign INIT_AXI_TXN = ~i_rst_n ? 1'b1 : i_pc_update;
+assign INIT_AXI_TXN = ~i_rst_n ? 1'b1 : (i_pre_valid && is_ls ? 1'b1 : 1'b0);
+assign is_ls = |load_opt || |store_opt;
+assign not_ls = ~is_ls;
+wire txn_pulse_load;
+wire txn_pulse_store;
 
-always @(posedge M_AXI_ACLK)										      
-    begin                                                                        
-    // Initiates AXI transaction delay    
-    if (M_AXI_ARESETN == 0 )                                                   
-        begin                                                                    
-        INIT_AXI_TXN <= 1'b1;                                            
-        end                                                                               
-    else                                                                       
-        begin  
-        if(i_pre_valid)begin
-            INIT_AXI_TXN <= 1'b1;
-        end
-        else INIT_AXI_TXN <= 1'b0;                                                          
-        end                                                                      
-    end     
+assign txn_pulse_load = |load_opt&& init_txn_pulse;
+assign txn_pulse_store = |store_opt && init_txn_pulse;  
+
+always @(posedge i_clk)begin
+    if(i_rst_n == 1'b0)begin
+      o_post_valid <= 1'b0; 
+    end
+    else begin
+      if(M_AXI_BREADY ||  M_AXI_RRESP)begin
+        o_post_valid <= 1'b1;
+      end
+      else if(not_ls && i_pre_valid)begin
+        o_post_valid <= 1'b1;
+      end
+      else begin
+        o_post_valid <= 1'b0;
+      end
+    end
+end
+
+// always @(posedge M_AXI_ACLK)										      
+//     begin                                                                        
+//     // Initiates AXI transaction delay    
+//     if (M_AXI_ARESETN == 0 )                                                   
+//         begin                                                                    
+//         INIT_AXI_TXN <= 1'b1;                                            
+//         end                                                                               
+//     else                                                                       
+//         begin  
+//         if(i_pre_valid)begin
+//             INIT_AXI_TXN <= 1'b1;
+//         end
+//         else INIT_AXI_TXN <= 1'b0;                                                          
+//         end                                                                      
+//     end     
 
 //Generate a pulse to initiate AXI transaction.
 always @(posedge M_AXI_ACLK)										      
@@ -234,7 +218,7 @@ always @(posedge M_AXI_ACLK)
 	      //Signal a new address/data command is available by user logic           
 	    else                                                                       
 	      begin                                                                    
-	        if (init_txn_pulse == 1'b1)                                                
+	        if (txn_pulse_store == 1'b1)                                                
 	          begin                                                                
 	            axi_awvalid <= 1'b1;                                               
 	          end                                                                  
@@ -261,7 +245,7 @@ always @(posedge M_AXI_ACLK)
 	         axi_wvalid <= 1'b0;                                                     
 	       end                                                                       
 	     //Signal a new address/data command is available by user logic              
-	     else if (init_txn_pulse == 1'b1)                                                
+	     else if (txn_pulse_store == 1'b1)                                                
 	       begin                                                                     
 	         axi_wvalid <= 1'b1;                                                     
 	       end                                                                       
@@ -315,7 +299,7 @@ always @(posedge M_AXI_ACLK)
         axi_arvalid <= 1'b0;                                                       
         end                                                                          
     //Signal a new read address command is available by user logic                 
-    else if (init_txn_pulse == 1'b1)                                                    
+    else if (txn_pulse_load == 1'b1)                                                    
         begin                                                                        
         axi_arvalid <= 1'b1;                                                       
         end                                                                          
@@ -412,31 +396,20 @@ SRAM_lsuaxi lsu_AXI_sram(
     .S_AXI_AWREADY(M_AXI_AWREADY),
     //write data channel
     .S_AXI_WDATA(lsu_src2),
-    .S_AXI_WSTRB(M_AXI_WSTRB),
+    .S_AXI_WSTRB(store_opt),
     .S_AXI_WVALID(M_AXI_WVALID),
     .S_AXI_WREADY(M_AXI_WREADY)
 );
 
-
-// ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH + `ysyx_23060124_ISA_WIDTH + `ysyx_23060124_OPT_WIDTH,  0) lsu_reg(
-//   .clk(i_clk),
-//   .rst(i_rst_n),
-//   .din({alu_res, store_opt, lsu_src2}),
-//   .dout({store_addr, store_opt_next, store_src2}),
-//   .wen(1)
-// );
-
-// always @(*) begin
-//   // $display("\nREAD DATA at ADDR = 0x%h", alu_res);
-//   npc_pmem_read(alu_res, read_res, |load_opt, 4);
-// end
-
-// always @(*) begin
-//     case(store_opt_next)
-//     `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 1); end
-//     `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 2); end
-//     `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 4); end
-//     endcase
-// end
+always @(posedge i_clk) begin
+    case(load_opt)
+    `ysyx_23060124_OPT_LSU_LB: begin lsu_res <= {{24{M_AXI_RDATA[7]}}, M_AXI_RDATA[7:0]}; end
+    `ysyx_23060124_OPT_LSU_LH: begin lsu_res <= {{16{M_AXI_RDATA[15]}}, M_AXI_RDATA[15:0]}; end
+    `ysyx_23060124_OPT_LSU_LW: begin lsu_res <= M_AXI_RDATA; end
+    `ysyx_23060124_OPT_LSU_LBU: begin lsu_res <= {24'b0, M_AXI_RDATA[7:0]}; end
+    `ysyx_23060124_OPT_LSU_LHU: begin lsu_res <= {{16'b0}, M_AXI_RDATA[15:0]}; end
+    default: begin lsu_res <= `ysyx_23060124_ISA_WIDTH'b0; end
+    endcase
+end
 
 endmodule

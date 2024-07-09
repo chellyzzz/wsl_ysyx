@@ -57,7 +57,7 @@ void reg_update(){
   cpu.csr.mstatus = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mstatus;
   cpu.csr.mepc = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mepc;
   cpu.csr.mtvec = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->top__DOT__CPU__DOT__pc_next;
+  cpu.pc = top->rootp->top__DOT__CPU__DOT__ifu_pc_next;
   return;
 }
 
@@ -110,9 +110,9 @@ void exec_once(Decode *s){
     #endif  
     top->clk = 1;
     top->eval();
-    // if(top->rootp->top__DOT__CPU__DOT__ifu1__DOT__next_pc_updated){
+    if(top->rootp->top__DOT__CPU__DOT__ifu2idu_valid){
       reg_update();
-    // }
+    }
     if(top->rootp->top__DOT__CPU__DOT__exu1__DOT__lsu_post_valid){
       decode_pc(s);
     }
@@ -126,7 +126,7 @@ void exec_once(Decode *s){
 static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
         int flag = 0;
         #ifdef CONFIG_DIFFTEST
-        if(top->rootp->top__DOT__ifu1__DOT__next_pc_updated){
+        if(top->rootp->top__DOT__CPU__DOT__ifu2idu_valid){
           if(!difftest_step(s->pc, s->dnpc)) {
             flag = 1;
           }

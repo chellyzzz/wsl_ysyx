@@ -26,7 +26,7 @@ module SRAM_lsuaxi (
 
     //write data channel
     input wire [`ysyx_23060124_ISA_WIDTH-1:0] S_AXI_WDATA,
-    input wire [`ysyx_23060124_ISA_WIDTH/8-1 : 0] S_AXI_WSTRB,
+    input wire [`ysyx_23060124_OPT_WIDTH-1 : 0] S_AXI_WSTRB,
     input wire  S_AXI_WVALID,
     output wire  S_AXI_WREADY,  
 );
@@ -107,6 +107,14 @@ begin
     end 
 end       
 
+
+always @(posedge S_AXI_ACLK) begin
+    case(S_AXI_WSTRB)
+    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(S_AXI_AWADDR, S_AXI_WDATA, axi_awready && axi_wready, 1); end
+    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(S_AXI_AWADDR, S_AXI_WDATA, axi_awready && axi_wready, 2); end
+    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(S_AXI_AWADDR, S_AXI_WDATA, axi_awready && axi_wready, 4); end
+    endcase
+end
 // Implement axi_awaddr latching
 // This process is used to latch the address when both 
 // S_AXI_AWVALID and S_AXI_WVALID are valid. 
@@ -191,14 +199,6 @@ begin
         end
     end
 end   
-
-// always @(*) begin
-//     case(S_AXI_WSTRB)
-//     `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(store_addr, store_src2, |S_AXI_WSTRB, 1); end
-//     `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(store_addr, store_src2, |S_AXI_WSTRB, 2); end
-//     `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(store_addr, store_src2, |S_AXI_WSTRB, 4); end
-//     endcase
-// end
 
 //read address ready latency
 always @( posedge S_AXI_ACLK )

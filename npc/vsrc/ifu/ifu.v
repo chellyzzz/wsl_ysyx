@@ -8,15 +8,12 @@ module ysyx_23060124_ifu (
   input i_post_ready,
   output [`ysyx_23060124_ISA_WIDTH-1:0] o_ins,
   output [`ysyx_23060124_ISA_WIDTH-1:0] o_pc_next,
+  output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_AXI_AWADDR,
   output reg o_post_valid
 );
 
     // Initiate AXI transactions
     reg  INIT_AXI_TXN;
-    // Asserts when ERROR is detected
-    reg  ERROR;
-    // Asserts when AXI transactions is complete
-    wire  TXN_DONE;
     // AXI clock signal
     wire  M_AXI_ACLK;
     // AXI active low reset signal
@@ -144,7 +141,7 @@ assign M_AXI_RVALID = s_axi_rvalid;
 assign M_AXI_RDATA = axi_rdata;
 //Example design I/O
 assign init_txn_pulse	= ~ifu_rst ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
-// assign INIT_AXI_TXN = ~ifu_rst ? 1'b1 : i_pc_update;
+// assign INIT_AXI_TXN = ~ifu_rst ? 1'b1 : (i_pc_update ? 1'b1 : 1'b0);
 
 always @(posedge M_AXI_ACLK)										      
     begin                                                                        
@@ -278,32 +275,33 @@ ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_r
 // wire s_axi_rvalid, s_axi_rready, s_axi_bvalid, s_axi_bready,s_axi_arready;
 // wire s_axi_awready, s_axi_wready;
 // wire [1:0] s_axi_rresp, s_axi_bresp;
-SRAM_ifu ifu_sram(
-    .S_AXI_ACLK(clk),
-    .S_AXI_ARESETN(ifu_rst),
-    //read data channel
-    .S_AXI_RDATA(s_axi_rdata),
-    .S_AXI_RRESP(rresp),
-    .S_AXI_RVALID(s_axi_rvalid),
-    .S_AXI_RREADY(M_AXI_RREADY),
-    //read adress channel
-    .S_AXI_ARADDR(pc_next),
-    .S_AXI_ARVALID(M_AXI_ARVALID),
-    .S_AXI_ARREADY(s_axi_arready),
-    //write back channel
-    .S_AXI_BRESP(s_axi_bresp),
-    .S_AXI_BVALID(s_axi_bvalid),
-    .S_AXI_BREADY(1),
-    //write address channel  
-    .S_AXI_AWADDR(0),
-    .S_AXI_AWVALID(0),
-    .S_AXI_AWREADY(s_axi_awready),
-    //write data channel
-    .S_AXI_WDATA(0),
-    .S_AXI_WSTRB(0),
-    .S_AXI_WVALID(0),
-    .S_AXI_WREADY(s_axi_wready)
-);
+
+// SRAM_ifu ifu_sram(
+//     .S_AXI_ACLK(clk),
+//     .S_AXI_ARESETN(ifu_rst),
+//     //read data channel
+//     .S_AXI_RDATA(s_axi_rdata),
+//     .S_AXI_RRESP(rresp),
+//     .S_AXI_RVALID(s_axi_rvalid),
+//     .S_AXI_RREADY(M_AXI_RREADY),
+//     //read adress channel
+//     .S_AXI_ARADDR(pc_next),
+//     .S_AXI_ARVALID(M_AXI_ARVALID),
+//     .S_AXI_ARREADY(s_axi_arready),
+//     //write back channel
+//     .S_AXI_BRESP(s_axi_bresp),
+//     .S_AXI_BVALID(s_axi_bvalid),
+//     .S_AXI_BREADY(1),
+//     //write address channel  
+//     .S_AXI_AWADDR(0),
+//     .S_AXI_AWVALID(0),
+//     .S_AXI_AWREADY(s_axi_awready),
+//     //write data channel
+//     .S_AXI_WDATA(0),
+//     .S_AXI_WSTRB(0),
+//     .S_AXI_WVALID(0),
+//     .S_AXI_WREADY(s_axi_wready)
+// );
 
 always @(posedge clk or negedge ifu_rst) begin
   if(~ifu_rst) begin

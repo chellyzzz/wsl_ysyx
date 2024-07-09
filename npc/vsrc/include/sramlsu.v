@@ -6,10 +6,8 @@ module SRAM_lsu (
     input [`ysyx_23060124_ISA_WIDTH - 1:0] wdata,
     input ren,
     input wen,
-    input i_pre_valid,
     input [`ysyx_23060124_OPT_WIDTH - 1:0] store_opt,
-    output  reg [`ysyx_23060124_ISA_WIDTH - 1:0] rdata,
-    output  reg o_post_valid
+    output  reg [`ysyx_23060124_ISA_WIDTH - 1:0] rdata
 );
 
 assign clk = S_AXI_ACLK;
@@ -26,12 +24,10 @@ import "DPI-C" function void store_skip (input int addr);
 always @(posedge clk or negedge rst_n) begin
     if (~rst_n) begin
         rdata <= read_data;
-        o_post_valid <= 1'b0;
         store_opt_next <= 0;
         store_addr <= 0;
         store_src2 <= 0;
     end else begin
-        o_post_valid <= i_pre_valid;
         if(ren) begin
             rdata <= read_data;
         end
@@ -55,12 +51,12 @@ always @(posedge clk) begin
     npc_pmem_read (raddr, read_data, ren, 4);
 end
 
-always @(posedge clk) begin
-    case(store_opt_next)
-    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 1); end
-    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 2); end
-    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 4); end
-    endcase
-end
+// always @(posedge clk) begin
+//     case(store_opt_next)
+//     `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 1); end
+//     `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 2); end
+//     `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(store_addr, store_src2, |store_opt_next, 4); end
+//     endcase
+// end
 
 endmodule
