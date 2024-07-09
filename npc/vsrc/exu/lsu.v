@@ -374,7 +374,7 @@ assign read_resp_error = (axi_rready & M_AXI_RVALID & M_AXI_RRESP[1]);
 // wire [`ysyx_23060124_ISA_WIDTH-1 : 0] s_axi_rdata;
 // reg [`ysyx_23060124_ISA_WIDTH-1:0] axi_rdata;
 
-SRAM_lsuaxi lsu_AXI_sram(
+SRAM lsu_AXI_sram(
     .S_AXI_ACLK(i_clk),
     .S_AXI_ARESETN(i_rst_n),
     //read data channel

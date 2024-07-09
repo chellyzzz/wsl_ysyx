@@ -106,31 +106,54 @@ ysyx_23060124_csr_RegisterFile Csrs(
   .csr_rdata(csr_rs2)
 );
 
-SRAM_ifu ifu_sram(
+//write address channel  
+wire [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] IFU_SRAM_AXI_AWADDR;
+wire  IFU_SRAM_AXI_AWVALID;
+wire  IFU_SRAM_AXI_AWREADY;
+//write data channel
+wire  IFU_SRAM_AXI_WVALID;
+wire  IFU_SRAM_AXI_WREADY;
+wire [`ysyx_23060124_ISA_WIDTH-1 : 0] IFU_SRAM_AXI_WDATA;
+wire [`ysyx_23060124_OPT_WIDTH-1 : 0] IFU_SRAM_AXI_WSTRB;
+//read data channel
+wire [`ysyx_23060124_ISA_WIDTH-1 : 0] IFU_SRAM_AXI_RDATA;
+wire [1 : 0] IFU_SRAM_AXI_RRESP;
+wire  IFU_SRAM_AXI_RVALID;
+wire  IFU_SRAM_AXI_RREADY;
+//read adress channel
+wire [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] IFU_SRAM_AXI_ARADDR;
+wire  IFU_SRAM_AXI_ARVALID;
+wire  IFU_SRAM_AXI_ARREADY;
+//write back channel
+wire [1 : 0] IFU_SRAM_AXI_BRESP;
+wire  IFU_SRAM_AXI_BVALID;
+wire  IFU_SRAM_AXI_BREADY;
+
+SRAM ifu_sram(
     .S_AXI_ACLK(clk),
-    .S_AXI_ARESETN(ifu_rst),
+    .S_AXI_ARESETN(i_rst_n),
     //read data channel
-    .S_AXI_RDATA(s_axi_rdata),
-    .S_AXI_RRESP(rresp),
-    .S_AXI_RVALID(s_axi_rvalid),
-    .S_AXI_RREADY(M_AXI_RREADY),
+    .S_AXI_RDATA(IFU_SRAM_AXI_RDATA),
+    .S_AXI_RRESP(IFU_SRAM_AXI_RRESP),
+    .S_AXI_RVALID(IFU_SRAM_AXI_RVALID),
+    .S_AXI_RREADY(IFU_SRAM_AXI_RREADY),
     //read adress channel
-    .S_AXI_ARADDR(pc_next),
-    .S_AXI_ARVALID(M_AXI_ARVALID),
-    .S_AXI_ARREADY(s_axi_arready),
+    .S_AXI_ARADDR(IFU_SRAM_AXI_ARADDR),
+    .S_AXI_ARVALID(IFU_SRAM_AXI_ARVALID),
+    .S_AXI_ARREADY(IFU_SRAM_AXI_ARREADY),
     //write back channel
-    .S_AXI_BRESP(s_axi_bresp),
-    .S_AXI_BVALID(s_axi_bvalid),
+    .S_AXI_BRESP(IFU_SRAM_AXI_BRESP),
+    .S_AXI_BVALID(IFU_SRAM_AXI_BVALID),
     .S_AXI_BREADY(1),
     //write address channel  
     .S_AXI_AWADDR(0),
     .S_AXI_AWVALID(0),
-    .S_AXI_AWREADY(s_axi_awready),
+    .S_AXI_AWREADY(IFU_SRAM_AXI_WREADY),
     //write data channel
     .S_AXI_WDATA(0),
     .S_AXI_WSTRB(0),
     .S_AXI_WVALID(0),
-    .S_AXI_WREADY(s_axi_wready)
+    .S_AXI_WREADY(IFU_SRAM_AXI_WREADY)
 );
 
 ysyx_23060124_ifu ifu1(
@@ -139,6 +162,30 @@ ysyx_23060124_ifu ifu1(
   .ifu_rst(i_rst_n),
   .i_pc_update(pc_update_en),
   .o_ins(ins),
+  //ifu -> sram axi
+  //write address channel  
+  .M_AXI_AWADDR(IFU_SRAM_AXI_AWADDR),
+  .M_AXI_AWVALID(IFU_SRAM_AXI_AWVALID),
+  .M_AXI_AWREADY(IFU_SRAM_AXI_AWREADY),
+  //write data channel
+  .M_AXI_WVALID(IFU_SRAM_AXI_WVALID),
+  .M_AXI_WREADY(IFU_SRAM_AXI_WREADY),
+  .M_AXI_WDATA(IFU_SRAM_AXI_WDATA),
+  .M_AXI_WSTRB(IFU_SRAM_AXI_WSTRB),
+  //read data channel
+  .M_AXI_RDATA(IFU_SRAM_AXI_RDATA),
+  .M_AXI_RRESP(IFU_SRAM_AXI_RRESP),
+  .M_AXI_RVALID(IFU_SRAM_AXI_RVALID),
+  .M_AXI_RREADY(IFU_SRAM_AXI_RREADY),
+  //read adress channel
+  .M_AXI_ARADDR(IFU_SRAM_AXI_ARADDR),
+  .M_AXI_ARVALID(IFU_SRAM_AXI_ARVALID),
+  .M_AXI_ARREADY(IFU_SRAM_AXI_ARREADY),
+  //write back channel
+  .M_AXI_BRESP(IFU_SRAM_AXI_BRESP),
+  .M_AXI_BVALID(IFU_SRAM_AXI_BVALID),
+  .M_AXI_BREADY(IFU_SRAM_AXI_BREADY),
+  //ifu -> idu handshake
   .i_post_ready(idu2ifu_ready),
   .o_post_valid(ifu2idu_valid),
   .o_pc_next(ifu_pc_next)

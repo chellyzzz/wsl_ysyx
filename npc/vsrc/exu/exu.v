@@ -3,10 +3,6 @@
 module ysyx_23060124_exu(
   input clk,
   input i_rst_n,
-  //
-  input i_post_ready,
-  input i_pre_valid,
-  //
   input csr_src_sel,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src1,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] src2,
@@ -21,7 +17,32 @@ module ysyx_23060124_exu(
   input [`ysyx_23060124_EXU_SEL_WIDTH - 1:0] i_src_sel,
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_res,
   output o_zero,
-  //
+  //axi interface
+    //write address channel  
+    output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_AXI_AWADDR,
+    output  M_AXI_AWVALID,
+    input  M_AXI_AWREADY,
+    //write data channel
+    output  M_AXI_WVALID,
+    input  M_AXI_WREADY,
+    output [`ysyx_23060124_ISA_WIDTH-1 : 0] M_AXI_WDATA,
+    output [`ysyx_23060124_OPT_WIDTH-1 : 0] M_AXI_WSTRB,
+    //read data channel
+    input [`ysyx_23060124_ISA_WIDTH-1 : 0] M_AXI_RDATA,
+    input [1 : 0] M_AXI_RRESP,
+    input  M_AXI_RVALID,
+    output  M_AXI_RREADY,
+    //read adress channel
+    output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_AXI_ARADDR,
+    output  M_AXI_ARVALID,
+    input  M_AXI_ARREADY,
+    //write back channel
+    input [1 : 0] M_AXI_BRESP,
+    input  M_AXI_BVALID,
+    output  M_AXI_BREADY,
+  //exu -> wbu handshake
+  input i_post_ready,
+  input i_pre_valid,
   output o_post_valid,
   output o_pre_ready
 );
