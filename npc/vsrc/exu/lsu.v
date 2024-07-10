@@ -73,7 +73,7 @@ reg  	init_txn_ff;
 reg  	init_txn_ff2;
 reg  	init_txn_edge;
 wire  	init_txn_pulse;
-
+wire is_ls, not_ls;
 // I/O Connections assignments
 reg [`ysyx_23060124_ISA_WIDTH-1:0] axi_rdata;
 

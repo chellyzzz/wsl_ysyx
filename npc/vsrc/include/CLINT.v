@@ -1,6 +1,6 @@
 `include "para_defines.v"
 
-module SRAM(
+module CLINT(
     input S_AXI_ACLK,
     input S_AXI_ARESETN,
     //read data channel
@@ -31,6 +31,7 @@ module SRAM(
     output   S_AXI_WREADY
 );
 
+//DPI-C functions
 import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int len);
 import "DPI-C" function void npc_pmem_write (input int waddr, input int wdata, input bit wen, input int len);
 
@@ -49,12 +50,15 @@ reg  	axi_rvalid;
 //----------------------------------------------
 //-- Signals for user logic register space example
 //------------------------------------------------
+
+// mtime Register Address
+localparam MTIME_REG_ADDR_LOW = 32'ha000_0048;
+localparam MTIME_REG_ADDR_HIGH = 32'ha000_004c;
 //-- Number of Slave Registers 4
-reg [`ysyx_23060124_ISA_WIDTH-1:0]	slv_reg0;
+reg [64-1:0]	reg_mtime;
 wire	 slv_reg_rden;
 wire	 slv_reg_wren;
 wire [`ysyx_23060124_ISA_WIDTH-1:0]	 reg_data_out;
-integer	 byte_index;
 reg	 aw_en;
 
 // I/O Connections assignments
@@ -67,6 +71,22 @@ assign S_AXI_ARREADY	= axi_arready;
 assign S_AXI_RDATA	= axi_rdata;
 assign S_AXI_RRESP	= axi_rresp;
 assign S_AXI_RVALID	= axi_rvalid;
+//mtime ++ per clock cycle
+always @( posedge S_AXI_ACLK or negedge S_AXI_ARESETN)
+begin
+    if ( S_AXI_ARESETN == 1'b0 )
+    begin
+        reg_mtime <= 1'b0;
+    end 
+    else
+    begin    
+        reg_mtime <= reg_mtime + 1'b1;
+        if (slv_reg_wren && S_AXI_AWADDR == MTIME_REG_ADDR_LOW) begin
+            reg_mtime <= S_AXI_WDATA;
+            $display("ERROR: Should not reach timer address");
+        end
+    end 
+end  
 // Implement axi_awready generation
 // axi_awready is asserted for one S_AXI_ACLK clock cycle when both
 // S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_awready is
@@ -105,9 +125,9 @@ end
 
 always @(posedge S_AXI_ACLK) begin
     case(S_AXI_WSTRB)
-    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 1); end
-    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 2); end
-    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 4); end
+    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 1); end
+    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 2); end
+    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 4); end
     endcase
 end
 // Implement axi_awaddr latching
@@ -243,7 +263,6 @@ begin
 end    
 
 assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
-assign slv_reg_wren = axi_wready && S_AXI_WVALID && axi_awready && S_AXI_AWVALID;
 
 always @(posedge S_AXI_ACLK)
 begin
@@ -262,12 +281,14 @@ begin
         // When there is a valid read address (S_AXI_ARVALID) with 
         // acceptance of read address by the slave (axi_arready), 
         // output the read dada 
-        if (slv_reg_rden)
+        if (slv_reg_rden && S_AXI_AWADDR == MTIME_REG_ADDR_LOW)
         begin
-            axi_rdata <= reg_data_out;     // register read data
-            // axi_rresp  <= 2'b1; // 'OKAY' response
+            axi_rdata <= reg_mtime[`ysyx_23060124_ISA_WIDTH-1 : 0];     // register read data
         end
-            // axi_rresp <= 2'b0; // 'IDLE' response
+        // else if (slv_reg_rden && S_AXI_AWADDR == MTIME_REG_ADDR_HIGH)
+        // begin
+        //     axi_rdata <= reg_mtime[64-1 : `ysyx_23060124_ISA_WIDTH];     // register read data
+        // end
     end
 end    
 

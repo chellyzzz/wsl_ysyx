@@ -2,34 +2,33 @@
 
 module ysyx_23060124_CPU
 (
-  input S_AXI_ACLK,
-  input S_AXI_ARESETN,
-    //write address channel  
-    output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_CPU_AXI_AWADDR,
-    output  M_CPU_AXI_AWVALID,
-    input  M_CPU_AXI_AWREADY,
-    //write data channel
-    output  M_CPU_AXI_WVALID,
-    input  M_CPU_AXI_WREADY,
-    output [`ysyx_23060124_ISA_WIDTH-1 : 0] M_CPU_AXI_WDATA,
-    output [`ysyx_23060124_OPT_WIDTH-1 : 0] M_CPU_AXI_WSTRB,
-    //read data channel
-    input [`ysyx_23060124_ISA_WIDTH-1 : 0] M_CPU_AXI_RDATA,
-    input [1 : 0] M_CPU_AXI_RRESP,
-    input  M_CPU_AXI_RVALID,
-    output  M_CPU_AXI_RREADY,
-    //read adress channel
-    output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_CPU_AXI_ARADDR,
-    output  M_CPU_AXI_ARVALID,
-    input  M_CPU_AXI_ARREADY,
-    //write back channel
-    input [1 : 0] M_CPU_AXI_BRESP,
-    input  M_CPU_AXI_BVALID,
-    output  M_CPU_AXI_BREADY
-
+  input  AXI_ACLK,
+  input  AXI_ARESETN,
+  //write address channel  
+  output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_CPU_AXI_AWADDR,
+  output  M_CPU_AXI_AWVALID,
+  input  M_CPU_AXI_AWREADY,
+  //write data channel
+  output  M_CPU_AXI_WVALID,
+  input  M_CPU_AXI_WREADY,
+  output [`ysyx_23060124_ISA_WIDTH-1 : 0] M_CPU_AXI_WDATA,
+  output [`ysyx_23060124_OPT_WIDTH-1 : 0] M_CPU_AXI_WSTRB,
+  //read data channel
+  input [`ysyx_23060124_ISA_WIDTH-1 : 0] M_CPU_AXI_RDATA,
+  input [1 : 0] M_CPU_AXI_RRESP,
+  input  M_CPU_AXI_RVALID,
+  output  M_CPU_AXI_RREADY,
+  //read adress channel
+  output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_CPU_AXI_ARADDR,
+  output  M_CPU_AXI_ARVALID,
+  input  M_CPU_AXI_ARREADY,
+  //write back channel
+  input [1 : 0] M_CPU_AXI_BRESP,
+  input  M_CPU_AXI_BVALID,
+  output  M_CPU_AXI_BREADY
 );
-assign clk = S_AXI_ACLK;
-assign i_rst_n = S_AXI_ARESETN;
+assign clk = AXI_ACLK;
+assign i_rst_n = AXI_ARESETN;
 
 wire [`ysyx_23060124_ISA_WIDTH-1:0] imm,ins;
 wire [`ysyx_23060124_REG_ADDR-1:0] addr_rs1,addr_rs2,addr_rd;
@@ -90,34 +89,6 @@ ysyx_23060124_csr_RegisterFile Csrs(
   .o_mtvec(mtvec),
   .csr_rdata(csr_rs2)
 );
-
-// SRAM sram(
-//     .S_AXI_ACLK                        (clk                       ),
-//     .S_AXI_ARESETN                     (i_rst_n                   ),
-//     //read data channel
-//     .S_AXI_RDATA                       (SRAM_AXI_RDATA        ),
-//     .S_AXI_RRESP                       (SRAM_AXI_RRESP        ),
-//     .S_AXI_RVALID                      (SRAM_AXI_RVALID       ),
-//     .S_AXI_RREADY                      (SRAM_AXI_RREADY       ),
-//     //read adress channel
-//     .S_AXI_ARADDR                      (SRAM_AXI_ARADDR       ),
-//     .S_AXI_ARVALID                     (SRAM_AXI_ARVALID      ),
-//     .S_AXI_ARREADY                     (SRAM_AXI_ARREADY      ),
-//     //write back channel
-//     .S_AXI_BRESP                       (SRAM_AXI_BRESP        ),
-//     .S_AXI_BVALID                      (SRAM_AXI_BVALID       ),
-//     .S_AXI_BREADY                      (SRAM_AXI_BREADY       ),
-//     //write address channel  
-//     .S_AXI_AWADDR                      (SRAM_AXI_AWADDR       ),
-//     .S_AXI_AWVALID                     (SRAM_AXI_AWVALID      ),
-//     .S_AXI_AWREADY                     (SRAM_AXI_AWREADY       ),
-//     //write data channel
-//     .S_AXI_WDATA                       (SRAM_AXI_WDATA        ),
-//     .S_AXI_WSTRB                       (SRAM_AXI_WSTRB        ),
-//     .S_AXI_WVALID                      (SRAM_AXI_WVALID       ),
-//     .S_AXI_WREADY                      (SRAM_AXI_WREADY       ) 
-// );
-
 ysyx_23060124_ifu ifu1(
     .i_pc_next                         (pc_next                   ),
     .clk                               (clk                       ),

@@ -1,6 +1,6 @@
 `include "para_defines.v"
 
-module SRAM(
+module UART(
     input S_AXI_ACLK,
     input S_AXI_ARESETN,
     //read data channel
@@ -31,6 +31,12 @@ module SRAM(
     output   S_AXI_WREADY
 );
 
+//----------------------------------------------
+//-- Signals for user logic register space example
+//------------------------------------------------
+//-- Number of Slave Registers 4
+
+//DPI-C functions
 import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int len);
 import "DPI-C" function void npc_pmem_write (input int waddr, input int wdata, input bit wen, input int len);
 
@@ -49,12 +55,15 @@ reg  	axi_rvalid;
 //----------------------------------------------
 //-- Signals for user logic register space example
 //------------------------------------------------
+
+// UART Register Address
+localparam UART_REG_ADDR = 32'ha000_03f8;
+
 //-- Number of Slave Registers 4
-reg [`ysyx_23060124_ISA_WIDTH-1:0]	slv_reg0;
+reg [`ysyx_23060124_ISA_WIDTH-1:0]	reg_uart;
 wire	 slv_reg_rden;
 wire	 slv_reg_wren;
 wire [`ysyx_23060124_ISA_WIDTH-1:0]	 reg_data_out;
-integer	 byte_index;
 reg	 aw_en;
 
 // I/O Connections assignments
@@ -67,6 +76,21 @@ assign S_AXI_ARREADY	= axi_arready;
 assign S_AXI_RDATA	= axi_rdata;
 assign S_AXI_RRESP	= axi_rresp;
 assign S_AXI_RVALID	= axi_rvalid;
+//clint ++ per clock cycle
+always @( posedge S_AXI_ACLK or negedge S_AXI_ARESETN)
+begin
+    if ( S_AXI_ARESETN == 1'b0 )
+    begin
+        reg_uart <= 1'b0;
+    end 
+    else
+    begin    
+        if (slv_reg_wren && S_AXI_AWADDR == UART_REG_ADDR) begin
+            reg_uart <= S_AXI_WDATA;
+            $write("%c", S_AXI_WDATA[7:0]); // Output the lower 8 bits as character
+        end
+    end 
+end  
 // Implement axi_awready generation
 // axi_awready is asserted for one S_AXI_ACLK clock cycle when both
 // S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_awready is
@@ -102,14 +126,6 @@ begin
     end 
 end       
 
-
-always @(posedge S_AXI_ACLK) begin
-    case(S_AXI_WSTRB)
-    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 1); end
-    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 2); end
-    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 4); end
-    endcase
-end
 // Implement axi_awaddr latching
 // This process is used to latch the address when both 
 // S_AXI_AWVALID and S_AXI_WVALID are valid. 
@@ -245,11 +261,6 @@ end
 assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
 assign slv_reg_wren = axi_wready && S_AXI_WVALID && axi_awready && S_AXI_AWVALID;
 
-always @(posedge S_AXI_ACLK)
-begin
-    npc_pmem_read (axi_araddr, reg_data_out, slv_reg_rden, 4);
-end
-
 // Output register or memory read data
 always @( posedge S_AXI_ACLK )
 begin
@@ -262,12 +273,10 @@ begin
         // When there is a valid read address (S_AXI_ARVALID) with 
         // acceptance of read address by the slave (axi_arready), 
         // output the read dada 
-        if (slv_reg_rden)
+        if (slv_reg_rden && S_AXI_AWADDR == UART_REG_ADDR)
         begin
-            axi_rdata <= reg_data_out;     // register read data
-            // axi_rresp  <= 2'b1; // 'OKAY' response
+            axi_rdata <= reg_uart;     // register read data
         end
-            // axi_rresp <= 2'b0; // 'IDLE' response
     end
 end    
 
