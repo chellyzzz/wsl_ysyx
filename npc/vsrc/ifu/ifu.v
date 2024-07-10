@@ -76,8 +76,6 @@ assign M_AXI_WDATA	= axi_wdata;
 assign M_AXI_AWVALID	= axi_awvalid;
 //Write Data(W)
 assign M_AXI_WVALID	= axi_wvalid;
-//Set all byte strobes in this example
-assign M_AXI_WSTRB	= 4'b1111;
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
 //Read Address (AR)

@@ -120,10 +120,8 @@ ysyx_23060124_lsu exu_lsu(
   .M_AXI_BVALID(M_AXI_BVALID),
   .M_AXI_BREADY(M_AXI_BREADY),
   //handshake
-  .i_post_ready(i_post_ready),
   .i_pre_valid(i_pre_valid),
-  .o_post_valid(lsu_post_valid),
-  .o_pre_ready(o_pre_ready)
+  .o_post_valid(lsu_post_valid)
 );
 
 assign brch_res = (brch_opt == `ysyx_23060124_OPT_BRCH_BEQ) ? ((alu_res == 0)) :

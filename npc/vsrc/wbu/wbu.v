@@ -60,7 +60,7 @@ assign o_rd_wdata = jal || jalr ? pc + 4 : res;
 assign o_csr_rd = res;
 assign o_pc_next =    jal ? (pc + imm) : 
                       (jalr ? (rs1 + imm) : 
-                      (brch && res ? pc + imm : 
+                      (brch && res[0] ? pc + imm : 
                       (ecall ? mtvec :
                       (mret ? mepc : pc + 4))));
 
