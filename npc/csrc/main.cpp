@@ -7,8 +7,6 @@
 void init_monitor(int, char *[]);
 int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb);
 
-bool rst_n_sync = false; // read from rtl by dpi-c.
-
 VerilatedContext* contextp = new VerilatedContext;  
 Vtop* top =new Vtop{contextp};  
 VerilatedVcdC* vcd = new VerilatedVcdC;

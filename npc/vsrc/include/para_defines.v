@@ -1,5 +1,6 @@
 `define ysyx_23060124_RESET_PC 32'h80000000
 `define ysyx_23060124_ISA_WIDTH 32
+`define ysyx_23060124_ISA_ADDR_WIDTH 32
 
 `define ysyx_23060124_REG_ADDR 5
 `define ysyx_23060124_CSR_ADDR 12

@@ -23,6 +23,7 @@
 // #include "verilated_vcd_c.h"
 
 CPU_state cpu = {};
+int cycles = 0;
 
 #define MAX_INST_TO_PRINT 11
 
@@ -50,13 +51,13 @@ extern bool ftrace_enable;
 // cpu exec
 void reg_update(){
   for(int i = 0; i < 32; i++){
-    cpu.gpr[i] = top->rootp->top__DOT__regfile1__DOT__rf[i] ;
+    cpu.gpr[i] = top->rootp->top__DOT__CPU__DOT__regfile1__DOT__rf[i] ;
   }
-  cpu.csr.mcause = top->rootp->top__DOT__Csrs__DOT__mcause;
-  cpu.csr.mstatus = top->rootp->top__DOT__Csrs__DOT__mstatus;
-  cpu.csr.mepc = top->rootp->top__DOT__Csrs__DOT__mepc;
-  cpu.csr.mtvec = top->rootp->top__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->top__DOT__pc_next;
+  cpu.csr.mcause = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mcause;
+  cpu.csr.mstatus = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mstatus;
+  cpu.csr.mepc = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mepc;
+  cpu.csr.mtvec = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mtvec;
+  cpu.pc = top->rootp->top__DOT__CPU__DOT__ifu_pc_next;
   return;
 }
 
@@ -87,17 +88,20 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, Verilate
 }
 
 void decode_pc(Decode* s){
-  s->pc = top->rootp->top__DOT__pc_next;
-  s->snpc = top->rootp->top__DOT__pc_next + 4;
-  s->dnpc = top->rootp->top__DOT__pcu1__DOT__pc_next;
-  s->isa.inst.val = top->rootp->top__DOT__ifu1__DOT__ins;
+  s->pc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc;
+  s->snpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc + 4;
+  s->dnpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc_next;
+  s->isa.inst.val = top->rootp->top__DOT__CPU__DOT__ins;
   instr = s->isa.inst.val;
-  // printf("pc: %lx\n", s->pc); 
-  // printf("dnpc: %lx\n", s->dnpc);
+  #ifdef CONFIG_ITRACE
+      disasm_pc(s);
+      iringbuf_push(s);
+  #endif
   return;
 }
 
 void exec_once(Decode *s){
+    cycles ++;
     top->clk = 0;
     top->eval();
     #ifdef CONFIG_WAVE
@@ -106,12 +110,12 @@ void exec_once(Decode *s){
     #endif  
     top->clk = 1;
     top->eval();
-    reg_update();
-    decode_pc(s);
-    #ifdef CONFIG_ITRACE
-        disasm_pc(s);
-        iringbuf_push(s);
-    #endif
+    if(top->rootp->top__DOT__CPU__DOT__ifu2idu_valid){
+      reg_update();
+    }
+    if(top->rootp->top__DOT__CPU__DOT__exu1__DOT__lsu_post_valid){
+      decode_pc(s);
+    }
     #ifdef CONFIG_WAVE
     contextp->timeInc(1);
     vcd->dump(contextp->time());
@@ -122,9 +126,11 @@ void exec_once(Decode *s){
 static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
         int flag = 0;
         #ifdef CONFIG_DIFFTEST
+        if(top->rootp->top__DOT__CPU__DOT__ifu2idu_valid){
           if(!difftest_step(s->pc, s->dnpc)) {
             flag = 1;
           }
+        }
         #endif
         #ifdef CONFIG_WP
         if(wp_check()){
@@ -200,5 +206,6 @@ void cpu_exec(uint64_t n){
 }
 
 int hit_goodtrap(){
+  // printf("\n train cycles: %d\n", cycles);
   return (cpu.gpr[10] == 0 && instr == 0x100073);
 }

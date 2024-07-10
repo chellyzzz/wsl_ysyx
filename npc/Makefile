@@ -38,12 +38,12 @@ ifeq ($(CONFIG_DIFFTEST), 1)
     NPC_FLAGS += -d $(NEMU_HOME)/build/riscv32-nemu-interpreter-so 
 endif
 
-NPC_FLAGS += -b
+# NPC_FLAGS += -b
 # NPC_FLAGS += -e $(IMAGE).elf
 NPC_FLAGS += -i $(IMAGE)
 NPC_FLAGS += -l $(BUILD_DIR)/npc-log.txt
 
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
+VSRCS = $(shell find $(abspath ./vsrc) -path $(abspath ./vsrc/templates) -prune -o -name "*.v" -print)
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 
 default: run

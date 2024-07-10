@@ -37,7 +37,9 @@ uint8_t* new_space(int size) {
 
 static void check_bound(IOMap *map, paddr_t addr, int is_write) {
   if (map == NULL) {
+    #ifdef CONFIG_MTRACE
     print_out_of_bound();
+    #endif
     printf("is_write: %s\n", is_write ? "write":"read");
     Assert(map != NULL, "address (" FMT_PADDR ") is out of bound at pc = " FMT_WORD, addr, cpu.pc);
   } else {

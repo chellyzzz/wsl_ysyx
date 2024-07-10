@@ -77,7 +77,6 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
   ref_difftest_init(port);
   ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, 0);
-  
 }
 
 static bool checkregs(CPU_state *ref, vaddr_t pc) {
@@ -87,29 +86,35 @@ static bool checkregs(CPU_state *ref, vaddr_t pc) {
 
 bool difftest_step(vaddr_t pc, vaddr_t npc){
 
+  // CPU_state ref_r;
+  // if(is_skip_ref_delay){
+  //   is_skip_ref_delay = false;
+  //   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, pc);
+  //   if (is_skip_ref) {
+  //     // to skip the checking of an instruction, just copy the reg state to reference design
+  //     is_skip_ref_delay = true; // delay one cycle to skip the instruction
+  //     is_skip_ref = false;
+  //   }
+  //   else ref_difftest_exec(1);
+  //   return 1;
+  // }
+
+  // ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT, 0);
+  // bool reg_eqa = checkregs(&ref_r, pc);
+
+  // if (is_skip_ref) {
+  //   // to skip the checking of an instruction, just copy the reg state to reference design
+  //   is_skip_ref_delay = true; // delay one cycle to skip the instruction
+  //   is_skip_ref = false;
+  // }  
+  // else ref_difftest_exec(1);
+
+  // return reg_eqa;
   CPU_state ref_r;
-  if(is_skip_ref_delay){
-    is_skip_ref_delay = false;
-    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, pc);
-    if (is_skip_ref) {
-      // to skip the checking of an instruction, just copy the reg state to reference design
-      is_skip_ref_delay = true; // delay one cycle to skip the instruction
-      is_skip_ref = false;
-    }
-    else ref_difftest_exec(1);
-    return 1;
-  }
-
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT, 0);
+
   bool reg_eqa = checkregs(&ref_r, pc);
-
-  if (is_skip_ref) {
-    // to skip the checking of an instruction, just copy the reg state to reference design
-    is_skip_ref_delay = true; // delay one cycle to skip the instruction
-    is_skip_ref = false;
-  }  
-  else ref_difftest_exec(1);
-
+    ref_difftest_exec(1);
   return reg_eqa;
 }
 #else

@@ -10,7 +10,7 @@ module ysyx_23060124_csr_RegisterFile (
   input [`ysyx_23060124_CSR_ADDR-1:0] csr_addr,
   input [`ysyx_23060124_ISA_WIDTH-1:0] csr_wdata,
   input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mret_a5,
-  output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mcasue,
+  output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mcause,
   output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mstatus,
   output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mepc,
   output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_mtvec,
@@ -26,7 +26,9 @@ always @(posedge clk) begin
             `ysyx_23060124_CSR_ADDR'h341: mepc <= csr_wdata;
             `ysyx_23060124_CSR_ADDR'h342: mcause <= csr_wdata;
             `ysyx_23060124_CSR_ADDR'h305: mtvec <= csr_wdata;
-        // default: $finish
+            default: begin
+                $display("csr_addr %h not supported", csr_addr);
+            end
         endcase
     end
     if(i_ecall)begin
