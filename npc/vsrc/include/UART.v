@@ -36,10 +36,6 @@ module UART(
 //------------------------------------------------
 //-- Number of Slave Registers 4
 
-//DPI-C functions
-import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int len);
-import "DPI-C" function void npc_pmem_write (input int waddr, input int wdata, input bit wen, input int len);
-
 // AXI4LITE signals
 reg [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 reg  	axi_awready;
@@ -81,7 +77,7 @@ always @( posedge S_AXI_ACLK or negedge S_AXI_ARESETN)
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
-        reg_uart <= 1'b0;
+        reg_uart <= 0;
     end 
     else
     begin    

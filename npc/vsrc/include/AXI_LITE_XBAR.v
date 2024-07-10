@@ -95,108 +95,113 @@ module AXI_LITE_XBAR (
     localparam SRAM_ACCESS = 3'b011;
     localparam ERROR      = 3'b111;
 
-    reg [1:0] state;
+    reg [2:0] STATE;
 
     always @(posedge AXI_ACLK or negedge AXI_ARESETN) begin
         if (AXI_ARESETN == 1'b0) begin
-            state <= IDLE;
+            STATE <= IDLE;
         end else begin
-            case (state)
+            case (STATE)
                 IDLE: begin
                     if (M_AXI_AWVALID || M_AXI_WVALID) begin
                         if (M_AXI_AWADDR >= UART_ADDR_START && M_AXI_AWADDR <= UART_ADDR_END) begin
-                            state <= UART_ACCESS;
+                            STATE <= UART_ACCESS;
                         end 
                         else if (M_AXI_AWADDR >= SRAM_ADDR_START && M_AXI_AWADDR <= SRAM_ADDR_END) begin
-                            state <= SRAM_ACCESS;
+                            STATE <= SRAM_ACCESS;
                         end 
                         else if(M_AXI_AWADDR >= CLINT_ADDR_START && M_AXI_AWADDR <= CLINT_ADDR_END) begin
-                            state <= CLINT_ACCESS;
+                            STATE <= CLINT_ACCESS;
                         end
                         else begin
-                            state <= ERROR;
+                            STATE <= ERROR;
                         end
                     end else if (M_AXI_ARVALID) begin
                         if (M_AXI_ARADDR >= UART_ADDR_START && M_AXI_ARADDR <= UART_ADDR_END) begin
-                            state <= UART_ACCESS;
+                            STATE <= UART_ACCESS;
                         end 
                         else if (M_AXI_ARADDR >= SRAM_ADDR_START && M_AXI_ARADDR <= SRAM_ADDR_END) begin
-                            state <= SRAM_ACCESS;
+                            STATE <= SRAM_ACCESS;
                         end 
                         else if (M_AXI_ARADDR >= CLINT_ADDR_START && M_AXI_ARADDR <= CLINT_ADDR_END) begin
-                            state <= CLINT_ACCESS;
+                            STATE <= CLINT_ACCESS;
                         end 
                         else begin
-                            state <= ERROR;
+                            STATE <= ERROR;
                         end
                     end
                 end
                 UART_ACCESS: begin
                     if (UART_BREADY || UART_RREADY) begin
-                            state <= IDLE;
+                            STATE <= IDLE;
                     end
                 end
                 SRAM_ACCESS: begin
                     if (SRAM_BREADY || SRAM_RREADY) begin
-                            state <= IDLE;
+                            STATE <= IDLE;
                     end
                 end
                 CLINT_ACCESS: begin
                     if (CLINT_BREADY || CLINT_RREADY) begin
-                            state <= IDLE;
+                            STATE <= IDLE;
                     end
                 end
                 ERROR: begin
-                    $display("ERROR: Invalid address");
+                    $display("XBAR ERROR: Invalid address");
                     $finish;
-                    state <= IDLE;
+                    STATE <= IDLE;
+                end
+                default: begin
+                    $display("XBAR ERROR: Invalid address");
+                    $finish;
+                    STATE <= IDLE;
                 end
             endcase
         end
     end
     always @(*) begin
-        case (state)
+        SRAM_AWADDR = 0;
+        SRAM_AWVALID = 0;
+        SRAM_WDATA = 0;
+        SRAM_WVALID = 0;
+        SRAM_WSTRB = 0;
+        SRAM_BREADY = 0;
+        SRAM_ARADDR = 0;
+        SRAM_ARVALID = 0;
+        SRAM_RREADY = 0;
+
+        UART_AWADDR = 0;
+        UART_AWVALID = 0;
+        UART_WDATA = 0;
+        UART_WVALID = 0;
+        UART_WSTRB = 0;
+        UART_BREADY = 0;
+        UART_ARADDR = 0;
+        UART_ARVALID = 0;
+        UART_RREADY = 0;
+
+        CLINT_AWADDR = 0;
+        CLINT_AWVALID = 0;
+        CLINT_WDATA = 0;
+        CLINT_WVALID = 0;
+        CLINT_WSTRB = 0;
+        CLINT_BREADY = 0;
+        CLINT_ARADDR = 0;
+        CLINT_ARVALID = 0;
+        CLINT_RREADY = 0;
+
+        M_AXI_AWREADY = 0;
+        M_AXI_WREADY = 0;
+        M_AXI_BVALID = 0;
+        M_AXI_ARREADY = 0;
+        M_AXI_RVALID = 0;
+        M_AXI_BRESP = 0;
+        M_AXI_RDATA = 0;
+        M_AXI_RRESP = 0;
+        case (STATE)
             IDLE: begin
                 // Already set default values above
                 // Default values
-                SRAM_AWADDR = 0;
-                SRAM_AWVALID = 0;
-                SRAM_WDATA = 0;
-                SRAM_WVALID = 0;
-                SRAM_WSTRB = 0;
-                SRAM_BREADY = 0;
-                SRAM_ARADDR = 0;
-                SRAM_ARVALID = 0;
-                SRAM_RREADY = 0;
-
-                UART_AWADDR = 0;
-                UART_AWVALID = 0;
-                UART_WDATA = 0;
-                UART_WVALID = 0;
-                UART_WSTRB = 0;
-                UART_BREADY = 0;
-                UART_ARADDR = 0;
-                UART_ARVALID = 0;
-                UART_RREADY = 0;
-
-                CLINT_AWADDR = 0;
-                CLINT_AWVALID = 0;
-                CLINT_WDATA = 0;
-                CLINT_WVALID = 0;
-                CLINT_WSTRB = 0;
-                CLINT_BREADY = 0;
-                CLINT_ARADDR = 0;
-                CLINT_ARVALID = 0;
-                CLINT_RREADY = 0;
-                
-                M_AXI_AWREADY = 0;
-                M_AXI_WREADY = 0;
-                M_AXI_BVALID = 0;
-                M_AXI_ARREADY = 0;
-                M_AXI_RVALID = 0;
-                M_AXI_BRESP = 0;
-                M_AXI_RDATA = 0;
-                M_AXI_RRESP = 0;
             end
             UART_ACCESS: begin
                 UART_AWADDR = M_AXI_AWADDR;
@@ -259,9 +264,13 @@ module AXI_LITE_XBAR (
                 M_AXI_RVALID = CLINT_RVALID;
             end
             ERROR: begin
-                M_AXI_BRESP <= 2'b11;  // DECERR
-                M_AXI_RRESP <= 2'b11;  // DECERR
+                M_AXI_BRESP = 2'b11;  // DECERR
+                M_AXI_RRESP = 2'b11;  // DECERR
             end 
+            default:begin
+                $display("XBAR ERROR: should not reach here");
+                $finish;
+            end
         endcase
     end
 endmodule

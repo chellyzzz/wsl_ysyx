@@ -31,10 +31,6 @@ module CLINT(
     output   S_AXI_WREADY
 );
 
-//DPI-C functions
-import "DPI-C" function void npc_pmem_read (input int raddr, output int rdata, input bit ren, input int len);
-import "DPI-C" function void npc_pmem_write (input int waddr, input int wdata, input bit wen, input int len);
-
 // AXI4LITE signals
 reg [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 reg  	axi_awready;
@@ -76,15 +72,19 @@ always @( posedge S_AXI_ACLK or negedge S_AXI_ARESETN)
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
-        reg_mtime <= 1'b0;
+        reg_mtime <= 0;
     end 
     else
     begin    
         reg_mtime <= reg_mtime + 1'b1;
         if (slv_reg_wren && S_AXI_AWADDR == MTIME_REG_ADDR_LOW) begin
-            reg_mtime <= S_AXI_WDATA;
+            reg_mtime[`ysyx_23060124_ISA_WIDTH-1 : 0] <= S_AXI_WDATA;
             $display("ERROR: Should not reach timer address");
         end
+        // else if (slv_reg_wren && S_AXI_AWADDR == MTIME_REG_ADDR_HIGH) begin
+        //     reg_mtime[64-1 : `ysyx_23060124_ISA_WIDTH] <= S_AXI_WDATA;
+        //     $display("ERROR: Should not reach timer address");
+        // end
     end 
 end  
 // Implement axi_awready generation
@@ -122,14 +122,6 @@ begin
     end 
 end       
 
-
-always @(posedge S_AXI_ACLK) begin
-    case(S_AXI_WSTRB)
-    `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 1); end
-    `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 2); end
-    `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, axi_awready && axi_wready, 4); end
-    endcase
-end
 // Implement axi_awaddr latching
 // This process is used to latch the address when both 
 // S_AXI_AWVALID and S_AXI_WVALID are valid. 
@@ -263,11 +255,6 @@ begin
 end    
 
 assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
-
-always @(posedge S_AXI_ACLK)
-begin
-    npc_pmem_read (axi_araddr, reg_data_out, slv_reg_rden, 4);
-end
 
 // Output register or memory read data
 always @( posedge S_AXI_ACLK )

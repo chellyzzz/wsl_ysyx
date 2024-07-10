@@ -72,7 +72,7 @@ assign S_AXI_RVALID	= axi_rvalid;
 // S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_awready is
 // de-asserted when reset is low.
 
-always @( posedge S_AXI_ACLK )
+always @( posedge S_AXI_ACLK)
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -108,6 +108,12 @@ always @(posedge S_AXI_ACLK) begin
     `ysyx_23060124_OPT_LSU_SB: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 1); end
     `ysyx_23060124_OPT_LSU_SH: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 2); end
     `ysyx_23060124_OPT_LSU_SW: begin  npc_pmem_write(axi_awaddr, S_AXI_WDATA, slv_reg_wren, 4); end
+    default: begin 
+        if(slv_reg_wren) begin
+            $display("SRAM WIRTE ERROR: should not reach here");
+            $finish;
+        end
+     end
     endcase
 end
 // Implement axi_awaddr latching

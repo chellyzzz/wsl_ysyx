@@ -26,6 +26,9 @@ always @(posedge clk) begin
             `ysyx_23060124_CSR_ADDR'h341: mepc <= csr_wdata;
             `ysyx_23060124_CSR_ADDR'h342: mcause <= csr_wdata;
             `ysyx_23060124_CSR_ADDR'h305: mtvec <= csr_wdata;
+            default: begin
+                $display("csr_addr %h not supported", csr_addr);
+            end
         endcase
     end
     if(i_ecall)begin

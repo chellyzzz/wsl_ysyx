@@ -18,28 +18,28 @@ module ysyx_23060124_exu(
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_res,
   output o_zero,
   //axi interface
-    //write address channel  
-    output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_AXI_AWADDR,
-    output  M_AXI_AWVALID,
-    input  M_AXI_AWREADY,
-    //write data channel
-    output  M_AXI_WVALID,
-    input  M_AXI_WREADY,
-    output [`ysyx_23060124_ISA_WIDTH-1 : 0] M_AXI_WDATA,
-    output [`ysyx_23060124_OPT_WIDTH-1 : 0] M_AXI_WSTRB,
-    //read data channel
-    input [`ysyx_23060124_ISA_WIDTH-1 : 0] M_AXI_RDATA,
-    input [1 : 0] M_AXI_RRESP,
-    input  M_AXI_RVALID,
-    output  M_AXI_RREADY,
-    //read adress channel
-    output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_AXI_ARADDR,
-    output  M_AXI_ARVALID,
-    input  M_AXI_ARREADY,
-    //write back channel
-    input [1 : 0] M_AXI_BRESP,
-    input  M_AXI_BVALID,
-    output  M_AXI_BREADY,
+  //write address channel  
+  output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_AXI_AWADDR,
+  output  M_AXI_AWVALID,
+  input  M_AXI_AWREADY,
+  //write data channel
+  output  M_AXI_WVALID,
+  input  M_AXI_WREADY,
+  output [`ysyx_23060124_ISA_WIDTH-1 : 0] M_AXI_WDATA,
+  output [`ysyx_23060124_OPT_WIDTH-1 : 0] M_AXI_WSTRB,
+  //read data channel
+  input [`ysyx_23060124_ISA_WIDTH-1 : 0] M_AXI_RDATA,
+  input [1 : 0] M_AXI_RRESP,
+  input  M_AXI_RVALID,
+  output  M_AXI_RREADY,
+  //read adress channel
+  output [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] M_AXI_ARADDR,
+  output  M_AXI_ARVALID,
+  input  M_AXI_ARREADY,
+  //write back channel
+  input [1 : 0] M_AXI_BRESP,
+  input  M_AXI_BVALID,
+  output  M_AXI_BREADY,
   //exu -> wbu handshake
   input i_post_ready,
   input i_pre_valid,
@@ -120,8 +120,10 @@ ysyx_23060124_lsu exu_lsu(
   .M_AXI_BVALID(M_AXI_BVALID),
   .M_AXI_BREADY(M_AXI_BREADY),
   //handshake
+  .i_post_ready(i_post_ready),
   .i_pre_valid(i_pre_valid),
-  .o_post_valid(lsu_post_valid)
+  .o_post_valid(lsu_post_valid),
+  .o_pre_ready(o_pre_ready)
 );
 
 assign brch_res = (brch_opt == `ysyx_23060124_OPT_BRCH_BEQ) ? ((alu_res == 0)) :
@@ -132,7 +134,7 @@ assign brch_res = (brch_opt == `ysyx_23060124_OPT_BRCH_BEQ) ? ((alu_res == 0)) :
                   (brch_opt == `ysyx_23060124_OPT_BRCH_BGEU) ? ((carry == 1'b0)) :
                   1'b0;
 
-assign o_res = (|load_opt) ? lsu_res : (|brch_opt ? brch_res : alu_res);
+assign o_res = (|load_opt) ? lsu_res : (|brch_opt ? {31'b0, brch_res} : alu_res);
 assign o_zero = ~(|o_res);
 
 endmodule

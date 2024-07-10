@@ -27,6 +27,7 @@ module ysyx_23060124_CPU
   input  M_CPU_AXI_BVALID,
   output  M_CPU_AXI_BREADY
 );
+wire clk, i_rst_n;
 assign clk = AXI_ACLK;
 assign i_rst_n = AXI_ARESETN;
 
@@ -288,24 +289,24 @@ AXI_LITE_ARBITRATOR ifu_lsu_arbitor(
     .LSU_RVALID                        (LSU_SRAM_AXI_RVALID       ),
     .LSU_RREADY                        (LSU_SRAM_AXI_RREADY       ),
 
-  // SRAM AXI-Lite Interface
-    .SRAM_AWADDR                       (M_CPU_AXI_AWADDR           ),
-    .SRAM_AWVALID                      (M_CPU_AXI_AWVALID          ),
-    .SRAM_AWREADY                      (M_CPU_AXI_AWREADY          ),
-    .SRAM_WDATA                        (M_CPU_AXI_WDATA            ),
-    .SRAM_WSTRB                        (M_CPU_AXI_WSTRB            ),
-    .SRAM_WVALID                       (M_CPU_AXI_WVALID           ),
-    .SRAM_WREADY                       (M_CPU_AXI_WREADY           ),
-    .SRAM_BRESP                        (M_CPU_AXI_BRESP            ),
-    .SRAM_BVALID                       (M_CPU_AXI_BVALID           ),
-    .SRAM_BREADY                       (M_CPU_AXI_BREADY           ),
-    .SRAM_ARADDR                       (M_CPU_AXI_ARADDR           ),
-    .SRAM_ARVALID                      (M_CPU_AXI_ARVALID          ),
-    .SRAM_ARREADY                      (M_CPU_AXI_ARREADY          ),
-    .SRAM_RDATA                        (M_CPU_AXI_RDATA            ),
-    .SRAM_RRESP                        (M_CPU_AXI_RRESP            ),
-    .SRAM_RVALID                       (M_CPU_AXI_RVALID           ),
-    .SRAM_RREADY                       (M_CPU_AXI_RREADY           ) 
+  // CPU AXI-Lite Interface
+    .CPU_AWADDR                       (M_CPU_AXI_AWADDR           ),
+    .CPU_AWVALID                      (M_CPU_AXI_AWVALID          ),
+    .CPU_AWREADY                      (M_CPU_AXI_AWREADY          ),
+    .CPU_WDATA                        (M_CPU_AXI_WDATA            ),
+    .CPU_WSTRB                        (M_CPU_AXI_WSTRB            ),
+    .CPU_WVALID                       (M_CPU_AXI_WVALID           ),
+    .CPU_WREADY                       (M_CPU_AXI_WREADY           ),
+    .CPU_BRESP                        (M_CPU_AXI_BRESP            ),
+    .CPU_BVALID                       (M_CPU_AXI_BVALID           ),
+    .CPU_BREADY                       (M_CPU_AXI_BREADY           ),
+    .CPU_ARADDR                       (M_CPU_AXI_ARADDR           ),
+    .CPU_ARVALID                      (M_CPU_AXI_ARVALID          ),
+    .CPU_ARREADY                      (M_CPU_AXI_ARREADY          ),
+    .CPU_RDATA                        (M_CPU_AXI_RDATA            ),
+    .CPU_RRESP                        (M_CPU_AXI_RRESP            ),
+    .CPU_RVALID                       (M_CPU_AXI_RVALID           ),
+    .CPU_RREADY                       (M_CPU_AXI_RREADY           ) 
 );
 
 import "DPI-C" function bit if_ebrk(input int ins);

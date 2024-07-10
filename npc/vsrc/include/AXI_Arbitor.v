@@ -41,24 +41,24 @@ module AXI_LITE_ARBITRATOR (
     output reg                          LSU_RVALID                 ,
     input                               LSU_RREADY                 ,
 
-    // SRAM AXI-Lite Interface
-    output reg         [`ysyx_23060124_ISA_ADDR_WIDTH-1:0]SRAM_AWADDR                ,
-    output reg                          SRAM_AWVALID               ,
-    input                               SRAM_AWREADY               ,
-    output reg         [`ysyx_23060124_ISA_WIDTH-1:0]SRAM_WDATA                 ,
-    output reg                          SRAM_WVALID                ,
-    output reg         [`ysyx_23060124_OPT_WIDTH-1:0]SRAM_WSTRB                 ,
-    input                               SRAM_WREADY                ,
-    input              [   1:0]         SRAM_BRESP                 ,
-    input                               SRAM_BVALID                ,
-    output reg                          SRAM_BREADY                ,
-    output reg         [`ysyx_23060124_ISA_ADDR_WIDTH-1:0]SRAM_ARADDR                ,
-    output reg                          SRAM_ARVALID               ,
-    input                               SRAM_ARREADY               ,
-    input              [`ysyx_23060124_ISA_WIDTH-1:0]SRAM_RDATA                 ,
-    input              [   1:0]         SRAM_RRESP                 ,
-    input                               SRAM_RVALID                ,
-    output reg                          SRAM_RREADY                 
+    // CPU AXI-Lite Interface
+    output reg         [`ysyx_23060124_ISA_ADDR_WIDTH-1:0]CPU_AWADDR                ,
+    output reg                          CPU_AWVALID               ,
+    input                               CPU_AWREADY               ,
+    output reg         [`ysyx_23060124_ISA_WIDTH-1:0]CPU_WDATA                 ,
+    output reg                          CPU_WVALID                ,
+    output reg         [`ysyx_23060124_OPT_WIDTH-1:0]CPU_WSTRB                 ,
+    input                               CPU_WREADY                ,
+    input              [   1:0]         CPU_BRESP                 ,
+    input                               CPU_BVALID                ,
+    output reg                          CPU_BREADY                ,
+    output reg         [`ysyx_23060124_ISA_ADDR_WIDTH-1:0]CPU_ARADDR                ,
+    output reg                          CPU_ARVALID               ,
+    input                               CPU_ARREADY               ,
+    input              [`ysyx_23060124_ISA_WIDTH-1:0]CPU_RDATA                 ,
+    input              [   1:0]         CPU_RRESP                 ,
+    input                               CPU_RVALID                ,
+    output reg                          CPU_RREADY                 
 );
     // Arbitration state machine
     reg [1:0] STATE;
@@ -79,89 +79,98 @@ module AXI_LITE_ARBITRATOR (
                     end
                 end
                 IFU_ACCESS: begin
-                    if (SRAM_BREADY || SRAM_RREADY) begin
+                    if (CPU_BREADY || CPU_RREADY) begin
                         STATE <= IDLE;
                     end
                 end
                 LSU_ACCESS: begin
-                    if (SRAM_BREADY || SRAM_RREADY) begin
+                    if (CPU_BREADY || CPU_RREADY) begin
                         STATE <= IDLE;
                     end
+                end
+                default: begin
+                    $display("ARBITOR ERROR: should not reach here");
+                    $finish;
+                    STATE <= IDLE;
                 end
             endcase
         end
     end
 
     always @(*) begin
+        CPU_AWADDR = 0;
+        CPU_AWVALID = 0;
+        CPU_WDATA = 0;
+        CPU_WVALID = 0;
+        CPU_WSTRB = 0;
+        CPU_BREADY = 0;
+        CPU_ARADDR = 0;
+        CPU_ARVALID = 0;
+        CPU_RREADY = 0;
+        IFU_AWREADY = 0;
+        IFU_WREADY = 0;
+        IFU_BVALID = 0;
+        IFU_ARREADY = 0;
+        IFU_RVALID = 0;
+        IFU_BRESP = 0;
+        IFU_RDATA = 0;
+        IFU_RRESP = 0;
+        LSU_AWREADY = 0;
+        LSU_WREADY = 0;
+        LSU_BVALID = 0;
+        LSU_ARREADY = 0;
+        LSU_RVALID = 0;
+        LSU_BRESP = 0;
+        LSU_RDATA = 0;
+        LSU_RRESP = 0;
         case (STATE)
             IDLE: begin
                 // Already set default values above
                 // Default values
-                SRAM_AWADDR = 0;
-                SRAM_AWVALID = 0;
-                SRAM_WDATA = 0;
-                SRAM_WVALID = 0;
-                SRAM_WSTRB = 0;
-                SRAM_BREADY = 0;
-                SRAM_ARADDR = 0;
-                SRAM_ARVALID = 0;
-                SRAM_RREADY = 0;
-                IFU_AWREADY = 0;
-                IFU_WREADY = 0;
-                IFU_BVALID = 0;
-                IFU_ARREADY = 0;
-                IFU_RVALID = 0;
-                IFU_BRESP = 0;
-                IFU_RDATA = 0;
-                IFU_RRESP = 0;
-                LSU_AWREADY = 0;
-                LSU_WREADY = 0;
-                LSU_BVALID = 0;
-                LSU_ARREADY = 0;
-                LSU_RVALID = 0;
-                LSU_BRESP = 0;
-                LSU_RDATA = 0;
-                LSU_RRESP = 0;
             end
             IFU_ACCESS: begin
-                SRAM_AWADDR = IFU_AWADDR;
-                SRAM_AWVALID = IFU_AWVALID;
-                SRAM_WDATA = IFU_WDATA;
-                SRAM_WVALID = IFU_WVALID;
-                SRAM_WSTRB = IFU_WSTRB;
-                SRAM_BREADY = IFU_BREADY;
-                SRAM_ARADDR = IFU_ARADDR;
-                SRAM_ARVALID = IFU_ARVALID;
-                SRAM_RREADY = IFU_RREADY;
+                CPU_AWADDR = IFU_AWADDR;
+                CPU_AWVALID = IFU_AWVALID;
+                CPU_WDATA = IFU_WDATA;
+                CPU_WVALID = IFU_WVALID;
+                CPU_WSTRB = IFU_WSTRB;
+                CPU_BREADY = IFU_BREADY;
+                CPU_ARADDR = IFU_ARADDR;
+                CPU_ARVALID = IFU_ARVALID;
+                CPU_RREADY = IFU_RREADY;
 
-                IFU_AWREADY = SRAM_AWREADY;
-                IFU_WREADY = SRAM_WREADY;
-                IFU_BRESP = SRAM_BRESP;
-                IFU_BVALID = SRAM_BVALID;
-                IFU_ARREADY = SRAM_ARREADY;
-                IFU_RDATA = SRAM_RDATA;
-                IFU_RRESP = SRAM_RRESP;
-                IFU_RVALID = SRAM_RVALID;
+                IFU_AWREADY = CPU_AWREADY;
+                IFU_WREADY = CPU_WREADY;
+                IFU_BRESP = CPU_BRESP;
+                IFU_BVALID = CPU_BVALID;
+                IFU_ARREADY = CPU_ARREADY;
+                IFU_RDATA = CPU_RDATA;
+                IFU_RRESP = CPU_RRESP;
+                IFU_RVALID = CPU_RVALID;
             end
             LSU_ACCESS: begin
-                SRAM_AWADDR = LSU_AWADDR;
-                SRAM_AWVALID = LSU_AWVALID;
-                SRAM_WDATA = LSU_WDATA;
-                SRAM_WVALID = LSU_WVALID;
-                SRAM_WSTRB = LSU_WSTRB;
-                SRAM_BREADY = LSU_BREADY;
-                SRAM_ARADDR = LSU_ARADDR;
-                SRAM_ARVALID = LSU_ARVALID;
-                SRAM_RREADY = LSU_RREADY;
+                CPU_AWADDR = LSU_AWADDR;
+                CPU_AWVALID = LSU_AWVALID;
+                CPU_WDATA = LSU_WDATA;
+                CPU_WVALID = LSU_WVALID;
+                CPU_WSTRB = LSU_WSTRB;
+                CPU_BREADY = LSU_BREADY;
+                CPU_ARADDR = LSU_ARADDR;
+                CPU_ARVALID = LSU_ARVALID;
+                CPU_RREADY = LSU_RREADY;
 
-                LSU_AWREADY = SRAM_AWREADY;
-                LSU_WREADY = SRAM_WREADY;
-                LSU_BRESP = SRAM_BRESP;
-                LSU_BVALID = SRAM_BVALID;
-                LSU_ARREADY = SRAM_ARREADY;
-                LSU_RDATA = SRAM_RDATA;
-                LSU_RRESP = SRAM_RRESP;
-                LSU_RVALID = SRAM_RVALID;
+                LSU_AWREADY = CPU_AWREADY;
+                LSU_WREADY = CPU_WREADY;
+                LSU_BRESP = CPU_BRESP;
+                LSU_BVALID = CPU_BVALID;
+                LSU_ARREADY = CPU_ARREADY;
+                LSU_RDATA = CPU_RDATA;
+                LSU_RRESP = CPU_RRESP;
+                LSU_RVALID = CPU_RVALID;
+            end
+            default:begin
+                $display("ARBITOR ERROR: should not reach here");
+                $finish;
             end
         endcase
     end
