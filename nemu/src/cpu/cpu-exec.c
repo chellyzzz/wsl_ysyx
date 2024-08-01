@@ -14,21 +14,39 @@
 ***************************************************************************************/
 
 #include <cpu/cpu.h>
+#include <cpu/trace.h>
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
+#include <isa.h>
+
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 10
-
+#define MAX_INST_TO_PRINT 11
+#ifdef CONFIG_WP
+bool wp_check();
+#endif
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
+
+
+#ifdef CONFIG_FTRACE
+
+void print_funcnodes();
+void free_funcnodes();
+const char* get_function_name(vaddr_t addr);
+void ftrace_call(Decode *_this, int call_level);
+void ftrace_return(Decode *_this, int call_level);
+static int last_call_depth = 0;
+extern bool ftrace_enable;
+
+#endif
 
 void device_update();
 
@@ -38,6 +56,54 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+  #ifdef CONFIG_WP
+  if(wp_check())  nemu_state.state = NEMU_STOP;
+  #endif
+#ifdef CONFIG_ITRACE
+  iringbuf_push(_this);
+#endif
+
+#ifdef CONFIG_FTRACE
+  if(!ftrace_enable){
+    return ;
+  }
+    word_t imm = (_this->isa.inst.val >> 20) & 0xFFF;
+    word_t rd = (_this->isa.inst.val >> 7) & 0x1F;
+    word_t opt = _this->isa.inst.val & 0x7F;
+    word_t rs1 = (_this->isa.inst.val >> 15) & 0x1F;
+
+    if (functab_head) {
+        if (opt == 0x6f) {
+          if(rd == 1) {
+            ftrace_call(_this, last_call_depth);         
+            last_call_depth++;
+          }
+          else if(rd == 0){
+            ftrace_return(_this, last_call_depth-1); // j
+            last_call_depth--;
+          }
+        }
+        else if (opt == 0x67) {
+            if(_this->isa.inst.val == 0x00008067) {
+            ftrace_return(_this, last_call_depth-1); // ret -> jalr x0, 0(x1)
+            last_call_depth--;
+            } 
+            else if (rd == 1) {
+                ftrace_call(_this, last_call_depth);
+                last_call_depth++;
+            } 
+            else if (rd == 0 && imm == 0 && rs1 == 1) {
+                ftrace_call(_this, last_call_depth); // jr rs1 -> jalr x0, 0(rs1), which may be other control flow e.g. 'goto','for'
+                last_call_depth++;
+            }
+        }
+        else if (_this->isa.inst.val == 0x00100073) {
+            ftrace_return(_this, last_call_depth-1); // jal
+            last_call_depth--;
+        }
+
+    }
+#endif
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
@@ -89,15 +155,20 @@ static void statistic() {
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
+
 }
 
 void assert_fail_msg() {
+  #ifdef CONFIG_ITRACE
+    iringbuf_print();
+  #endif
   isa_reg_display();
   statistic();
 }
 
 /* Simulate how the CPU works. */
 void cpu_exec(uint64_t n) {
+
   g_print_step = (n < MAX_INST_TO_PRINT);
   switch (nemu_state.state) {
     case NEMU_END: case NEMU_ABORT:
@@ -122,7 +193,10 @@ void cpu_exec(uint64_t n) {
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
-      // fall through
-    case NEMU_QUIT: statistic();
+          #ifdef CONFIG_ITRACE
+            if(nemu_state.state == NEMU_ABORT || nemu_state.halt_ret != 0) assert_fail_msg();
+          #endif
+    case NEMU_QUIT: 
+      statistic();
   }
 }

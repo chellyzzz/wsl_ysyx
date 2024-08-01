@@ -151,6 +151,49 @@ config ITRACE_COND
   string "Only trace instructions when the condition is true"
   default "true"
 
+config FTRACE
+  depends on TRACE
+  bool "Enable function tracer"
+  default n
+
+config FTRACE_HALF_WAY
+  depends on FTRACE
+  bool "Modify function tracer half way, ftrace off if condition is true"
+  default n
+
+config DTRACE
+  depends on TRACE
+  bool "Enable device tracer"
+  default n
+
+config MTRACE
+  depends on TRACE
+  bool "Enable mtracer"
+  default n
+
+config MTRACE_SIZE_CONF
+  bool "Mtrace within specified address range"
+  depends on MTRACE
+  default n
+
+config MTRACE_BASE
+  hex "Mtrace base address"
+  depends on MTRACE && MTRACE_SIZE_CONF
+  default MBASE
+
+config MTRACE_SIZE
+  hex "Mtrace size"
+  depends on MTRACE && MTRACE_SIZE_CONF
+  default MSIZE
+
+config ETRACE
+  depends on TRACE
+  bool "Enable etracer"
+  default n
+
+config WP
+  bool "Enable watchpoint tracer"
+  default n
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
