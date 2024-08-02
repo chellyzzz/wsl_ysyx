@@ -13,20 +13,20 @@ void fsbl(){
 }
 
 void ssbl(){
-    extern char _text, text_flash_start, _edata;
+    extern char _text, text_flash_start, _etext;
     volatile char *src = &text_flash_start;
     volatile char *dst = &_text;
-    volatile char *end = &_edata;
+    volatile char *end = &_etext;
     /* ROM has data at end of text; copy it.  */
     while (dst < end)
       *dst++ = *src++;
 
-    // extern char _rodata, rodata_flash_start, _erodata;
-    // src = &rodata_flash_start;
-    // dst = &_rodata;
-    // end = &_erodata;    
-    // while (dst < end)
-    //   *dst++ = *src++;
+    extern char _rodata, rodata_flash_start, _edata;
+    src = &rodata_flash_start;
+    dst = &_rodata;
+    end = &_edata;    
+    while (dst < end)
+      *dst++ = *src++;
 
     // extern char _data, data_flash_start, _edata;
     // src = &data_flash_start;
