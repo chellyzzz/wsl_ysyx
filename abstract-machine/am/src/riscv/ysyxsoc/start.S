@@ -6,3 +6,5 @@ _start:
   mv s0, zero
   la sp, _stack_pointer
   jal fsbl
+  la t0, _trm_init
+  jr t0

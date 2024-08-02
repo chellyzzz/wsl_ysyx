@@ -115,7 +115,7 @@ reg o_pre_ready_d1;
 wire  init_txn_pulse;
 wire  is_ls, not_ls;
 wire  in_sram, in_uart, in_mrom, in_flash, in_spi, in_psram, in_sdram;
-wire [2:0] shift_sram, shift_uart, shift_mrom, shift_flash, shift_spi, shift_psram, shitf_sdram, shift;
+wire [1:0] shift_sram, shift_uart, shift_mrom, shift_flash, shift_spi, shift_psram, shitf_sdram, shift;
 wire [`ysyx_23060124_BUS_WIDTH-1:0] read_res;
 // I/O Connections assignments
 reg [`ysyx_23060124_BUS_WIDTH-1:0] axi_rdata;
@@ -175,7 +175,7 @@ assign in_spi = (alu_res >= `ysyx_23060124_SPI_ADDR) && (alu_res < `ysyx_2306012
 assign in_psram = (alu_res >= `ysyx_23060124_PSRAM_ADDR) && (alu_res < `ysyx_23060124_PSRAM_ADDR + `ysyx_23060124_PSRAM_SIZE);
 assign in_sdram = (alu_res >= `ysyx_23060124_SDRAM_ADDR) && (alu_res < `ysyx_23060124_SDRAM_ADDR + `ysyx_23060124_SDRAM_SIZE);
 
-assign shift_uart = {1'b0, alu_res[1:0]};
+assign shift_uart =  alu_res[1:0];
 assign shift_flash = alu_res[1:0];
 assign shift_sram = alu_res[1:0];
 assign shift_mrom = alu_res[1:0];

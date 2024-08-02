@@ -28,7 +28,7 @@ CPU_state cpu = {};
 int cycles = 0;
 
 #define MAX_INST_TO_PRINT 11
-#define PC_WAVE_START 0xa0000098
+#define PC_WAVE_START 0xf000000
 #ifdef CONFIG_WP
 bool wp_check();
 #endif

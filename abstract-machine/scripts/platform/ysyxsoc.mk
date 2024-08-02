@@ -1,20 +1,18 @@
 AM_SRCS := riscv/ysyxsoc/start.S \
            riscv/ysyxsoc/trm.c \
-           riscv/ysyxsoc/trap.S \
-           platform/dummy/vme.c \
 		   riscv/ysyxsoc/bootloader.c \
-           platform/dummy/mpe.c \
+           riscv/ysyxsoc/trap.S \
            riscv/ysyxsoc/ioe.c \
            riscv/ysyxsoc/timer.c \
-		#    riscv/ysyxsoc/uart.c \
+           riscv/ysyxsoc/cte.c \
+           riscv/ysyxsoc/input.c \
+           platform/dummy/vme.c \
+           platform/dummy/mpe.c \
+		# #    riscv/ysyxsoc/uart.c \
 		#    riscv/ysyxsoc/gpu.c \
-        #    riscv/ysyxsoc/input.c \
-        #    riscv/ysyxsoc/cte.c \
-
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDFLAGS   += -T $(AM_HOME)/scripts/linkersoc.ld \
-						 --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0\
 						 --defsym=_sram_start=0x0f000000 --defsym=_sram_size=0x4000\
 
 LDFLAGS   += --gc-sections -e _start

@@ -174,7 +174,7 @@ ifu1
   //write data channel
     .M_AXI_WVALID                      (IFU_SRAM_AXI_WVALID       ),
     .M_AXI_WREADY                      (IFU_SRAM_AXI_WREADY       ),
-    .M_AXI_WDATA                       (IFU_SRAM_AXI_WDATA[31:0]  ),
+    .M_AXI_WDATA                       (IFU_SRAM_AXI_WDATA        ),
     .M_AXI_WSTRB                       (IFU_SRAM_AXI_WSTRB        ),
     .M_AXI_WLAST                       (IFU_SRAM_AXI_WLAST        ),
 
@@ -526,7 +526,7 @@ CLINT clint
     .S_AXI_ACLK                        (clk                       ),
     .S_AXI_ARESETN                     (rst_n_sync                ),
     //read data channel
-    .S_AXI_RDATA                       (CLINT_AXI_RDATA[31:0]     ),
+    .S_AXI_RDATA                       (CLINT_AXI_RDATA     ),
     .S_AXI_RRESP                       (CLINT_AXI_RRESP           ),
     .S_AXI_RVALID                      (CLINT_AXI_RVALID          ),
     .S_AXI_RREADY                      (CLINT_AXI_RREADY          ),
@@ -556,7 +556,7 @@ CLINT clint
     .S_AXI_AWBURST                     (CLINT_AXI_AWBURST         ),
 
     //write data channel
-    .S_AXI_WDATA                       (CLINT_AXI_WDATA[31:0]     ),
+    .S_AXI_WDATA                       (CLINT_AXI_WDATA     ),
     .S_AXI_WSTRB                       (CLINT_AXI_WSTRB           ),
     .S_AXI_WVALID                      (CLINT_AXI_WVALID          ),
     .S_AXI_WREADY                      (CLINT_AXI_WREADY          ),
