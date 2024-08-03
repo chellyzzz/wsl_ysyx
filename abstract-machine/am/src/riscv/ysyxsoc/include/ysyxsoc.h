@@ -13,7 +13,7 @@
 // Flash	0x3000_0000~0x3fff_ffff
 // PSRAM	0x8000_0000~0x9fff_ffff
 // SDRAM	0xa000_0000~0xbfff_ffff
-
+// keyboard 0x1001_1000~0x1001_1007
 #define UART_BASE       0x10000000
 #define UART_TXFIFO     0x00
 #define UART_RXFIFO     0x04
@@ -24,13 +24,10 @@
 #define UART_THR  0   // Transmitter Holding Register
 #define UART_LSR_EMPTY_MASK 0x20  // Transmitter Holding Register Empty
 
-#define KBD_ADDR        0x0000060
+#define KBD_ADDR        0x10011000
+#define SERIAL_PORT     0x10000000
 #define RTC_ADDR        0x02000000
-#define VGACTL_ADDR     0x02000000
-#define FB_ADDR         0x02000000
+#define CLINT_PORT      0x02000000
 
-// #define CLINT_PORT          0x02000000
-// #define KBD_ADDR            0x10011000
-// #define VGACTL_ADDR         0x211FFFF0
-// #define SYNC_ADDR           (VGACTL_ADDR + 4)
-// #define FB_ADDR             0x21000000
+#define VGACTL_ADDR         0x21000000
+#define FB_ADDR             0x21000000

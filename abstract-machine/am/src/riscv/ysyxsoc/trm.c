@@ -19,10 +19,7 @@ Area heap = RANGE(&_heap_start, &_heap_end);
 static const char mainargs[] = MAINARGS;
 
 #define divider 1
-// lsr bit 7 to 1
-// divisor latches msb adn lsb
-// set lsr bit 7 to 0
-// more
+
 void uart_init() {
 
     outb(UART_BASE + UART_LCR, 0x80);

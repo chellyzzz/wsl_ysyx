@@ -8,8 +8,8 @@ AM_SRCS := riscv/ysyxsoc/start.S \
            riscv/ysyxsoc/input.c \
            platform/dummy/vme.c \
            platform/dummy/mpe.c \
-		# #    riscv/ysyxsoc/uart.c \
-		#    riscv/ysyxsoc/gpu.c \
+		   riscv/ysyxsoc/uart.c \
+		   riscv/ysyxsoc/gpu.c \
 
 CFLAGS    += -fdata-sections -ffunction-sections
 LDFLAGS   += -T $(AM_HOME)/scripts/linkersoc.ld \

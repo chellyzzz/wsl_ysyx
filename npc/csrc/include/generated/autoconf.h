@@ -26,6 +26,7 @@
 #define CONFIG_CC_DEBUG 1
 #define CONFIG_TRACE_START 0
 #define CONFIG_CC_GCC 1
+#define CONFIG_NVBOARD 1
 #define CONFIG_TRACE 1
 #define CONFIG_ISA "riscv32"
 #define CONFIG_WP 1
