@@ -1,5 +1,12 @@
-`include "para_defines.v"
-
+ 
+//LSU_OPT
+`define ysyx_23060124_OPT_LSU_LB 4'b1
+`define ysyx_23060124_OPT_LSU_LH 4'b11
+`define ysyx_23060124_OPT_LSU_LW 4'b1111
+//STORE
+`define ysyx_23060124_OPT_LSU_SB 4'b1
+`define ysyx_23060124_OPT_LSU_SH 4'b11
+`define ysyx_23060124_OPT_LSU_SW 4'b1111
 module ysyx_23060124_LSU #(
 		// Users to add parameters here
 
@@ -11,11 +18,11 @@ module ysyx_23060124_LSU #(
 		// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
 		parameter integer C_M_AXI_BURST_LEN	= 1,
 		// Thread ID Width
-		parameter integer C_M_AXI_ID_WIDTH	= `ysyx_23060124_AXI_ID_WIDTH,
+		parameter integer C_M_AXI_ID_WIDTH	= 4,
 		// Width of Address Bus
 		parameter integer C_M_AXI_ADDR_WIDTH	= 32,
 		// Width of Data Bus
-		parameter integer C_M_AXI_DATA_WIDTH	= `ysyx_23060124_BUS_WIDTH,
+		parameter integer C_M_AXI_DATA_WIDTH	= 32,
 		// Width of User Write Address Bus
 		parameter integer C_M_AXI_AWUSER_WIDTH	= 0,
 		// Width of User Read Address Bus
@@ -30,16 +37,16 @@ module ysyx_23060124_LSU #(
   (
   input                               i_clk   ,
   input                               i_rst_n , 
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] lsu_src2,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] alu_res,
-  input [`ysyx_23060124_MASK_LENTH - 1:0] load_opt,
-  input [`ysyx_23060124_MASK_LENTH - 1:0] store_opt,
+  input [32 - 1:0] lsu_src2,
+  input [32 - 1:0] alu_res,
+  input [4 - 1:0] load_opt,
+  input [4 - 1:0] store_opt,
   input if_unsigned,
 
-  output reg [`ysyx_23060124_ISA_WIDTH - 1:0] lsu_res,
+  output reg [32 - 1:0] lsu_res,
   //axi interface
     //write address channel  
-    output             [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]M_AXI_AWADDR               ,
+    output             [32-1 : 0]M_AXI_AWADDR               ,
     output                              M_AXI_AWVALID              ,
     input                               M_AXI_AWREADY              ,
     output             [   7:0]         M_AXI_AWLEN                ,
@@ -50,7 +57,7 @@ module ysyx_23060124_LSU #(
     output                              M_AXI_WVALID               ,
     input                               M_AXI_WREADY               ,
     output             [C_M_AXI_DATA_WIDTH-1 : 0]M_AXI_WDATA                ,
-    output             [`ysyx_23060124_MASK_LENTH-1 : 0]M_AXI_WSTRB                ,
+    output             [4-1 : 0]M_AXI_WSTRB                ,
     input                               M_AXI_WLAST                ,
 
     //read data channel
@@ -62,7 +69,7 @@ module ysyx_23060124_LSU #(
     input                               M_AXI_RLAST                ,
 
     //read adress channel
-    output             [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]M_AXI_ARADDR               ,
+    output             [32-1 : 0]M_AXI_ARADDR               ,
     output                              M_AXI_ARVALID              ,
     input                               M_AXI_ARREADY              ,
     output             [C_M_AXI_ID_WIDTH-1 : 0]M_AXI_ARID                 ,
@@ -80,19 +87,13 @@ module ysyx_23060124_LSU #(
   input i_pre_valid,
   output reg o_post_valid
 );
+
 assign M_AXI_ARESETN = i_rst_n; 
 assign M_AXI_ACLK = i_clk;
-
-import "DPI-C" function void store_skip (input int addr);
  
-reg [`ysyx_23060124_ISA_WIDTH - 1 : 0] store_addr, store_src2;
-reg [`ysyx_23060124_MASK_LENTH - 1 : 0] store_opt_next;
+reg [32 - 1 : 0] store_addr, store_src2;
+reg [4 - 1 : 0] store_opt_next;
 
-// always @(*) begin
-//   if(|store_opt) begin 
-//       store_skip(alu_res);
-//   end
-// end
 
 // Initiate AXI transactions
 wire  INIT_AXI_TXN;
@@ -105,20 +106,19 @@ reg  	axi_wvalid;
 reg  	axi_arvalid;
 reg  	axi_rready;
 reg  	axi_bready;
-reg [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] 	axi_awaddr;
-reg [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] 	axi_araddr;
+reg [32-1 : 0] 	axi_awaddr;
+reg [32-1 : 0] 	axi_araddr;
 reg  	init_txn_ff;
 reg  	init_txn_ff2;
 reg  	init_txn_edge;
-reg o_pre_ready_d1;
+reg   o_pre_ready_d1;
 
 wire  init_txn_pulse;
 wire  is_ls, not_ls;
-wire  in_sram, in_uart, in_mrom, in_flash, in_spi, in_psram, in_sdram;
-wire [1:0] shift_sram, shift_uart, shift_mrom, shift_flash, shift_spi, shift_psram, shitf_sdram, shift;
-wire [`ysyx_23060124_BUS_WIDTH-1:0] read_res;
+wire [1:0] shift;
+wire [32-1:0] read_res;
 // I/O Connections assignments
-reg [`ysyx_23060124_BUS_WIDTH-1:0] axi_rdata;
+reg [32-1:0] axi_rdata;
 
 //Adding the offset address to the base addr of the slave
 assign M_AXI_AWADDR	= alu_res;
@@ -128,9 +128,7 @@ assign M_AXI_WDATA = lsu_src2 << 8*shift;
 
 assign M_AXI_AWVALID	= axi_awvalid;
 assign M_AXI_AWLEN = 'b0;
-assign M_AXI_AWSIZE =   (in_sram || in_mrom || in_sdram) ? 3'b010 :
-                        (in_spi) ? 3'b010 :
-                        (store_opt == `ysyx_23060124_OPT_LSU_SW) ? 3'b010 :
+assign M_AXI_AWSIZE =   (store_opt == `ysyx_23060124_OPT_LSU_SW) ? 3'b010 :
                         (store_opt == `ysyx_23060124_OPT_LSU_SH) ? 3'b001 :
                         (store_opt == `ysyx_23060124_OPT_LSU_SB) ? 3'b000 : 3'b010;
 
@@ -146,9 +144,7 @@ assign M_AXI_BREADY	= axi_bready;
 assign M_AXI_ARADDR	= alu_res;
 assign M_AXI_ARVALID	= axi_arvalid;
 assign M_AXI_ARLEN = 'b0;
-assign M_AXI_ARSIZE =   (in_sram || in_mrom || in_sdram) ? 3'b010 :
-                        (in_flash) ? 3'b010 :
-                        (load_opt == `ysyx_23060124_OPT_LSU_LW ) ? 3'b010 :
+assign M_AXI_ARSIZE =   (load_opt == `ysyx_23060124_OPT_LSU_LW ) ? 3'b010 :
                         (load_opt == `ysyx_23060124_OPT_LSU_LH ) ? 3'b001 :
                         (load_opt == `ysyx_23060124_OPT_LSU_LB ) ? 3'b000 : 3'b010;
 
@@ -166,31 +162,7 @@ wire txn_pulse_store;
 assign txn_pulse_load = |load_opt&& init_txn_pulse;
 assign txn_pulse_store = |store_opt && init_txn_pulse;  
 
-// shift
-assign in_mrom = (alu_res >= `ysyx_23060124_MROM_ADDR) && (alu_res < `ysyx_23060124_MROM_ADDR + `ysyx_23060124_MROM_SIZE);
-assign in_uart = (alu_res >= `ysyx_23060124_UART_ADDR) && (alu_res < `ysyx_23060124_UART_ADDR + `ysyx_23060124_UART_SIZE);
-assign in_sram = (alu_res >= `ysyx_23060124_SRAM_ADDR) && (alu_res < `ysyx_23060124_SRAM_ADDR + `ysyx_23060124_SRAM_SIZE);
-assign in_flash = (alu_res >= `ysyx_23060124_FLASH_ADDR) && (alu_res < `ysyx_23060124_FLASH_ADDR + `ysyx_23060124_FLASH_SIZE);
-assign in_spi = (alu_res >= `ysyx_23060124_SPI_ADDR) && (alu_res < `ysyx_23060124_SPI_ADDR + `ysyx_23060124_SPI_SIZE);
-assign in_psram = (alu_res >= `ysyx_23060124_PSRAM_ADDR) && (alu_res < `ysyx_23060124_PSRAM_ADDR + `ysyx_23060124_PSRAM_SIZE);
-assign in_sdram = (alu_res >= `ysyx_23060124_SDRAM_ADDR) && (alu_res < `ysyx_23060124_SDRAM_ADDR + `ysyx_23060124_SDRAM_SIZE);
-
-assign shift_uart =  alu_res[1:0];
-assign shift_flash = alu_res[1:0];
-assign shift_sram = alu_res[1:0];
-assign shift_mrom = alu_res[1:0];
-assign shift_spi =  alu_res[1:0];
-assign shift_psram = alu_res[1:0];
-assign shitf_sdram = alu_res[1:0];
-
-assign shift =  in_sram ? shift_sram  :
-                in_psram ? shift_psram  :
-                in_mrom ? shift_mrom  :
-                in_uart ? shift_uart  : 
-                in_flash ? shift_flash:
-                in_spi ?  shift_spi :
-                in_sdram ? shitf_sdram :
-                alu_res[1:0];
+assign shift = alu_res[1:0];
 
 always @(posedge i_clk)begin
     if(i_rst_n == 1'b0)begin
@@ -386,8 +358,7 @@ always @(posedge M_AXI_ACLK)
         end
     end
 
-assign read_res = in_psram ? axi_rdata >> 8 * alu_res[1:0] :
-                  axi_rdata >> 8 * shift;
+assign read_res = axi_rdata >> 8 * shift;
 
 always @(posedge i_clk) begin
     case(load_opt)
@@ -406,7 +377,7 @@ always @(posedge i_clk) begin
     `ysyx_23060124_OPT_LSU_LW: begin 
       lsu_res <= read_res[31:0]; 
     end
-    default: begin lsu_res <= `ysyx_23060124_ISA_WIDTH'b0; end
+    default: begin lsu_res <= 32'b0; end
     endcase
 end
 

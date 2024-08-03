@@ -1,5 +1,3 @@
-`include "para_defines.v"
-
 module ysyx_23060124
 (
     input                               clock                        ,
@@ -89,12 +87,13 @@ wire                   [ISA_WIDTH-1:0]  csr_rs2                    ;
 wire                   [ISA_WIDTH-1:0]  mcause, mstatus, mepc, mtvec, mret_a5;
 
 //load store
+`define ysyx_23060124_OPT_WIDTH 13
 wire [`ysyx_23060124_OPT_WIDTH-1:0] exu_opt, brch_opt;
-wire [`ysyx_23060124_MASK_LENTH-1:0] load_opt, store_opt;
+wire [4-1:0] load_opt, store_opt;
 
 wire idu_wen, csr_wen, wbu_wen, wbu_csr_wen;
 wire [ISA_WIDTH-1:0] pc_next, ifu_pc_next;
-wire [`ysyx_23060124_EXU_SEL_WIDTH-1:0] i_src_sel;
+wire [2-1:0] i_src_sel;
 wire brch,jal,jalr;                    // idu -> pcu.
 wire ecall,mret;                       // idu -> pcu.
 wire zero;                             // exu -> pcu.
@@ -234,7 +233,7 @@ ysyx_23060124_IDU idu1(
 );
 
 //write address channel  
-wire                   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]IFU_SRAM_AXI_AWADDR,LSU_SRAM_AXI_AWADDR;
+wire                   [32-1 : 0]IFU_SRAM_AXI_AWADDR,LSU_SRAM_AXI_AWADDR;
 wire                                    IFU_SRAM_AXI_AWVALID, LSU_SRAM_AXI_AWVALID;
 wire                                    IFU_SRAM_AXI_AWREADY, LSU_SRAM_AXI_AWREADY;
 wire                   [   7:0]         IFU_SRAM_AXI_AWLEN    ,LSU_SRAM_AXI_AWLEN;
@@ -244,24 +243,24 @@ wire                   [   3:0]         IFU_SRAM_AXI_AWID,  LSU_SRAM_AXI_AWID;
 //write data channel,
 wire                                    IFU_SRAM_AXI_WVALID, LSU_SRAM_AXI_WVALID;
 wire                                    IFU_SRAM_AXI_WREADY, LSU_SRAM_AXI_WREADY;
-wire                   [`ysyx_23060124_BUS_WIDTH-1 : 0]IFU_SRAM_AXI_WDATA         ;
-wire                   [`ysyx_23060124_BUS_WIDTH-1 : 0]LSU_SRAM_AXI_WDATA         ;
-wire                   [`ysyx_23060124_MASK_LENTH-1 : 0]IFU_SRAM_AXI_WSTRB, LSU_SRAM_AXI_WSTRB;
+wire                   [32-1 : 0]IFU_SRAM_AXI_WDATA         ;
+wire                   [32-1 : 0]LSU_SRAM_AXI_WDATA         ;
+wire                   [4-1 : 0]IFU_SRAM_AXI_WSTRB, LSU_SRAM_AXI_WSTRB;
 wire                                    IFU_SRAM_AXI_WLAST,LSU_SRAM_AXI_WLAST;
 //read data channel
-wire                   [`ysyx_23060124_BUS_WIDTH-1 : 0]IFU_SRAM_AXI_RDATA         ;
-wire                   [`ysyx_23060124_BUS_WIDTH-1 : 0]LSU_SRAM_AXI_RDATA         ;
+wire                   [32-1 : 0]IFU_SRAM_AXI_RDATA         ;
+wire                   [32-1 : 0]LSU_SRAM_AXI_RDATA         ;
 wire                   [   1:0]         IFU_SRAM_AXI_RRESP, LSU_SRAM_AXI_RRESP;
 wire                                    IFU_SRAM_AXI_RVALID, LSU_SRAM_AXI_RVALID;
 wire                                    IFU_SRAM_AXI_RREADY, LSU_SRAM_AXI_RREADY;
-wire                   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]IFU_SRAM_AXI_RID,LSU_SRAM_AXI_RID;
+wire                   [4-1 : 0]IFU_SRAM_AXI_RID,LSU_SRAM_AXI_RID;
 wire                                    IFU_SRAM_AXI_RLAST,LSU_SRAM_AXI_RLAST;
     
 //read adress channel
-wire                   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]IFU_SRAM_AXI_ARADDR, LSU_SRAM_AXI_ARADDR;
+wire                   [32-1 : 0]IFU_SRAM_AXI_ARADDR, LSU_SRAM_AXI_ARADDR;
 wire                                    IFU_SRAM_AXI_ARVALID, LSU_SRAM_AXI_ARVALID;
 wire                                    IFU_SRAM_AXI_ARREADY, LSU_SRAM_AXI_ARREADY;
-wire                   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]IFU_SRAM_AXI_ARID,LSU_SRAM_AXI_ARID;
+wire                   [4-1 : 0]IFU_SRAM_AXI_ARID,LSU_SRAM_AXI_ARID;
 wire                   [   7:0]         IFU_SRAM_AXI_ARLEN   ,LSU_SRAM_AXI_ARLEN;
 wire                   [   2:0]         IFU_SRAM_AXI_ARSIZE  ,LSU_SRAM_AXI_ARSIZE;
 wire                   [   1:0]         IFU_SRAM_AXI_ARBURST ,LSU_SRAM_AXI_ARBURST;
@@ -269,7 +268,7 @@ wire                   [   1:0]         IFU_SRAM_AXI_ARBURST ,LSU_SRAM_AXI_ARBUR
 wire                   [   1:0]         IFU_SRAM_AXI_BRESP, LSU_SRAM_AXI_BRESP;
 wire                                    IFU_SRAM_AXI_BVALID, LSU_SRAM_AXI_BVALID;
 wire                                    IFU_SRAM_AXI_BREADY, LSU_SRAM_AXI_BREADY;
-wire                   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]IFU_SRAM_AXI_BID,LSU_SRAM_AXI_BID;
+wire                   [4-1 : 0]IFU_SRAM_AXI_BID,LSU_SRAM_AXI_BID;
 
 ysyx_23060124_EXU exu1(
     .clk                               (clk                       ),
@@ -486,7 +485,7 @@ ysyx_23060124_Xbar xbar
 );
 
 //write address channel  
-wire                   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]CLINT_AXI_AWADDR             ;
+wire                   [32-1 : 0]CLINT_AXI_AWADDR             ;
 wire                                    CLINT_AXI_AWVALID            ;
 wire                                    CLINT_AXI_AWREADY            ;
 wire                   [   7:0]         CLINT_AXI_AWLEN              ;
@@ -496,22 +495,22 @@ wire                   [   3:0]         CLINT_AXI_AWID               ;
 //write data channel,
 wire                                    CLINT_AXI_WVALID             ;
 wire                                    CLINT_AXI_WREADY             ;
-wire                   [`ysyx_23060124_BUS_WIDTH-1 : 0]CLINT_AXI_WDATA              ;
-wire                   [`ysyx_23060124_MASK_LENTH-1 : 0]CLINT_AXI_WSTRB              ;
+wire                   [32-1 : 0]CLINT_AXI_WDATA              ;
+wire                   [4-1 : 0]CLINT_AXI_WSTRB              ;
 wire                                    CLINT_AXI_WLAST              ;
 //read data channel
-wire                   [`ysyx_23060124_BUS_WIDTH-1 : 0]CLINT_AXI_RDATA              ;
+wire                   [32-1 : 0]CLINT_AXI_RDATA              ;
 wire                   [   1:0]         CLINT_AXI_RRESP              ;
 wire                                    CLINT_AXI_RVALID             ;
 wire                                    CLINT_AXI_RREADY             ;
-wire                   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CLINT_AXI_RID                ;
+wire                   [4-1 : 0]CLINT_AXI_RID                ;
 wire                                    CLINT_AXI_RLAST              ;
     
 //read adress channel
-wire                   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]CLINT_AXI_ARADDR             ;
+wire                   [32-1 : 0]CLINT_AXI_ARADDR             ;
 wire                                    CLINT_AXI_ARVALID            ;
 wire                                    CLINT_AXI_ARREADY            ;
-wire                   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CLINT_AXI_ARID               ;
+wire                   [4-1 : 0]CLINT_AXI_ARID               ;
 wire                   [   7:0]         CLINT_AXI_ARLEN              ;
 wire                   [   2:0]         CLINT_AXI_ARSIZE             ;
 wire                   [   1:0]         CLINT_AXI_ARBURST            ;
@@ -519,7 +518,7 @@ wire                   [   1:0]         CLINT_AXI_ARBURST            ;
 wire                   [   1:0]         CLINT_AXI_BRESP              ;
 wire                                    CLINT_AXI_BVALID             ;
 wire                                    CLINT_AXI_BREADY             ;
-wire                   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CLINT_AXI_BID                ;
+wire                   [4-1 : 0]CLINT_AXI_BID                ;
 
 CLINT clint
 (
@@ -564,12 +563,12 @@ CLINT clint
 );
 
 
-import "DPI-C" function bit if_ebrk(input int ins);
-always@(posedge clk)
-begin
-  if(if_ebrk(ins))begin  //ins == ebreak.
-    $finish;
-  end
-end
+// import "DPI-C" function bit if_ebrk(input int ins);
+// always@(posedge clk)
+// begin
+//   if(if_ebrk(ins))begin  //ins == ebreak.
+//     $finish;
+//   end
+// end
 
 endmodule

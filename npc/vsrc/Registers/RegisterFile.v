@@ -1,21 +1,21 @@
-`include "para_defines.v"
+ 
 
 module ysyx_23060124_RegisterFile (
   input clk,
   input i_rst_n,
   input i_ecall,
   input i_mret,
-  input [`ysyx_23060124_ISA_WIDTH-1:0] wdata,
-  input [`ysyx_23060124_REG_ADDR-1:0] waddr,
-  input [`ysyx_23060124_REG_ADDR-1:0] raddr1,
-  input [`ysyx_23060124_REG_ADDR-1:0] raddr2,
-  output [`ysyx_23060124_ISA_WIDTH-1:0] rdata1,
-  output [`ysyx_23060124_ISA_WIDTH-1:0] rdata2,
-  output [`ysyx_23060124_ISA_WIDTH-1:0] o_mret_a5,
+  input [32-1:0] wdata,
+  input [5-1:0] waddr,
+  input [5-1:0] raddr1,
+  input [5-1:0] raddr2,
+  output [32-1:0] rdata1,
+  output [32-1:0] rdata2,
+  output [32-1:0] o_mret_a5,
   input wen,
   output a0_zero
 );
-  reg [`ysyx_23060124_ISA_WIDTH-1:0] rf [`ysyx_23060124_REG_NUM - 1:0];
+  reg [32-1:0] rf [32 - 1:0];
 
   integer i;
 

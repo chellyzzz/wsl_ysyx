@@ -1,4 +1,4 @@
-`include "para_defines.v"
+ 
 
 module ysyx_23060124_WBU (
   input clk,
@@ -12,36 +12,36 @@ module ysyx_23060124_WBU (
   input i_csrr,
   input i_mret,
   input i_ecall,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_pc,
+  input [32 - 1:0] i_pc,
   // ecall and mret
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mepc,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_mtvec,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_csrr_rd,
+  input [32 - 1:0] i_mepc,
+  input [32 - 1:0] i_mtvec,
+  input [32 - 1:0] i_csrr_rd,
   // 
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_rs1,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_imm,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] i_res,
-  output [`ysyx_23060124_ISA_WIDTH - 1:0] o_pc_next,
-  output [`ysyx_23060124_ISA_WIDTH - 1:0] o_rd_wdata,
-  output [`ysyx_23060124_ISA_WIDTH - 1:0] o_csr_rd,
+  input [32 - 1:0] i_rs1,
+  input [32 - 1:0] i_imm,
+  input [32 - 1:0] i_res,
+  output [32 - 1:0] o_pc_next,
+  output [32 - 1:0] o_rd_wdata,
+  output [32 - 1:0] o_csr_rd,
   output o_pre_ready,
   output o_wbu_wen,
   output o_wbu_csr_wen,
   output o_pc_update
 );
 
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] pc;
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] res;
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] rs1;
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] imm;
+wire [32 - 1:0] pc;
+wire [32 - 1:0] res;
+wire [32 - 1:0] rs1;
+wire [32 - 1:0] imm;
 wire brch;
 wire jal;
 wire jalr;
 wire csrr;
 wire mret;
 wire ecall;
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] mtvec;
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] mepc;
+wire [32 - 1:0] mtvec;
+wire [32 - 1:0] mepc;
 
 assign pc            =  i_pre_valid && o_pre_ready ? i_pc        :  'b0;
 assign res           =  i_pre_valid && o_pre_ready ? i_res       :  'b0;

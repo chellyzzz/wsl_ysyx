@@ -23,8 +23,6 @@ void init_log(const char *log_file);
 void init_mem();
 void init_flash();
 void init_sram();
-void init_psram();
-void init_sdram();
 void init_difftest(char *ref_so_file, long img_size, int port);
 
 #ifdef CONFIG_DEVICE
@@ -131,7 +129,6 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Initialize memory mrom sram. */
   init_flash();
-  init_psram();
   init_sram();
   // init_sdram();
   /* Initialize devices. */

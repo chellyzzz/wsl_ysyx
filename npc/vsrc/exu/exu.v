@@ -1,25 +1,33 @@
-`include "para_defines.v"
+ 
+`define ysyx_23060124_OPT_WIDTH 13
+//BRCH_OPT
+`define ysyx_23060124_OPT_BRCH_BEQ `ysyx_23060124_OPT_WIDTH'b0000_0000_00001
+`define ysyx_23060124_OPT_BRCH_BGE `ysyx_23060124_OPT_WIDTH'b0000_1000_00000
+`define ysyx_23060124_OPT_BRCH_BNE `ysyx_23060124_OPT_WIDTH'b0001_0000_00000
+`define ysyx_23060124_OPT_BRCH_BLT `ysyx_23060124_OPT_WIDTH'b0010_0000_00000
+`define ysyx_23060124_OPT_BRCH_BLTU `ysyx_23060124_OPT_WIDTH'b0100_0000_00000
+`define ysyx_23060124_OPT_BRCH_BGEU `ysyx_23060124_OPT_WIDTH'b1000_0000_00000
 
 module ysyx_23060124_EXU(
     input                               clk                        ,
     input                               i_rst_n                    ,
     input                               csr_src_sel                ,
-    input              [`ysyx_23060124_ISA_WIDTH - 1:0]src1                       ,
-    input              [`ysyx_23060124_ISA_WIDTH - 1:0]src2                       ,
-    input              [`ysyx_23060124_ISA_WIDTH - 1:0]csr_rs2                    ,
+    input              [32 - 1:0]src1                       ,
+    input              [32 - 1:0]src2                       ,
+    input              [32 - 1:0]csr_rs2                    ,
     input                               if_unsigned                ,
-    input              [`ysyx_23060124_ISA_WIDTH - 1:0]i_pc                       ,
-    input              [`ysyx_23060124_ISA_WIDTH - 1:0]imm                        ,
+    input              [32 - 1:0]i_pc                       ,
+    input              [32 - 1:0]imm                        ,
     input              [`ysyx_23060124_OPT_WIDTH - 1:0]exu_opt                    ,
-    input              [`ysyx_23060124_MASK_LENTH - 1:0]load_opt                   ,
-    input              [`ysyx_23060124_MASK_LENTH - 1:0]store_opt                  ,
+    input              [4 - 1:0]load_opt                   ,
+    input              [4 - 1:0]store_opt                  ,
     input              [`ysyx_23060124_OPT_WIDTH - 1:0]brch_opt                   ,
-    input              [`ysyx_23060124_EXU_SEL_WIDTH - 1:0]i_src_sel                  ,
-    output             [`ysyx_23060124_ISA_WIDTH - 1:0]o_res                      ,
+    input              [2 - 1:0]i_src_sel                  ,
+    output             [32 - 1:0]o_res                      ,
     output                              o_zero                     ,
   //axi interface
     //write address channel  
-    output             [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]M_AXI_AWADDR               ,
+    output             [32-1 : 0]M_AXI_AWADDR               ,
     output                              M_AXI_AWVALID              ,
     input                               M_AXI_AWREADY              ,
     output             [   7:0]         M_AXI_AWLEN                ,
@@ -29,23 +37,23 @@ module ysyx_23060124_EXU(
     //write data channel
     output                              M_AXI_WVALID               ,
     input                               M_AXI_WREADY               ,
-    output             [`ysyx_23060124_BUS_WIDTH-1 : 0]M_AXI_WDATA                ,
-    output             [`ysyx_23060124_MASK_LENTH-1 : 0]M_AXI_WSTRB                ,
+    output             [32-1 : 0]M_AXI_WDATA                ,
+    output             [4-1 : 0]M_AXI_WSTRB                ,
     input                               M_AXI_WLAST                ,
 
     //read data channel
-    input              [`ysyx_23060124_BUS_WIDTH-1 : 0]M_AXI_RDATA                ,
+    input              [32-1 : 0]M_AXI_RDATA                ,
     input              [   1:0]         M_AXI_RRESP                ,
     input                               M_AXI_RVALID               ,
     output                              M_AXI_RREADY               ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]M_AXI_RID                  ,
+    input              [4-1 : 0]M_AXI_RID                  ,
     input                               M_AXI_RLAST                ,
 
     //read adress channel
-    output             [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]M_AXI_ARADDR               ,
+    output             [32-1 : 0]M_AXI_ARADDR               ,
     output                              M_AXI_ARVALID              ,
     input                               M_AXI_ARREADY              ,
-    output             [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]M_AXI_ARID                 ,
+    output             [4-1 : 0]M_AXI_ARID                 ,
     output             [   7:0]         M_AXI_ARLEN                ,
     output             [   2:0]         M_AXI_ARSIZE               ,
     output             [   1:0]         M_AXI_ARBURST              ,
@@ -54,13 +62,19 @@ module ysyx_23060124_EXU(
     input              [   1:0]         M_AXI_BRESP                ,
     input                               M_AXI_BVALID               ,
     output                              M_AXI_BREADY               ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]M_AXI_BID                  ,
+    input              [4-1 : 0]M_AXI_BID                  ,
   //exu -> wbu handshake
     input                               i_post_ready               ,
     input                               i_pre_valid                ,
     output                              o_post_valid               ,
     output reg                          o_pre_ready                 
 );
+
+`define ysyx_23060124_EXU_SEL_REG 2'b00
+`define ysyx_23060124_EXU_SEL_IMM 2'b01
+`define ysyx_23060124_EXU_SEL_PC4 2'b10
+`define ysyx_23060124_EXU_SEL_PCI 2'b11
+
 
 wire lsu_post_valid;  
 
@@ -80,26 +94,22 @@ end
 
 assign o_post_valid = lsu_post_valid;
 
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] sel_src2;
-wire [`ysyx_23060124_ISA_WIDTH-1:0] alu_src1,alu_src2;
-wire [`ysyx_23060124_ISA_WIDTH - 1:0] alu_res, lsu_res;
+wire [32 - 1:0] sel_src2;
+wire [32-1:0] alu_src1,alu_src2;
+wire [32 - 1:0] alu_res, lsu_res;
 wire carry, brch_res;
 
 assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
 
-ysyx_23060124_MuxKeyWithDefault #(1<<`ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_ISA_WIDTH) mux_src1 (alu_src1, i_src_sel, `ysyx_23060124_ISA_WIDTH'b0, {
-    `ysyx_23060124_EXU_SEL_REG, src1,
-    `ysyx_23060124_EXU_SEL_IMM, src1,
-    `ysyx_23060124_EXU_SEL_PC4, i_pc,
-    `ysyx_23060124_EXU_SEL_PCI, i_pc
-  });
+assign alu_src1 = (i_src_sel == `ysyx_23060124_EXU_SEL_REG) ? src1 :
+                 (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? src1 :
+                 (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? i_pc :
+                 (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? i_pc : 32'b0;
 
-ysyx_23060124_MuxKeyWithDefault #(1<<`ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_EXU_SEL_WIDTH, `ysyx_23060124_ISA_WIDTH) mux_src2 (alu_src2, i_src_sel, `ysyx_23060124_ISA_WIDTH'b0, {
-    `ysyx_23060124_EXU_SEL_REG, sel_src2,
-    `ysyx_23060124_EXU_SEL_IMM, imm,
-    `ysyx_23060124_EXU_SEL_PC4, `ysyx_23060124_ISA_WIDTH'h4,
-    `ysyx_23060124_EXU_SEL_PCI, imm
-});
+assign alu_src2 = (i_src_sel == `ysyx_23060124_EXU_SEL_REG) ? sel_src2 :
+                 (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? imm :
+                 (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? 32'h4 :
+                 (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? imm : 32'b0;
 
 ysyx_23060124_ALU exu_alu(
   .src1(alu_src1),

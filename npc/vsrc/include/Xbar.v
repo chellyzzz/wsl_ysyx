@@ -1,132 +1,132 @@
-`include "para_defines.v"
+ 
 
 module ysyx_23060124_Xbar(
     input                               CLK                        ,
     input                               RESETN                     ,
     // IFU AXI-FULL Interface
-    output             [`ysyx_23060124_BUS_WIDTH-1 : 0]IFU_RDATA                  ,
+    output             [32-1 : 0]       IFU_RDATA                  ,
     output             [   1:0]         IFU_RRESP                  ,
     output                              IFU_RVALID                 ,
     input                               IFU_RREADY                 ,
     output                              IFU_RLAST                  ,
-    output             [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]IFU_RID                    ,
-    input              [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]IFU_ARADDR                 ,
+    output             [4-1 : 0]        IFU_RID                    ,
+    input              [32-1 : 0]       IFU_ARADDR                 ,
     input                               IFU_ARVALID                ,
     output                              IFU_ARREADY                ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]IFU_ARID                   ,
+    input              [4-1 : 0]        IFU_ARID                   ,
     input              [   7:0]         IFU_ARLEN                  ,
     input              [   2:0]         IFU_ARSIZE                 ,
     input              [   1:0]         IFU_ARBURST                ,
     output             [   1:0]         IFU_BRESP                  ,
     output                              IFU_BVALID                 ,
     input                               IFU_BREADY                 ,
-    output             [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]IFU_BID                    ,
-    input              [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]IFU_AWADDR                 ,
+    output             [4-1 : 0]        IFU_BID                    ,
+    input              [32-1 : 0]       IFU_AWADDR                 ,
     input                               IFU_AWVALID                ,
     output                              IFU_AWREADY                ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]IFU_AWID                   ,
+    input              [4-1 : 0]        IFU_AWID                   ,
     input              [   7:0]         IFU_AWLEN                  ,
     input              [   2:0]         IFU_AWSIZE                 ,
     input              [   1:0]         IFU_AWBURST                ,
-    input              [`ysyx_23060124_BUS_WIDTH-1 : 0]IFU_WDATA                  ,
-    input              [`ysyx_23060124_MASK_LENTH-1 : 0]IFU_WSTRB                  ,
+    input              [32-1 : 0]       IFU_WDATA                  ,
+    input              [4-1 : 0]        IFU_WSTRB                  ,
     input                               IFU_WVALID                 ,
     input                               IFU_WLAST                  ,
     output                              IFU_WREADY                 ,
     
     // LSU AXI-FULL Interface
-    output             [`ysyx_23060124_BUS_WIDTH-1 : 0]LSU_RDATA                  ,
+    output             [32-1 : 0]       LSU_RDATA                  ,
     output             [   1:0]         LSU_RRESP                  ,
     output                              LSU_RVALID                 ,
     input                               LSU_RREADY                 ,
-    output                          LSU_RLAST                  ,
-    output         [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]LSU_RID                    ,
-    input              [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]LSU_ARADDR                 ,
+    output                              LSU_RLAST                  ,
+    output             [4-1 : 0]        LSU_RID                    ,
+    input              [32-1 : 0]       LSU_ARADDR                 ,
     input                               LSU_ARVALID                ,
-    output                          LSU_ARREADY                ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]LSU_ARID                   ,
+    output                              LSU_ARREADY                ,
+    input              [4-1 : 0]        LSU_ARID                   ,
     input              [   7:0]         LSU_ARLEN                  ,
     input              [   2:0]         LSU_ARSIZE                 ,
     input              [   1:0]         LSU_ARBURST                ,
-    output         [   1:0]         LSU_BRESP                  ,
-    output                          LSU_BVALID                 ,
+    output             [   1:0]         LSU_BRESP                  ,
+    output                              LSU_BVALID                 ,
     input                               LSU_BREADY                 ,
-    output         [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]LSU_BID                    ,
-    input              [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]LSU_AWADDR                 ,
+    output             [4-1 : 0]        LSU_BID                    ,
+    input              [32-1 : 0]       LSU_AWADDR                 ,
     input                               LSU_AWVALID                ,
-    output                          LSU_AWREADY                ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]LSU_AWID                   ,
+    output                              LSU_AWREADY                ,
+    input              [4-1 : 0]        LSU_AWID                   ,
     input              [   7:0]         LSU_AWLEN                  ,
     input              [   2:0]         LSU_AWSIZE                 ,
     input              [   1:0]         LSU_AWBURST                ,
-    input              [`ysyx_23060124_BUS_WIDTH-1 : 0]LSU_WDATA                  ,
-    input              [`ysyx_23060124_MASK_LENTH-1 : 0]LSU_WSTRB                  ,
+    input              [32-1 : 0]       LSU_WDATA                  ,
+    input              [4-1 : 0]        LSU_WSTRB                  ,
     input                               LSU_WVALID                 ,
     input                               LSU_WLAST                  ,
-    output                          LSU_WREADY                 ,
+    output                              LSU_WREADY                 ,
 
 
         //clint
-    output         [  `ysyx_23060124_ISA_ADDR_WIDTH-1:0]CLINT_AWADDR               ,
-    output                          CLINT_AWVALID              ,
+    output             [  32-1:0]       CLINT_AWADDR               ,
+    output                              CLINT_AWVALID              ,
     input                               CLINT_AWREADY              ,
-    output         [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CLINT_AWID                 ,
-    output         [   7:0]         CLINT_AWLEN                ,
-    output         [   2:0]         CLINT_AWSIZE               ,
-    output         [   1:0]         CLINT_AWBURST              ,
-    output         [  `ysyx_23060124_BUS_WIDTH-1:0]CLINT_WDATA                ,
-    output         [  `ysyx_23060124_MASK_LENTH-1:0]CLINT_WSTRB                ,
-    output                          CLINT_WVALID               ,
+    output             [4-1 : 0]        CLINT_AWID                 ,
+    output             [   7:0]         CLINT_AWLEN                ,
+    output             [   2:0]         CLINT_AWSIZE               ,
+    output             [   1:0]         CLINT_AWBURST              ,
+    output             [  32-1:0]       CLINT_WDATA                ,
+    output             [  4-1:0]        CLINT_WSTRB                ,
+    output                              CLINT_WVALID               ,
     input                               CLINT_WREADY               ,
     input                               CLINT_WLAST                ,
     input              [   1:0]         CLINT_BRESP                ,
     input                               CLINT_BVALID               ,
-    output                          CLINT_BREADY               ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CLINT_BID                  ,
-    output         [  `ysyx_23060124_ISA_ADDR_WIDTH-1:0]CLINT_ARADDR               ,
-    output         [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CLINT_ARID                 ,
-    output                          CLINT_ARVALID              ,
+    output                              CLINT_BREADY               ,
+    input              [4-1 : 0]        CLINT_BID                  ,
+    output             [  32-1:0]       CLINT_ARADDR               ,
+    output             [4-1 : 0]        CLINT_ARID                 ,
+    output                              CLINT_ARVALID              ,
     input                               CLINT_ARREADY              ,
-    output         [   7:0]         CLINT_ARLEN                ,
-    output         [   2:0]         CLINT_ARSIZE               ,
-    output         [   1:0]         CLINT_ARBURST              ,
-    input              [  `ysyx_23060124_BUS_WIDTH-1:0]CLINT_RDATA                ,
+    output             [   7:0]         CLINT_ARLEN                ,
+    output             [   2:0]         CLINT_ARSIZE               ,
+    output             [   1:0]         CLINT_ARBURST              ,
+    input              [  32-1:0]       CLINT_RDATA                ,
     input              [   1:0]         CLINT_RRESP                ,
     input                               CLINT_RVALID               ,
-    output                          CLINT_RREADY               ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CLINT_RID                  ,
+    output                              CLINT_RREADY               ,
+    input              [4-1 : 0]        CLINT_RID                  ,
     input                               CLINT_RLAST                ,
 
     // SRAM AXI-Lite Interface
-    output         [  `ysyx_23060124_ISA_ADDR_WIDTH-1:0]SRAM_AWADDR               ,
-    output                          SRAM_AWVALID              ,
-    input                               SRAM_AWREADY              ,
-    output         [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]SRAM_AWID                 ,
-    output         [   7:0]         SRAM_AWLEN                ,
-    output         [   2:0]         SRAM_AWSIZE               ,
-    output         [   1:0]         SRAM_AWBURST              ,
-    output         [  `ysyx_23060124_BUS_WIDTH-1:0]SRAM_WDATA                ,
-    output         [  `ysyx_23060124_MASK_LENTH-1:0]SRAM_WSTRB                ,
-    output                          SRAM_WVALID               ,
-    input                               SRAM_WREADY               ,
-    input                               SRAM_WLAST                ,
-    input              [   1:0]         SRAM_BRESP                ,
-    input                               SRAM_BVALID               ,
-    output                          SRAM_BREADY               ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]SRAM_BID                  ,
-    output         [  `ysyx_23060124_ISA_ADDR_WIDTH-1:0]SRAM_ARADDR               ,
-    output         [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]SRAM_ARID                 ,
-    output                          SRAM_ARVALID              ,
-    input                               SRAM_ARREADY              ,
-    output         [   7:0]         SRAM_ARLEN                ,
-    output         [   2:0]         SRAM_ARSIZE               ,
-    output         [   1:0]         SRAM_ARBURST              ,
-    input              [  `ysyx_23060124_BUS_WIDTH-1:0]SRAM_RDATA                ,
-    input              [   1:0]         SRAM_RRESP                ,
-    input                               SRAM_RVALID               ,
-    output                          SRAM_RREADY               ,
-    input              [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]SRAM_RID                  ,
-    input                               SRAM_RLAST                
+    output             [  32-1:0]       SRAM_AWADDR                ,
+    output                              SRAM_AWVALID               ,
+    input                               SRAM_AWREADY               ,
+    output             [4-1 : 0]        SRAM_AWID                  ,
+    output             [   7:0]         SRAM_AWLEN                 ,
+    output             [   2:0]         SRAM_AWSIZE                ,
+    output             [   1:0]         SRAM_AWBURST               ,
+    output             [  32-1:0]       SRAM_WDATA                 ,
+    output             [  4-1:0]        SRAM_WSTRB                 ,
+    output                              SRAM_WVALID                ,
+    input                               SRAM_WREADY                ,
+    input                               SRAM_WLAST                 ,
+    input              [   1:0]         SRAM_BRESP                 ,
+    input                               SRAM_BVALID                ,
+    output                              SRAM_BREADY                ,
+    input              [4-1 : 0]        SRAM_BID                   ,
+    output             [  32-1:0]       SRAM_ARADDR                ,
+    output             [4-1 : 0]        SRAM_ARID                  ,
+    output                              SRAM_ARVALID               ,
+    input                               SRAM_ARREADY               ,
+    output             [   7:0]         SRAM_ARLEN                 ,
+    output             [   2:0]         SRAM_ARSIZE                ,
+    output             [   1:0]         SRAM_ARBURST               ,
+    input              [  32-1:0]       SRAM_RDATA                 ,
+    input              [   1:0]         SRAM_RRESP                 ,
+    input                               SRAM_RVALID                ,
+    output                              SRAM_RREADY                ,
+    input              [4-1 : 0]        SRAM_RID                   ,
+    input                               SRAM_RLAST                  
 
 );
 
@@ -145,40 +145,40 @@ module ysyx_23060124_Xbar(
     localparam SRAM_ACCESS = 3'b001;
 /*************      wires   *********************/
 //write address channel  
-wire                    [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]CPU_AWADDR                 ;
-wire                                     CPU_AWVALID                ;
-wire                                     CPU_AWREADY                ;
-wire                    [   7:0]         CPU_AWLEN                  ;
-wire                    [   2:0]         CPU_AWSIZE                 ;
-wire                    [   1:0]         CPU_AWBURST                ;
-wire                    [   3:0]         CPU_AWID                   ;
+wire                   [32-1 : 0]       CPU_AWADDR                 ;
+wire                                    CPU_AWVALID                ;
+wire                                    CPU_AWREADY                ;
+wire                   [   7:0]         CPU_AWLEN                  ;
+wire                   [   2:0]         CPU_AWSIZE                 ;
+wire                   [   1:0]         CPU_AWBURST                ;
+wire                   [   3:0]         CPU_AWID                   ;
 //write data channel,
-wire                                     CPU_WVALID                 ;
-wire                                     CPU_WREADY                 ;
-wire                    [`ysyx_23060124_BUS_WIDTH-1 : 0]CPU_WDATA                  ;
-wire                    [`ysyx_23060124_MASK_LENTH-1 : 0]CPU_WSTRB                  ;
-wire                                     CPU_WLAST                  ;
+wire                                    CPU_WVALID                 ;
+wire                                    CPU_WREADY                 ;
+wire                   [32-1 : 0]       CPU_WDATA                  ;
+wire                   [4-1 : 0]        CPU_WSTRB                  ;
+wire                                    CPU_WLAST                  ;
 //read data channel
-wire                    [`ysyx_23060124_BUS_WIDTH-1 : 0]CPU_RDATA                  ;
-wire                    [   1:0]         CPU_RRESP                  ;
-wire                                     CPU_RVALID                 ;
-wire                                     CPU_RREADY                 ;
-wire                    [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CPU_RID                    ;
-wire                                     CPU_RLAST                  ;
+wire                   [32-1 : 0]       CPU_RDATA                  ;
+wire                   [   1:0]         CPU_RRESP                  ;
+wire                                    CPU_RVALID                 ;
+wire                                    CPU_RREADY                 ;
+wire                   [4-1 : 0]        CPU_RID                    ;
+wire                                    CPU_RLAST                  ;
     
 //read adress channel
-wire                    [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0]CPU_ARADDR                 ;
-wire                                     CPU_ARVALID                ;
-wire                                     CPU_ARREADY                ;
-wire                    [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CPU_ARID                   ;
-wire                    [   7:0]         CPU_ARLEN                  ;
-wire                    [   2:0]         CPU_ARSIZE                 ;
-wire                    [   1:0]         CPU_ARBURST                ;
+wire                   [32-1 : 0]       CPU_ARADDR                 ;
+wire                                    CPU_ARVALID                ;
+wire                                    CPU_ARREADY                ;
+wire                   [4-1 : 0]        CPU_ARID                   ;
+wire                   [   7:0]         CPU_ARLEN                  ;
+wire                   [   2:0]         CPU_ARSIZE                 ;
+wire                   [   1:0]         CPU_ARBURST                ;
 //write back channel
-wire                    [   1:0]         CPU_BRESP                  ;
-wire                                     CPU_BVALID                 ;
-wire                                     CPU_BREADY                 ;
-wire                    [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CPU_BID                    ;
+wire                   [   1:0]         CPU_BRESP                  ;
+wire                                    CPU_BVALID                 ;
+wire                                    CPU_BREADY                 ;
+wire                   [4-1 : 0]        CPU_BID                    ;
 
 /*************  state machine  ******************/
     always @(posedge CLK or negedge RESETN) begin
@@ -204,8 +204,6 @@ wire                    [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CPU_BID              
                     end
                 end
                 default: begin
-                    $display("ARBITOR ERROR: should not reach here");
-                    $finish;
                     IN_STATE <= IN_IDLE;
                 end
             endcase
@@ -245,8 +243,6 @@ wire                    [`ysyx_23060124_AXI_ID_WIDTH-1 : 0]CPU_BID              
                     end
                 end
                 default: begin
-                    $display("XBAR ERROR: Invalid address");
-                    $finish;
                     OUT_STATE <= OUT_IDLE;
                 end
             endcase

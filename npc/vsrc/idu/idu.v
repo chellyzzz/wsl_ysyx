@@ -1,23 +1,114 @@
-`include "para_defines.v"
+`define ysyx_23060124_OPT_WIDTH 13
+`define ysyx_23060124_OPT_EXU_ADD  `ysyx_23060124_OPT_WIDTH'b0000_0000_00001
+`define ysyx_23060124_OPT_EXU_SUB  `ysyx_23060124_OPT_WIDTH'b0000_0000_00010
+`define ysyx_23060124_OPT_EXU_AND  `ysyx_23060124_OPT_WIDTH'b0000_0000_00100
+`define ysyx_23060124_OPT_EXU_OR   `ysyx_23060124_OPT_WIDTH'b0000_0000_01000
+`define ysyx_23060124_OPT_EXU_XOR  `ysyx_23060124_OPT_WIDTH'b0000_0000_10000
+`define ysyx_23060124_OPT_EXU_SLL  `ysyx_23060124_OPT_WIDTH'b0000_0001_00000
+`define ysyx_23060124_OPT_EXU_SRL  `ysyx_23060124_OPT_WIDTH'b0000_0010_00000
+`define ysyx_23060124_OPT_EXU_SRA  `ysyx_23060124_OPT_WIDTH'b0000_0100_00000
+`define ysyx_23060124_OPT_EXU_SLT  `ysyx_23060124_OPT_WIDTH'b0000_1000_00000
+`define ysyx_23060124_OPT_EXU_SW   `ysyx_23060124_OPT_WIDTH'b0000_0000_00000
+//LSU_OPT
+`define ysyx_23060124_OPT_LSU_LB 4'b1
+`define ysyx_23060124_OPT_LSU_LH 4'b11
+`define ysyx_23060124_OPT_LSU_LW 4'b1111
+`define ysyx_23060124_EXU_SEL_REG 2'b00
+`define ysyx_23060124_EXU_SEL_IMM 2'b01
+`define ysyx_23060124_EXU_SEL_PC4 2'b10
+`define ysyx_23060124_EXU_SEL_PCI 2'b11
+//STORE
+`define ysyx_23060124_OPT_LSU_SB 4'b1
+`define ysyx_23060124_OPT_LSU_SH 4'b11
+`define ysyx_23060124_OPT_LSU_SW 4'b1111
+
+//TYPE_EXCPT_RS2
+`define ysyx_23060124_RS2_ECALL 5'b00000
+`define ysyx_23060124_RS2_EBREAK 5'b00001
+`define ysyx_23060124_RS2_MRET 5'b00010
+// TYPE_I_OPT
+`define ysyx_23060124_TYPE_I 7'b0010011
+`define ysyx_23060124_TYPE_I_LOAD 7'b0000011
+`define ysyx_23060124_TYPE_JALR 7'b1100111
+//ECALL EBREAK
+`define ysyx_23060124_TYPE_EBRK 7'b1110011
+
+//TYPE_S_OPT
+`define ysyx_23060124_TYPE_S 7'b0100011
+//TYPE_R_OPT
+`define ysyx_23060124_TYPE_R 7'b0110011
+//TYPE_U_OPT
+`define ysyx_23060124_TYPE_AUIPC 7'b0010111
+`define ysyx_23060124_TYPE_LUI 7'b0110111
+// TYPE_J_OPT
+`define ysyx_23060124_TYPE_JAL 7'b1101111
+//TYPE_B
+`define ysyx_23060124_TYPE_B 7'b1100011
+
+//TYPE_I_FUN3
+`define ysyx_23060124_FUN3_ADD 3'b000
+`define ysyx_23060124_FUN3_AND 3'b111
+`define ysyx_23060124_FUN3_OR  3'b110
+`define ysyx_23060124_FUN3_XOR 3'b100
+`define ysyx_23060124_FUN3_SLT 3'b010
+`define ysyx_23060124_FUN3_SLL 3'b001
+`define ysyx_23060124_FUN3_SRL_SRA 3'b101
+`define ysyx_23060124_FUN3_SLTU 3'b011
+//TYPE_I_LOAD_FUN3
+`define ysyx_23060124_FUN3_LB 3'b000
+`define ysyx_23060124_FUN3_LH 3'b001
+`define ysyx_23060124_FUN3_LW 3'b010
+`define ysyx_23060124_FUN3_LBU 3'b100
+`define ysyx_23060124_FUN3_LHU 3'b101
+//TYPE_S_FUN3
+`define ysyx_23060124_FUN3_SH 3'b001
+`define ysyx_23060124_FUN3_SB 3'b000
+`define ysyx_23060124_FUN3_SW 3'b010
+
+//TYPE_B_FUN3
+`define ysyx_23060124_FUN3_BEQ 3'b000
+`define ysyx_23060124_FUN3_BNE 3'b001
+`define ysyx_23060124_FUN3_BLT 3'b100
+`define ysyx_23060124_FUN3_BGE 3'b101   
+`define ysyx_23060124_FUN3_BLTU 3'b110
+`define ysyx_23060124_FUN3_BGEU 3'b111
+//CSRR
+`define ysyx_23060124_FUN3_CSRRW 3'b001
+`define ysyx_23060124_FUN3_CSRRS 3'b010
+`define ysyx_23060124_FUN3_EXCPT 3'b000
+
+//TYPE_I_FUN7
+`define ysyx_23060124_FUN7_SRLI 7'b0000000
+`define ysyx_23060124_FUN7_SRAI 7'b0100000
+//TYPE_R_FUN7
+`define ysyx_23060124_FUN7_R_ADD 7'b0000000
+`define ysyx_23060124_FUN7_R_SUB 7'b0100000
+//BRCH_OPT
+`define ysyx_23060124_OPT_BRCH_BEQ `ysyx_23060124_OPT_WIDTH'b0000_0000_00001
+`define ysyx_23060124_OPT_BRCH_BGE `ysyx_23060124_OPT_WIDTH'b0000_1000_00000
+`define ysyx_23060124_OPT_BRCH_BNE `ysyx_23060124_OPT_WIDTH'b0001_0000_00000
+`define ysyx_23060124_OPT_BRCH_BLT `ysyx_23060124_OPT_WIDTH'b0010_0000_00000
+`define ysyx_23060124_OPT_BRCH_BLTU `ysyx_23060124_OPT_WIDTH'b0100_0000_00000
+`define ysyx_23060124_OPT_BRCH_BGEU `ysyx_23060124_OPT_WIDTH'b1000_0000_00000
 
 module ysyx_23060124_IDU (
-  input [`ysyx_23060124_ISA_WIDTH-1:0] ins,
+  input [32-1:0] ins,
   input i_rst_n, //for sim
   input i_pre_valid,
   input i_post_ready,
-  output reg [`ysyx_23060124_ISA_WIDTH-1:0] o_imm,
-  output reg [`ysyx_23060124_REG_ADDR-1:0] o_rd,
-  output reg [`ysyx_23060124_REG_ADDR-1:0] o_rs1,
-  output reg [`ysyx_23060124_REG_ADDR-1:0] o_rs2,
-  output reg [`ysyx_23060124_CSR_ADDR-1:0] o_csr_addr,
+  output reg [32-1:0] o_imm,
+  output reg [5-1:0] o_rd,
+  output reg [5-1:0] o_rs1,
+  output reg [5-1:0] o_rs2,
+  output reg [12-1:0] o_csr_addr,
   output reg [`ysyx_23060124_OPT_WIDTH-1:0] o_exu_opt,
-  output reg [`ysyx_23060124_MASK_LENTH-1:0] o_load_opt,
-  output reg [`ysyx_23060124_MASK_LENTH-1:0] o_store_opt,
+  output reg [4-1:0] o_load_opt,
+  output reg [4-1:0] o_store_opt,
   output reg [`ysyx_23060124_OPT_WIDTH-1:0] o_brch_opt,
   output reg o_wen,
   output reg o_csr_wen,
   output reg o_csrr,
-  output reg [`ysyx_23060124_EXU_SEL_WIDTH-1:0] o_src_sel,
+  output reg [2-1:0] o_src_sel,
   output o_if_unsigned,
   output o_mret,
   output o_ecall,
@@ -28,15 +119,18 @@ module ysyx_23060124_IDU (
   output o_post_valid
 );
 
+
+
+
 assign o_pre_ready = i_post_ready;
 assign o_post_valid = i_pre_valid;
 
 wire [2:0] func3  = ins[14:12];
 wire [6:0] opcode  = ins[6:0];
 wire [6:0] func7 = ins[31:25];
-wire [`ysyx_23060124_REG_ADDR-1:0] rs1 = ins[19:15];
-wire [`ysyx_23060124_REG_ADDR-1:0] rs2 = ins[24:20];
-wire [`ysyx_23060124_REG_ADDR-1:0] rd  = ins[11:7];
+wire [5-1:0] rs1 = ins[19:15];
+wire [5-1:0] rs2 = ins[24:20];
+wire [5-1:0] rd  = ins[11:7];
 
 
 
@@ -44,10 +138,10 @@ reg [2:0] id_err; //0:opc_err, 1:funct3_err, 2:funct7_err
 
 always @(ins)
 begin
-  o_imm = `ysyx_23060124_ISA_WIDTH'b0;
-  o_rs1 = `ysyx_23060124_REG_ADDR'b0;
-  o_rs2 = `ysyx_23060124_REG_ADDR'b0;
-  o_rd  = `ysyx_23060124_REG_ADDR'b0;
+  o_imm = 32'b0;
+  o_rs1 = 5'b0;
+  o_rs2 = 5'b0;
+  o_rd  = 5'b0;
   o_load_opt = 0;
   o_store_opt = 0;
   o_brch_opt = 0;
@@ -180,12 +274,12 @@ assign o_jal  = (opcode == `ysyx_23060124_TYPE_JAL) ? 1:0;
 assign o_jalr = (opcode == `ysyx_23060124_TYPE_JALR) ? 1:0;
 
 
-always@(ins)begin
-    if(i_rst_n & |ins & id_err[0]) $display("\n----------ins decode error, ins = %x, opcode = %b---------------\n", ins, opcode);
-    if(i_rst_n & |ins & id_err[1]) $display("\n----------ins decode error, ins = %x, func3 = %b---------------\n", ins, func3 );
-    if(i_rst_n & |ins & id_err[2]) $display("\n----------ins decode error, ins = %x, func7 = %b---------------\n", ins, func7 );
-    if(i_rst_n & |ins & |id_err ) $finish; //ins docode err.
-  end
+// always@(ins)begin
+//     if(i_rst_n & |ins & id_err[0]) $display("\n----------ins decode error, ins = %x, opcode = %b---------------\n", ins, opcode);
+//     if(i_rst_n & |ins & id_err[1]) $display("\n----------ins decode error, ins = %x, func3 = %b---------------\n", ins, func3 );
+//     if(i_rst_n & |ins & id_err[2]) $display("\n----------ins decode error, ins = %x, func7 = %b---------------\n", ins, func7 );
+//     if(i_rst_n & |ins & |id_err ) $finish; //ins docode err.
+//   end
 
 
 endmodule

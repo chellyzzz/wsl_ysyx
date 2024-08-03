@@ -1,21 +1,19 @@
-`include "para_defines.v"
-
 module CLINT(
     input S_AXI_ACLK,
     input S_AXI_ARESETN,
     //read data channel
-    output  [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_RDATA,
+    output  [32-1 : 0] S_AXI_RDATA,
     output  [1 : 0] S_AXI_RRESP,
     output   S_AXI_RVALID,
     input    S_AXI_RREADY,
     output  S_AXI_RLAST,
-    output [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_RID,
+    output [4-1 : 0] S_AXI_RID,
 
     //read adress channel
-    input   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_ARADDR,
+    input   [32-1 : 0] S_AXI_ARADDR,
     input    S_AXI_ARVALID,
     output   S_AXI_ARREADY,
-    input [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_ARID,
+    input [4-1 : 0] S_AXI_ARID,
     input [7 : 0] S_AXI_ARLEN,
     input [2 : 0] S_AXI_ARSIZE,
     input [1 : 0] S_AXI_ARBURST,
@@ -24,20 +22,20 @@ module CLINT(
     output  [1 : 0] S_AXI_BRESP,
     output   S_AXI_BVALID,
     input    S_AXI_BREADY,
-    output [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_BID,
+    output [4-1 : 0] S_AXI_BID,
 
     //write address channel  
-    input   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_AWADDR,
+    input   [32-1 : 0] S_AXI_AWADDR,
     input    S_AXI_AWVALID,
     output   S_AXI_AWREADY,
-    input   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_AWID,
+    input   [4-1 : 0] S_AXI_AWID,
     input   [7 : 0] S_AXI_AWLEN,
     input [2 : 0] S_AXI_AWSIZE,
     input [1 : 0] S_AXI_AWBURST,
 
     //write data channel
-    input   [`ysyx_23060124_ISA_WIDTH-1 : 0] S_AXI_WDATA,
-    input   [`ysyx_23060124_MASK_LENTH-1 : 0] S_AXI_WSTRB,
+    input   [32-1 : 0] S_AXI_WDATA,
+    input   [4-1 : 0] S_AXI_WSTRB,
     input   S_AXI_WVALID,
     input   S_AXI_WLAST,
     output  S_AXI_WREADY
@@ -48,14 +46,14 @@ localparam MTIME_REG_ADDR_LOW = 32'h0200_0000;
 localparam MTIME_REG_ADDR_HIGH = 32'h0200_0004;
 
 /**********************regs******************************/
-reg [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] 	axi_awaddr;
+reg [32-1 : 0] 	axi_awaddr;
 reg  	axi_awready;
 reg  	axi_wready;
 reg [1 : 0] 	axi_bresp;
 reg  	axi_bvalid;
-reg [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] 	axi_araddr;
+reg [32-1 : 0] 	axi_araddr;
 reg  	axi_arready;
-reg [`ysyx_23060124_ISA_WIDTH-1 : 0] 	axi_rdata;
+reg [32-1 : 0] 	axi_rdata;
 reg [1 : 0] 	axi_rresp;
 reg  	axi_rvalid;
 reg	 aw_en;
@@ -66,7 +64,7 @@ reg [64-1:0]	reg_mtime;
 /**********************wire******************************/
 wire	 slv_reg_rden;
 wire	 slv_reg_wren;
-wire [`ysyx_23060124_ISA_WIDTH-1:0]	 reg_data_out;
+wire [32-1:0]	 reg_data_out;
 
 // I/O Connections assignments
 
@@ -90,11 +88,11 @@ begin
     begin    
         reg_mtime <= reg_mtime + 1'b1;
         if (slv_reg_wren && S_AXI_AWADDR == MTIME_REG_ADDR_LOW) begin
-            reg_mtime[`ysyx_23060124_ISA_WIDTH-1 : 0] <= S_AXI_WDATA;
+            reg_mtime[32-1 : 0] <= S_AXI_WDATA;
             // $display("ERROR: Should not reach timer address");
         end
         else if (slv_reg_wren && S_AXI_AWADDR == MTIME_REG_ADDR_HIGH) begin
-            reg_mtime[64-1 : `ysyx_23060124_ISA_WIDTH] <= S_AXI_WDATA;
+            reg_mtime[64-1 : 32] <= S_AXI_WDATA;
             // $display("ERROR: Should not reach timer address");
         end
     end 
@@ -282,11 +280,11 @@ begin
         // output the read dada 
         if (slv_reg_rden && S_AXI_ARADDR == MTIME_REG_ADDR_LOW)
         begin
-            axi_rdata <= reg_mtime[`ysyx_23060124_ISA_WIDTH-1 : 0];     // register read data
+            axi_rdata <= reg_mtime[32-1 : 0];     // register read data
         end
         else if (slv_reg_rden && S_AXI_AWADDR == MTIME_REG_ADDR_HIGH)
         begin
-            axi_rdata <= reg_mtime[64-1 : `ysyx_23060124_ISA_WIDTH];     // register read data
+            axi_rdata <= reg_mtime[64-1 : 32];     // register read data
         end
     end
 end    
