@@ -86,9 +86,8 @@ wire                   [ISA_WIDTH-1:0]  csr_rs2                    ;
 wire                   [ISA_WIDTH-1:0]  mcause, mstatus, mepc, mtvec, mret_a5;
 
 //load store
-`define ysyx_23060124_OPT_WIDTH 13
-wire [`ysyx_23060124_OPT_WIDTH-1:0] exu_opt, brch_opt;
-wire [4-1:0] load_opt, store_opt;
+wire [3-1:0] exu_opt, brch_opt;
+wire [3-1:0] load_opt, store_opt;
 
 wire idu_wen, csr_wen, wbu_wen, wbu_csr_wen;
 wire [ISA_WIDTH-1:0] pc_next, ifu_pc_next;
@@ -236,24 +235,24 @@ wire                   [   3:0]         IFU_SRAM_AXI_AWID,  LSU_SRAM_AXI_AWID;
 //write data channel,
 wire                                    IFU_SRAM_AXI_WVALID, LSU_SRAM_AXI_WVALID;
 wire                                    IFU_SRAM_AXI_WREADY, LSU_SRAM_AXI_WREADY;
-wire                   [32-1 : 0]IFU_SRAM_AXI_WDATA         ;
-wire                   [32-1 : 0]LSU_SRAM_AXI_WDATA         ;
-wire                   [4-1 : 0]IFU_SRAM_AXI_WSTRB, LSU_SRAM_AXI_WSTRB;
+wire                   [32-1 : 0]       IFU_SRAM_AXI_WDATA         ;
+wire                   [32-1 : 0]       LSU_SRAM_AXI_WDATA         ;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_WSTRB, LSU_SRAM_AXI_WSTRB;
 wire                                    IFU_SRAM_AXI_WLAST,LSU_SRAM_AXI_WLAST;
 //read data channel
-wire                   [32-1 : 0]IFU_SRAM_AXI_RDATA         ;
-wire                   [32-1 : 0]LSU_SRAM_AXI_RDATA         ;
+wire                   [32-1 : 0]       IFU_SRAM_AXI_RDATA         ;
+wire                   [32-1 : 0]       LSU_SRAM_AXI_RDATA         ;
 wire                   [   1:0]         IFU_SRAM_AXI_RRESP, LSU_SRAM_AXI_RRESP;
 wire                                    IFU_SRAM_AXI_RVALID, LSU_SRAM_AXI_RVALID;
 wire                                    IFU_SRAM_AXI_RREADY, LSU_SRAM_AXI_RREADY;
-wire                   [4-1 : 0]IFU_SRAM_AXI_RID,LSU_SRAM_AXI_RID;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_RID,LSU_SRAM_AXI_RID;
 wire                                    IFU_SRAM_AXI_RLAST,LSU_SRAM_AXI_RLAST;
     
 //read adress channel
-wire                   [32-1 : 0]IFU_SRAM_AXI_ARADDR, LSU_SRAM_AXI_ARADDR;
+wire                   [32-1 : 0]       IFU_SRAM_AXI_ARADDR, LSU_SRAM_AXI_ARADDR;
 wire                                    IFU_SRAM_AXI_ARVALID, LSU_SRAM_AXI_ARVALID;
 wire                                    IFU_SRAM_AXI_ARREADY, LSU_SRAM_AXI_ARREADY;
-wire                   [4-1 : 0]IFU_SRAM_AXI_ARID,LSU_SRAM_AXI_ARID;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_ARID,LSU_SRAM_AXI_ARID;
 wire                   [   7:0]         IFU_SRAM_AXI_ARLEN   ,LSU_SRAM_AXI_ARLEN;
 wire                   [   2:0]         IFU_SRAM_AXI_ARSIZE  ,LSU_SRAM_AXI_ARSIZE;
 wire                   [   1:0]         IFU_SRAM_AXI_ARBURST ,LSU_SRAM_AXI_ARBURST;
@@ -261,7 +260,7 @@ wire                   [   1:0]         IFU_SRAM_AXI_ARBURST ,LSU_SRAM_AXI_ARBUR
 wire                   [   1:0]         IFU_SRAM_AXI_BRESP, LSU_SRAM_AXI_BRESP;
 wire                                    IFU_SRAM_AXI_BVALID, LSU_SRAM_AXI_BVALID;
 wire                                    IFU_SRAM_AXI_BREADY, LSU_SRAM_AXI_BREADY;
-wire                   [4-1 : 0]IFU_SRAM_AXI_BID,LSU_SRAM_AXI_BID;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_BID,LSU_SRAM_AXI_BID;
 
 ysyx_23060124_EXU exu1(
     .clock                             (clock                     ),
@@ -352,7 +351,7 @@ ysyx_23060124_WBU wbu1(
 
 ysyx_23060124_Xbar xbar
 (
-    .clock                               (clock                     ),
+    .clock                             (clock                     ),
     .RESETN                            (rst_n_sync                ),
   // IFU AXI-FULL Interface
     .IFU_AWADDR                        (IFU_SRAM_AXI_AWADDR       ),

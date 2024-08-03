@@ -18,10 +18,10 @@ module ysyx_23060124_EXU(
     input                               if_unsigned                ,
     input              [32 - 1:0]       i_pc                       ,
     input              [32 - 1:0]       imm                        ,
-    input              [`ysyx_23060124_OPT_WIDTH - 1:0]exu_opt                    ,
-    input              [4 - 1:0]        load_opt                   ,
-    input              [4 - 1:0]        store_opt                  ,
-    input              [`ysyx_23060124_OPT_WIDTH - 1:0]brch_opt                   ,
+    input              [3 - 1:0]        exu_opt                    ,
+    input              [3 - 1:0]        load_opt                   ,
+    input              [3 - 1:0]        store_opt                  ,
+    input              [3 - 1:0]        brch_opt                   ,
     input              [2 - 1:0]        i_src_sel                  ,
     output             [32 - 1:0]       o_res                      ,
     output                              o_zero                     ,
@@ -74,7 +74,13 @@ module ysyx_23060124_EXU(
 `define ysyx_23060124_EXU_SEL_IMM 2'b01
 `define ysyx_23060124_EXU_SEL_PC4 2'b10
 `define ysyx_23060124_EXU_SEL_PCI 2'b11
-
+/******************parameter******************/
+parameter BEQ   = 3'b000;
+parameter BNE   = 3'b001;
+parameter BLT   = 3'b100;
+parameter BGE   = 3'b101;
+parameter BLTU  = 3'b110;
+parameter BGEU  = 3'b111;
 
 wire lsu_post_valid;  
 
@@ -94,30 +100,30 @@ end
 
 assign o_post_valid = lsu_post_valid;
 
-wire [32 - 1:0] sel_src2;
-wire [32-1:0] alu_src1,alu_src2;
-wire [32 - 1:0] alu_res, lsu_res;
-wire carry, brch_res;
+wire                   [32-1:0]         sel_src2                   ;
+wire                   [32-1:0]         alu_src1,alu_src2          ;
+wire                   [32-1:0]         alu_res, lsu_res           ;
+wire                                    carry, brch_res            ;
 
 assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
 
 assign alu_src1 = (i_src_sel == `ysyx_23060124_EXU_SEL_REG) ? src1 :
-                 (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? src1 :
-                 (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? i_pc :
-                 (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? i_pc : 32'b0;
+                  (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? src1 :
+                  (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? i_pc :
+                  (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? i_pc : 32'b0;
 
 assign alu_src2 = (i_src_sel == `ysyx_23060124_EXU_SEL_REG) ? sel_src2 :
-                 (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? imm :
-                 (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? 32'h4 :
-                 (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? imm : 32'b0;
+                  (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? imm :
+                  (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? 32'h4 :
+                  (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? imm : 32'b0;
 
 ysyx_23060124_ALU exu_alu(
-  .src1(alu_src1),
-  .src2(alu_src2),
-  .if_unsigned(if_unsigned),
-  .opt(exu_opt),
-  .res(alu_res),
-  .carry(carry)
+    .src1                              (alu_src1                  ),
+    .src2                              (alu_src2                  ),
+    .if_unsigned                       (if_unsigned               ),
+    .opt                               (exu_opt                   ),
+    .res                               (alu_res                   ),
+    .carry                             (carry                     ) 
 );
 
 ysyx_23060124_LSU exu_lsu(
@@ -128,7 +134,6 @@ ysyx_23060124_LSU exu_lsu(
     .load_opt                          (load_opt                  ),
     .store_opt                         (store_opt                 ),
     .lsu_res                           (lsu_res                   ),
-    .if_unsigned                       (if_unsigned               ),
   //lsu ->exu sram axi
   //write address channel  
     .M_AXI_AWADDR                      (M_AXI_AWADDR              ),
@@ -169,12 +174,12 @@ ysyx_23060124_LSU exu_lsu(
     .o_post_valid                      (lsu_post_valid            ) 
 );
 
-assign brch_res = (brch_opt == `ysyx_23060124_OPT_BRCH_BEQ) ? ((alu_res == 0)) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BNE) ? ((alu_res != 0)) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BLT) ? (carry == 1'b1) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BGE) ? (carry == 1'b0) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BLTU) ? ((carry == 1'b1)) :
-                  (brch_opt == `ysyx_23060124_OPT_BRCH_BGEU) ? ((carry == 1'b0)) :
+assign brch_res = (brch_opt == BEQ)   ? (alu_res == 0)  :
+                  (brch_opt == BNE)   ? (alu_res != 0)  :
+                  (brch_opt == BLT)   ? (carry == 1'b1) :
+                  (brch_opt == BGE)   ? (carry == 1'b0) :
+                  (brch_opt == BLTU)  ? (carry == 1'b1) :
+                  (brch_opt == BGEU)  ? (carry == 1'b0) :
                   1'b0;
 
 assign o_res = (|load_opt) ? lsu_res : (|brch_opt ? {31'b0, brch_res} : alu_res);

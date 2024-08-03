@@ -1,21 +1,11 @@
- 
-//LSU_OPT
-`define ysyx_23060124_OPT_LSU_LB 4'b1
-`define ysyx_23060124_OPT_LSU_LH 4'b11
-`define ysyx_23060124_OPT_LSU_LW 4'b1111
-//STORE
-`define ysyx_23060124_OPT_LSU_SB 4'b1
-`define ysyx_23060124_OPT_LSU_SH 4'b11
-`define ysyx_23060124_OPT_LSU_SW 4'b1111
 module ysyx_23060124_LSU 
 (
     input                               clock                      ,
     input                               i_rst_n                    ,
     input              [32 - 1:0]       lsu_src2                   ,
     input              [32 - 1:0]       alu_res                    ,
-    input              [4 - 1:0]        load_opt                   ,
-    input              [4 - 1:0]        store_opt                  ,
-    input                               if_unsigned                ,
+    input              [3 - 1:0]        load_opt                   ,
+    input              [3 - 1:0]        store_opt                  ,
     output reg         [32 - 1:0]       lsu_res                    ,
   //axi interface
 
@@ -61,13 +51,26 @@ module ysyx_23060124_LSU
     input                               i_pre_valid                ,
     output reg                          o_post_valid                
 );
+/************parameter************/
+//LSU_OPT
+parameter LB  = 3'b000;
+parameter LH  = 3'b001;
+parameter LW  = 3'b010;
+parameter LBU = 3'b100;
+parameter LHU = 3'b101;
+
+parameter SB = 3'b000;
+parameter SH = 3'b001;
+parameter SW = 3'b010;
 
 assign M_AXI_ARESETN = i_rst_n; 
 assign M_AXI_ACLK = clock;
  
 reg [32 - 1 : 0] store_addr, store_src2;
-reg [4 - 1 : 0] store_opt_next;
+reg [3 - 1 : 0] store_opt_next;
 
+
+wire                   [   3:0]         wstrb                      ;
 // Initiate AXI transactions
 wire                                    INIT_AXI_TXN               ;
 wire                                    M_AXI_ACLK                 ;
@@ -99,25 +102,29 @@ assign M_AXI_WDATA = lsu_src2 << 8*shift;
 
 assign M_AXI_AWVALID	= axi_awvalid;
 assign M_AXI_AWLEN = 'b0;
-assign M_AXI_AWSIZE =   (store_opt == `ysyx_23060124_OPT_LSU_SW) ? 3'b010 :
-                        (store_opt == `ysyx_23060124_OPT_LSU_SH) ? 3'b001 :
-                        (store_opt == `ysyx_23060124_OPT_LSU_SB) ? 3'b000 : 3'b010;
+assign M_AXI_AWSIZE =   (store_opt == SW) ? 3'b010 :
+                        (store_opt == SH) ? 3'b001 :
+                        (store_opt == SB) ? 3'b000 : 3'b010;
 
 assign M_AXI_AWBURST = 2'b00;
 //Write Data(W)
 assign M_AXI_WVALID	= axi_wvalid;
 //Set all byte strobes in this example
-assign M_AXI_WSTRB = store_opt[3:0] << shift;
-// assign M_AXI_WSTRB = {store_opt[3:0], 4'b0000} >> shift;
+assign wstrb =  (store_opt == SB) ? 4'b0001 :
+                (store_opt == SH) ? 4'b0011 :
+                (store_opt == SW) ? 4'b1111 : 4'b0000;
+
+assign M_AXI_WSTRB = wstrb << shift;
+
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
 //Read Address (AR)
 assign M_AXI_ARADDR	= alu_res;
 assign M_AXI_ARVALID	= axi_arvalid;
 assign M_AXI_ARLEN = 'b0;
-assign M_AXI_ARSIZE =   (load_opt == `ysyx_23060124_OPT_LSU_LW ) ? 3'b010 :
-                        (load_opt == `ysyx_23060124_OPT_LSU_LH ) ? 3'b001 :
-                        (load_opt == `ysyx_23060124_OPT_LSU_LB ) ? 3'b000 : 3'b010;
+assign M_AXI_ARSIZE =   (load_opt == LW ) ? 3'b010 :
+                        (load_opt == LH ) ? 3'b001 :
+                        (load_opt == LB ) ? 3'b000 : 3'b010;
 
 assign M_AXI_ARBURST = 2'b00;
 assign M_AXI_ARID = 0;
@@ -333,21 +340,21 @@ assign read_res = axi_rdata >> 8 * shift;
 
 always @(posedge clock) begin
     case(load_opt)
-    `ysyx_23060124_OPT_LSU_LB: begin 
-      if(if_unsigned)begin
-        lsu_res <= {24'b0, read_res[7:0]};
-      end
-      else lsu_res <= {{24{read_res[7]}}, read_res[7:0]}; 
+    LB: begin 
+      lsu_res <= {{24{read_res[7]}}, read_res[7:0]}; 
     end
-    `ysyx_23060124_OPT_LSU_LH: begin 
-      if(if_unsigned)begin
-        lsu_res <= {{16'b0}, read_res[15:0]};
+    LH: begin 
+      lsu_res <= {{16{read_res[15]}}, read_res[15:0]}; 
       end
-      else lsu_res <= {{16{read_res[15]}}, read_res[15:0]}; 
-      end
-    `ysyx_23060124_OPT_LSU_LW: begin 
+    LW: begin 
       lsu_res <= read_res[31:0]; 
     end
+    LBU: begin 
+        lsu_res <= {24'b0, read_res[7:0]};
+      end
+    LHU: begin 
+        lsu_res <= {{16'b0}, read_res[15:0]};
+      end
     default: begin lsu_res <= 32'b0; end
     endcase
 end
