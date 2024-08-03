@@ -7,46 +7,20 @@
 `define ysyx_23060124_OPT_LSU_SB 4'b1
 `define ysyx_23060124_OPT_LSU_SH 4'b11
 `define ysyx_23060124_OPT_LSU_SW 4'b1111
-module ysyx_23060124_LSU #(
-		// Users to add parameters here
-
-		// User parameters ends
-		// Do not modify the parameters beyond this line
-
-		// Base address of targeted slave
-		parameter  C_M_TARGET_SLAVE_BASE_ADDR	= 32'h80000000,
-		// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
-		parameter integer C_M_AXI_BURST_LEN	= 1,
-		// Thread ID Width
-		parameter integer C_M_AXI_ID_WIDTH	= 4,
-		// Width of Address Bus
-		parameter integer C_M_AXI_ADDR_WIDTH	= 32,
-		// Width of Data Bus
-		parameter integer C_M_AXI_DATA_WIDTH	= 32,
-		// Width of User Write Address Bus
-		parameter integer C_M_AXI_AWUSER_WIDTH	= 0,
-		// Width of User Read Address Bus
-		parameter integer C_M_AXI_ARUSER_WIDTH	= 0,
-		// Width of User Write Data Bus
-		parameter integer C_M_AXI_WUSER_WIDTH	= 0,
-		// Width of User Read Data Bus
-		parameter integer C_M_AXI_RUSER_WIDTH	= 0,
-		// Width of User Response Bus
-		parameter integer C_M_AXI_BUSER_WIDTH	= 0
-	)
-  (
-  input                               i_clk   ,
-  input                               i_rst_n , 
-  input [32 - 1:0] lsu_src2,
-  input [32 - 1:0] alu_res,
-  input [4 - 1:0] load_opt,
-  input [4 - 1:0] store_opt,
-  input if_unsigned,
-
-  output reg [32 - 1:0] lsu_res,
+module ysyx_23060124_LSU 
+(
+    input                               clock                      ,
+    input                               i_rst_n                    ,
+    input              [32 - 1:0]       lsu_src2                   ,
+    input              [32 - 1:0]       alu_res                    ,
+    input              [4 - 1:0]        load_opt                   ,
+    input              [4 - 1:0]        store_opt                  ,
+    input                               if_unsigned                ,
+    output reg         [32 - 1:0]       lsu_res                    ,
   //axi interface
+
     //write address channel  
-    output             [32-1 : 0]M_AXI_AWADDR               ,
+    output             [32-1 : 0]       M_AXI_AWADDR               ,
     output                              M_AXI_AWVALID              ,
     input                               M_AXI_AWREADY              ,
     output             [   7:0]         M_AXI_AWLEN                ,
@@ -56,23 +30,23 @@ module ysyx_23060124_LSU #(
     //write data channel
     output                              M_AXI_WVALID               ,
     input                               M_AXI_WREADY               ,
-    output             [C_M_AXI_DATA_WIDTH-1 : 0]M_AXI_WDATA                ,
-    output             [4-1 : 0]M_AXI_WSTRB                ,
+    output             [32-1 : 0]       M_AXI_WDATA                ,
+    output             [4-1 : 0]        M_AXI_WSTRB                ,
     input                               M_AXI_WLAST                ,
 
     //read data channel
-    input              [C_M_AXI_DATA_WIDTH-1 : 0]M_AXI_RDATA                ,
+    input              [32-1 : 0]       M_AXI_RDATA                ,
     input              [   1:0]         M_AXI_RRESP                ,
     input                               M_AXI_RVALID               ,
     output                              M_AXI_RREADY               ,
-    input              [C_M_AXI_ID_WIDTH-1 : 0]M_AXI_RID                  ,
+    input              [4-1 : 0]        M_AXI_RID                  ,
     input                               M_AXI_RLAST                ,
 
     //read adress channel
-    output             [32-1 : 0]M_AXI_ARADDR               ,
+    output             [32-1 : 0]       M_AXI_ARADDR               ,
     output                              M_AXI_ARVALID              ,
     input                               M_AXI_ARREADY              ,
-    output             [C_M_AXI_ID_WIDTH-1 : 0]M_AXI_ARID                 ,
+    output             [4-1 : 0]        M_AXI_ARID                 ,
     output             [   7:0]         M_AXI_ARLEN                ,
     output             [   2:0]         M_AXI_ARSIZE               ,
     output             [   1:0]         M_AXI_ARBURST              ,
@@ -81,49 +55,46 @@ module ysyx_23060124_LSU #(
     input              [   1:0]         M_AXI_BRESP                ,
     input                               M_AXI_BVALID               ,
     output                              M_AXI_BREADY               ,
-    input              [C_M_AXI_ID_WIDTH-1 : 0]M_AXI_BID                  ,
+    input              [4-1 : 0]        M_AXI_BID                  ,
   //lsu -> wbu handshake
-  input o_pre_ready,
-  input i_pre_valid,
-  output reg o_post_valid
+    input                               o_pre_ready                ,
+    input                               i_pre_valid                ,
+    output reg                          o_post_valid                
 );
 
 assign M_AXI_ARESETN = i_rst_n; 
-assign M_AXI_ACLK = i_clk;
+assign M_AXI_ACLK = clock;
  
 reg [32 - 1 : 0] store_addr, store_src2;
 reg [4 - 1 : 0] store_opt_next;
 
-
 // Initiate AXI transactions
-wire  INIT_AXI_TXN;
-wire  M_AXI_ACLK;
-wire  M_AXI_ARESETN;
+wire                                    INIT_AXI_TXN               ;
+wire                                    M_AXI_ACLK                 ;
+wire                                    M_AXI_ARESETN              ;
 
 // AXI4LITE signals
-reg  	axi_awvalid;
-reg  	axi_wvalid;
-reg  	axi_arvalid;
-reg  	axi_rready;
-reg  	axi_bready;
-reg [32-1 : 0] 	axi_awaddr;
-reg [32-1 : 0] 	axi_araddr;
-reg  	init_txn_ff;
-reg  	init_txn_ff2;
-reg  	init_txn_edge;
-reg   o_pre_ready_d1;
+reg                                     axi_awvalid                ;
+reg                                     axi_wvalid                 ;
+reg                                     axi_arvalid                ;
+reg                                     axi_rready                 ;
+reg                    [32-1:0]         axi_rdata                  ;
+reg                                     axi_bready                 ;
+reg                    [32-1 : 0]       axi_awaddr                 ;
+reg                    [32-1 : 0]       axi_araddr                 ;
+reg                                     init_txn_ff                ;
+reg                                     init_txn_ff2               ;
+reg                                     init_txn_edge              ;
+reg                                     o_pre_ready_d1             ;
 
-wire  init_txn_pulse;
-wire  is_ls, not_ls;
-wire [1:0] shift;
-wire [32-1:0] read_res;
-// I/O Connections assignments
-reg [32-1:0] axi_rdata;
+wire                                    init_txn_pulse             ;
+wire                                    is_ls, not_ls              ;
+wire                   [   1:0]         shift                      ;
+wire                   [32-1:0]         read_res                   ;
 
 //Adding the offset address to the base addr of the slave
-assign M_AXI_AWADDR	= alu_res;
+assign M_AXI_AWADDR    = alu_res;
 //AXI 4 write data
-// assign M_AXI_WDATA = in_spi ? {lsu_src2, 32'b0} << 8*shift : {32'b0, lsu_src2} << 8*shift;
 assign M_AXI_WDATA = lsu_src2 << 8*shift;
 
 assign M_AXI_AWVALID	= axi_awvalid;
@@ -164,7 +135,7 @@ assign txn_pulse_store = |store_opt && init_txn_pulse;
 
 assign shift = alu_res[1:0];
 
-always @(posedge i_clk)begin
+always @(posedge clock)begin
     if(i_rst_n == 1'b0)begin
       o_pre_ready_d1 <= 1'b0; 
     end
@@ -173,7 +144,7 @@ always @(posedge i_clk)begin
     end
 end
 
-always @(posedge i_clk)begin
+always @(posedge clock)begin
     if(i_rst_n == 1'b0)begin
       o_post_valid <= 1'b0; 
     end
@@ -360,7 +331,7 @@ always @(posedge M_AXI_ACLK)
 
 assign read_res = axi_rdata >> 8 * shift;
 
-always @(posedge i_clk) begin
+always @(posedge clock) begin
     case(load_opt)
     `ysyx_23060124_OPT_LSU_LB: begin 
       if(if_unsigned)begin

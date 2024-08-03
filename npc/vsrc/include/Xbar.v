@@ -1,7 +1,5 @@
- 
-
 module ysyx_23060124_Xbar(
-    input                               CLK                        ,
+    input                               clock                      ,
     input                               RESETN                     ,
     // IFU AXI-FULL Interface
     output             [32-1 : 0]       IFU_RDATA                  ,
@@ -181,7 +179,7 @@ wire                                    CPU_BREADY                 ;
 wire                   [4-1 : 0]        CPU_BID                    ;
 
 /*************  state machine  ******************/
-    always @(posedge CLK or negedge RESETN) begin
+    always @(posedge clock or negedge RESETN) begin
         if (RESETN == 1'b0) begin
             IN_STATE <= IN_IDLE;
         end else begin
@@ -210,7 +208,7 @@ wire                   [4-1 : 0]        CPU_BID                    ;
         end
     end
     
-    always @(posedge CLK or negedge RESETN) begin
+    always @(posedge clock or negedge RESETN) begin
         if (RESETN == 1'b0) begin
             OUT_STATE <= OUT_IDLE;
         end else begin

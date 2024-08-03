@@ -1,44 +1,44 @@
 module CLINT(
-    input S_AXI_ACLK,
-    input S_AXI_ARESETN,
+    input                               clock                      ,
+    input                               S_AXI_ARESETN              ,
     //read data channel
-    output  [32-1 : 0] S_AXI_RDATA,
-    output  [1 : 0] S_AXI_RRESP,
-    output   S_AXI_RVALID,
-    input    S_AXI_RREADY,
-    output  S_AXI_RLAST,
-    output [4-1 : 0] S_AXI_RID,
+    output             [32-1 : 0]       S_AXI_RDATA                ,
+    output             [   1:0]         S_AXI_RRESP                ,
+    output                              S_AXI_RVALID               ,
+    input                               S_AXI_RREADY               ,
+    output                              S_AXI_RLAST                ,
+    output             [4-1 : 0]        S_AXI_RID                  ,
 
     //read adress channel
-    input   [32-1 : 0] S_AXI_ARADDR,
-    input    S_AXI_ARVALID,
-    output   S_AXI_ARREADY,
-    input [4-1 : 0] S_AXI_ARID,
-    input [7 : 0] S_AXI_ARLEN,
-    input [2 : 0] S_AXI_ARSIZE,
-    input [1 : 0] S_AXI_ARBURST,
+    input              [32-1 : 0]       S_AXI_ARADDR               ,
+    input                               S_AXI_ARVALID              ,
+    output                              S_AXI_ARREADY              ,
+    input              [4-1 : 0]        S_AXI_ARID                 ,
+    input              [   7:0]         S_AXI_ARLEN                ,
+    input              [   2:0]         S_AXI_ARSIZE               ,
+    input              [   1:0]         S_AXI_ARBURST              ,
 
     //write back channel
-    output  [1 : 0] S_AXI_BRESP,
-    output   S_AXI_BVALID,
-    input    S_AXI_BREADY,
-    output [4-1 : 0] S_AXI_BID,
+    output             [   1:0]         S_AXI_BRESP                ,
+    output                              S_AXI_BVALID               ,
+    input                               S_AXI_BREADY               ,
+    output             [4-1 : 0]        S_AXI_BID                  ,
 
     //write address channel  
-    input   [32-1 : 0] S_AXI_AWADDR,
-    input    S_AXI_AWVALID,
-    output   S_AXI_AWREADY,
-    input   [4-1 : 0] S_AXI_AWID,
-    input   [7 : 0] S_AXI_AWLEN,
-    input [2 : 0] S_AXI_AWSIZE,
-    input [1 : 0] S_AXI_AWBURST,
+    input              [32-1 : 0]       S_AXI_AWADDR               ,
+    input                               S_AXI_AWVALID              ,
+    output                              S_AXI_AWREADY              ,
+    input              [4-1 : 0]        S_AXI_AWID                 ,
+    input              [   7:0]         S_AXI_AWLEN                ,
+    input              [   2:0]         S_AXI_AWSIZE               ,
+    input              [   1:0]         S_AXI_AWBURST              ,
 
     //write data channel
-    input   [32-1 : 0] S_AXI_WDATA,
-    input   [4-1 : 0] S_AXI_WSTRB,
-    input   S_AXI_WVALID,
-    input   S_AXI_WLAST,
-    output  S_AXI_WREADY
+    input              [32-1 : 0]       S_AXI_WDATA                ,
+    input              [4-1 : 0]        S_AXI_WSTRB                ,
+    input                               S_AXI_WVALID               ,
+    input                               S_AXI_WLAST                ,
+    output                              S_AXI_WREADY                
 );
 /**********************para******************************/
 // mtime Register Address
@@ -76,9 +76,12 @@ assign S_AXI_ARREADY	= axi_arready;
 assign S_AXI_RDATA	= axi_rdata;
 assign S_AXI_RRESP	= axi_rresp;
 assign S_AXI_RVALID	= axi_rvalid;
+assign S_AXI_RLAST	= 1'b1;
+assign S_AXI_RID    = 4'b0;
+assign S_AXI_BID    = 4'b0;
 
 //mtime ++ per clock cycle
-always @( posedge S_AXI_ACLK or negedge S_AXI_ARESETN)
+always @( posedge clock or negedge S_AXI_ARESETN)
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -98,11 +101,11 @@ begin
     end 
 end  
 // Implement axi_awready generation
-// axi_awready is asserted for one S_AXI_ACLK clock cycle when both
+// axi_awready is asserted for one clock clock cycle when both
 // S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_awready is
 // de-asserted when reset is low.
 
-always @( posedge S_AXI_ACLK )
+always @( posedge clock )
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -135,7 +138,7 @@ end
 // Implement axi_awaddr latching
 // This process is used to latch the address when both 
 // S_AXI_AWVALID and S_AXI_WVALID are valid. 
-always @( posedge S_AXI_ACLK )
+always @( posedge clock )
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -152,11 +155,11 @@ begin
 end      
 
 // Implement axi_wready generation
-// axi_wready is asserted for one S_AXI_ACLK clock cycle when both
+// axi_wready is asserted for one clock clock cycle when both
 // S_AXI_AWVALID and S_AXI_WVALID are asserted. axi_wready is 
 // de-asserted when reset is low. 
 
-always @( posedge S_AXI_ACLK )
+always @( posedge clock )
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -185,7 +188,7 @@ end
 // This marks the acceptance of address and indicates the status of 
 // write transaction.
 
-always @( posedge S_AXI_ACLK )
+always @( posedge clock )
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -217,7 +220,7 @@ begin
     end
 end   
 
-always @( posedge S_AXI_ACLK )
+always @( posedge clock )
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -240,7 +243,7 @@ begin
     end 
 end       
 
-always @( posedge S_AXI_ACLK )
+always @( posedge clock )
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin
@@ -267,7 +270,7 @@ end
 assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
 
 // Output register or memory read data
-always @( posedge S_AXI_ACLK )
+always @( posedge clock )
 begin
     if ( S_AXI_ARESETN == 1'b0 )
     begin

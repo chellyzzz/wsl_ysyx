@@ -9,25 +9,25 @@
 `define ysyx_23060124_OPT_BRCH_BGEU `ysyx_23060124_OPT_WIDTH'b1000_0000_00000
 
 module ysyx_23060124_EXU(
-    input                               clk                        ,
+    input                               clock                      ,
     input                               i_rst_n                    ,
     input                               csr_src_sel                ,
-    input              [32 - 1:0]src1                       ,
-    input              [32 - 1:0]src2                       ,
-    input              [32 - 1:0]csr_rs2                    ,
+    input              [32 - 1:0]       src1                       ,
+    input              [32 - 1:0]       src2                       ,
+    input              [32 - 1:0]       csr_rs2                    ,
     input                               if_unsigned                ,
-    input              [32 - 1:0]i_pc                       ,
-    input              [32 - 1:0]imm                        ,
+    input              [32 - 1:0]       i_pc                       ,
+    input              [32 - 1:0]       imm                        ,
     input              [`ysyx_23060124_OPT_WIDTH - 1:0]exu_opt                    ,
-    input              [4 - 1:0]load_opt                   ,
-    input              [4 - 1:0]store_opt                  ,
+    input              [4 - 1:0]        load_opt                   ,
+    input              [4 - 1:0]        store_opt                  ,
     input              [`ysyx_23060124_OPT_WIDTH - 1:0]brch_opt                   ,
-    input              [2 - 1:0]i_src_sel                  ,
-    output             [32 - 1:0]o_res                      ,
+    input              [2 - 1:0]        i_src_sel                  ,
+    output             [32 - 1:0]       o_res                      ,
     output                              o_zero                     ,
   //axi interface
     //write address channel  
-    output             [32-1 : 0]M_AXI_AWADDR               ,
+    output             [32-1 : 0]       M_AXI_AWADDR               ,
     output                              M_AXI_AWVALID              ,
     input                               M_AXI_AWREADY              ,
     output             [   7:0]         M_AXI_AWLEN                ,
@@ -37,23 +37,23 @@ module ysyx_23060124_EXU(
     //write data channel
     output                              M_AXI_WVALID               ,
     input                               M_AXI_WREADY               ,
-    output             [32-1 : 0]M_AXI_WDATA                ,
-    output             [4-1 : 0]M_AXI_WSTRB                ,
+    output             [32-1 : 0]       M_AXI_WDATA                ,
+    output             [4-1 : 0]        M_AXI_WSTRB                ,
     input                               M_AXI_WLAST                ,
 
     //read data channel
-    input              [32-1 : 0]M_AXI_RDATA                ,
+    input              [32-1 : 0]       M_AXI_RDATA                ,
     input              [   1:0]         M_AXI_RRESP                ,
     input                               M_AXI_RVALID               ,
     output                              M_AXI_RREADY               ,
-    input              [4-1 : 0]M_AXI_RID                  ,
+    input              [4-1 : 0]        M_AXI_RID                  ,
     input                               M_AXI_RLAST                ,
 
     //read adress channel
-    output             [32-1 : 0]M_AXI_ARADDR               ,
+    output             [32-1 : 0]       M_AXI_ARADDR               ,
     output                              M_AXI_ARVALID              ,
     input                               M_AXI_ARREADY              ,
-    output             [4-1 : 0]M_AXI_ARID                 ,
+    output             [4-1 : 0]        M_AXI_ARID                 ,
     output             [   7:0]         M_AXI_ARLEN                ,
     output             [   2:0]         M_AXI_ARSIZE               ,
     output             [   1:0]         M_AXI_ARBURST              ,
@@ -62,7 +62,7 @@ module ysyx_23060124_EXU(
     input              [   1:0]         M_AXI_BRESP                ,
     input                               M_AXI_BVALID               ,
     output                              M_AXI_BREADY               ,
-    input              [4-1 : 0]M_AXI_BID                  ,
+    input              [4-1 : 0]        M_AXI_BID                  ,
   //exu -> wbu handshake
     input                               i_post_ready               ,
     input                               i_pre_valid                ,
@@ -79,7 +79,7 @@ module ysyx_23060124_EXU(
 wire lsu_post_valid;  
 
 // assign o_pre_ready = 1'b1;
-always @(posedge clk or negedge i_rst_n) begin
+always @(posedge  clock or negedge i_rst_n) begin
   if(~i_rst_n) begin
     o_pre_ready <= 1'b0;
   end
@@ -121,7 +121,7 @@ ysyx_23060124_ALU exu_alu(
 );
 
 ysyx_23060124_LSU exu_lsu(
-    .i_clk                             (clk                       ),
+    .clock                             (clock                     ),
     .i_rst_n                           (i_rst_n                   ),
     .lsu_src2                          (src2                      ),
     .alu_res                           (alu_res                   ),

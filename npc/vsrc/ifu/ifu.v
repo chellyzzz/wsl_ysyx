@@ -1,33 +1,9 @@
  
 
-module ysyx_23060124_IFU #(
-		// Users to add parameters here
-
-		// User parameters ends
-		// Do not modify the parameters beyond this line
-
-		// Base address of targeted slave
-    parameter                           C_M_TARGET_SLAVE_BASE_ADDR	= 32'h80000000,
-		// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
-    parameter                           integer C_M_AXI_BURST_LEN	= 1,
-		// Width of Address Bus
-    parameter                           integer C_M_AXI_ADDR_WIDTH	= 32,
-		// Width of Data Bus
-    parameter                           integer C_M_AXI_DATA_WIDTH	= 32,
-		// Width of User Write Address Bus
-    parameter                           integer C_M_AXI_AWUSER_WIDTH	= 0,
-		// Width of User Read Address Bus
-    parameter                           integer C_M_AXI_ARUSER_WIDTH	= 0,
-		// Width of User Write Data Bus
-    parameter                           integer C_M_AXI_WUSER_WIDTH	= 0,
-		// Width of User Read Data Bus
-    parameter                           integer C_M_AXI_RUSER_WIDTH	= 0,
-		// Width of User Response Bus
-    parameter                           integer C_M_AXI_BUSER_WIDTH	= 0 
-    )
-    (
+module ysyx_23060124_IFU
+(
     input              [32-1:0]         i_pc_next                  ,
-    input                               clk                        ,
+    input                               clock                      ,
     input                               ifu_rst                    ,
     input                               i_pc_update                ,
     input                               i_post_ready               ,
@@ -77,65 +53,59 @@ module ysyx_23060124_IFU #(
     output reg                          o_post_valid                
 );
 
-  localparam RESET_PC = 32'h3000_0000;
+localparam RESET_PC = 32'h3000_0000;
 /******************************regs*****************************/
     // Initiate AXI transactions
-    reg  INIT_AXI_TXN;
+reg                                     INIT_AXI_TXN               ;
     // AXI4LITE signals
-    reg  	axi_awvalid;
-    reg  	axi_wvalid;
-    reg  	axi_arvalid;
-    reg  	axi_rready;
-    reg  	axi_bready;
-    reg [32-1 : 0] 	axi_awaddr;
-    reg [32-1 : 0] 	axi_wdata;
-    reg [32-1 : 0] 	axi_araddr;
-    reg [32-1:0] axi_rdata;
+reg                                     axi_arvalid                ;
+reg                                     axi_rready                 ;
+reg                    [32-1:0]       axi_araddr                 ;
+reg                    [32-1:0]         axi_rdata                  ;
+reg                    [32-1:0]         pc_next                    ;
 
     //Flag is asserted when the read index reaches the last read transction number
-    reg  	init_txn_ff;
-    reg  	init_txn_ff2;
-    reg  	init_txn_edge;
-    wire  init_txn_pulse;
+reg                                     init_txn_ff                ;
+reg                                     init_txn_ff2               ;
+reg                                     init_txn_edge              ;
+wire                                    init_txn_pulse             ;
 
 /******************************nets*****************************/
     // AXI clock signal
-    wire  M_AXI_ACLK;
+wire                                    M_AXI_ACLK                 ;
     // AXI active low reset signal
-    wire  M_AXI_ARESETN;
+wire                                    M_AXI_ARESETN              ;
 /******************************combinational logic*****************************/
-    assign M_AXI_ARESETN = ifu_rst; 
-    assign M_AXI_ACLK = clk;
+    assign M_AXI_ARESETN = ifu_rst;
+    assign M_AXI_ACLK =  clock;
     
     //should not send write signal
-        //Write Address (AW)
-        assign M_AXI_AWVALID = 1'b0;
-        assign M_AXI_AWADDR = 32'b0;
-        // assign M_AXI_AWADDR	= C_M_TARGET_SLAVE_BASE_ADDR + axi_awaddr;
-        assign M_AXI_WDATA	= axi_wdata;
-        assign M_AXI_AWVALID	= axi_awvalid;
+    //Write Address (AW)
+    assign M_AXI_AWVALID = 1'b0;
+    assign M_AXI_AWADDR = 32'b0;
+    assign M_AXI_AWLEN  = 'b0;
+    assign M_AXI_AWSIZE = 'b0;
+    assign M_AXI_AWBURST = 'b0;
+    assign M_AXI_AWID = 'b0;
+    //Write Data(W)
+    assign M_AXI_WVALID = 1'b0;
+    assign M_AXI_WDATA = 32'b0;
+    assign M_AXI_WSTRB = 4'b0; 
+  
+    //Write Response (B)
+    assign M_AXI_BREADY = 1'b0;
 
-        //Write Data(W)
-        assign M_AXI_WVALID	= axi_wvalid;
-        assign M_AXI_WVALID = 1'b0;
-        assign M_AXI_WDATA = 32'b0;
-        assign M_AXI_WSTRB = 4'b0;   
-        //Write Response (B)
-        assign M_AXI_BREADY = 1'b0;
-        assign M_AXI_BREADY	= axi_bready;
-        //Read Address (AR)
-        assign M_AXI_ARADDR = pc_next;
-        assign M_AXI_ARVALID	= axi_arvalid;
-        assign M_AXI_ARID = 'b0;
-        assign M_AXI_ARLEN = 'b0;
-        assign M_AXI_ARSIZE = 3'b010;
-        assign M_AXI_ARBURST = 2'b00;
-
-        //Read and Read Response (R)
-        assign M_AXI_RREADY	= axi_rready;
-         
-        //Example design I/O
-        assign init_txn_pulse	= ~ifu_rst ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
+    //Read Address (AR)
+    assign M_AXI_ARADDR = pc_next;
+    assign M_AXI_ARVALID	= axi_arvalid;
+    assign M_AXI_ARID = 'b0;
+    assign M_AXI_ARLEN = 'b0;
+    assign M_AXI_ARSIZE = 3'b010;
+    assign M_AXI_ARBURST = 2'b00;
+    //Read and Read Response (R)
+    assign M_AXI_RREADY	= axi_rready;
+    //Example design I/O
+    assign init_txn_pulse	= ~ifu_rst ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
 
 /******************************sequential logic*****************************/
 
@@ -251,17 +221,15 @@ always @(posedge M_AXI_ACLK)
 // only for ifu
 //----------------------------
 
-reg [32-1:0] pc_next;
-
-ysyx_23060124_Reg #(32, RESET_PC) next_pc_reg(
-  .clk(clk),
-  .rst(ifu_rst),
-  .din(i_pc_next),
-  .dout(pc_next),
-  .wen(i_pc_update)
+ysyx_23060124_Reg #(.WIDTH(32), .RESET_VAL(RESET_PC)) next_pc_reg(
+    .clock                             (clock                     ),
+    .rst                               (ifu_rst                   ),
+    .din                               (i_pc_next                 ),
+    .dout                              (pc_next                   ),
+    .wen                               (i_pc_update               ) 
 );
 
-always @(posedge clk or negedge ifu_rst) begin
+always @(posedge  clock or negedge ifu_rst) begin
   if(~ifu_rst) begin
     o_post_valid <= 1'b0;
   end
@@ -274,7 +242,7 @@ always @(posedge clk or negedge ifu_rst) begin
   else o_post_valid <= o_post_valid;
 end
 
-always @(posedge clk or negedge ifu_rst) begin
+always @(posedge  clock or negedge ifu_rst) begin
   if(~ifu_rst) begin
     o_ins <= 32'h0;
     o_pc_next <= RESET_PC;

@@ -1,7 +1,7 @@
  
 
 module ysyx_23060124_RegisterFile (
-  input clk,
+  input  clock,
   input i_rst_n,
   input i_ecall,
   input i_mret,
@@ -19,7 +19,7 @@ module ysyx_23060124_RegisterFile (
 
   integer i;
 
-  always @(posedge clk or negedge i_rst_n) begin
+  always @(posedge  clock or negedge i_rst_n) begin
     if(~i_rst_n) begin
     for (i = 0; i < 32; i = i + 1) rf[i] <= 0;
     end

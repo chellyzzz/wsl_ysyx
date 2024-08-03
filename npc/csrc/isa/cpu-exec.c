@@ -26,6 +26,7 @@
 
 CPU_state cpu = {};
 int cycles = 0;
+int instr_count = 0;
 
 #define MAX_INST_TO_PRINT 11
 #define PC_WAVE_START 0xa0000000
@@ -57,6 +58,7 @@ extern bool ftrace_enable;
 
 // cpu exec
 void reg_update(){  
+  instr_count ++;
   if(dead_detector){
     if(cpu.pc == top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next){
       dead_cycles ++;
@@ -126,7 +128,7 @@ void decode_pc(Decode* s){
 }
 
 void exec_once(Decode *s){
-    // cycles ++;
+    cycles ++;
     top->reset = 0;
     top->clock = 0;
     top->eval();
@@ -221,7 +223,7 @@ void cpu_exec(uint64_t n){
         n = -1u;
     }
     for(; n > 0; n--){
-      if(contextp->gotFinish()){
+      if(if_end()){
         printf("Program execution has ended. To restart the program, exit NPC and run again.\n");
         Log("npc: %s at pc = " FMT_WORD,
         (hit_goodtrap() ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
@@ -240,10 +242,16 @@ void cpu_exec(uint64_t n){
           break;
         }
     }
+    printf("train cycles: %d\n", cycles);
+    printf("train instrs: %d\n", instr_count);
+    float ipc = (float)instr_count / (float)cycles;
+    printf("train IPC: %f\n", ipc);
     return;
+}
+bool if_end(){
+  return instr == 0x100073;
 }
 
 int hit_goodtrap(){
-  // printf("\n train cycles: %d\n", cycles);
   return (cpu.gpr[10] == 0 && instr == 0x100073);
 }

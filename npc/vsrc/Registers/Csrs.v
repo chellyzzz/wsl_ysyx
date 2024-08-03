@@ -1,7 +1,7 @@
  
 
 module ysyx_23060124_CSR_RegisterFile (
-  input clk,
+  input  clock,
   input rst,
   input csr_wen,
   input i_ecall,
@@ -10,10 +10,10 @@ module ysyx_23060124_CSR_RegisterFile (
   input [12-1:0] csr_addr,
   input [32-1:0] csr_wdata,
   input [32 - 1:0] i_mret_a5,
-  output reg [32-1:0] o_mcause,
-  output reg [32-1:0] o_mstatus,
-  output reg [32-1:0] o_mepc,
-  output reg [32-1:0] o_mtvec,
+  output [32-1:0] o_mcause,
+  output [32-1:0] o_mstatus,
+  output [32-1:0] o_mepc,
+  output [32-1:0] o_mtvec,
   output reg [32-1:0] csr_rdata
 );
 // ysyx_23060124
@@ -23,7 +23,7 @@ assign marchid = 32'h23060124;
 
 reg [32-1:0] mcause, mstatus, mepc, mtvec;
 
-always @(posedge clk) begin
+always @(posedge  clock) begin
     if (csr_wen)begin 
         case (csr_addr)
             12'h300: mstatus <= csr_wdata;

@@ -28,6 +28,7 @@ void set_nemu_state(int state, vaddr_t pc, int halt_ret);
 void invalid_inst(vaddr_t thispc);
 
 int hit_goodtrap();
+bool if_end();
 void verilator_sync_init(VerilatedContext* contextp_sdb, VysyxSoCFull* top_sdb, VerilatedVcdC* vcd_sdb);
 
 #ifdef CONFIG_FTRACE

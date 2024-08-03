@@ -1,10 +1,10 @@
 module ysyx_23060124_stdrst(
-  input i_clk,
+  input clock,
   input i_rst_n,
   output o_rst_n_sync
 );
   reg [10:0] shift_reg;
-  always @(posedge i_clk or negedge i_rst_n) begin
+  always @(posedge clock or posedge i_rst_n) begin
     if (i_rst_n) begin
       shift_reg <= 11'b0;
     end else begin

@@ -1,7 +1,7 @@
  
 
 module ysyx_23060124_WBU (
-  input clk,
+  input  clock,
   input i_rst_pcu,
   input i_pre_valid,
   input i_wen,
