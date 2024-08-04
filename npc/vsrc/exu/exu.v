@@ -1,13 +1,3 @@
- 
-`define ysyx_23060124_OPT_WIDTH 13
-//BRCH_OPT
-`define ysyx_23060124_OPT_BRCH_BEQ `ysyx_23060124_OPT_WIDTH'b0000_0000_00001
-`define ysyx_23060124_OPT_BRCH_BGE `ysyx_23060124_OPT_WIDTH'b0000_1000_00000
-`define ysyx_23060124_OPT_BRCH_BNE `ysyx_23060124_OPT_WIDTH'b0001_0000_00000
-`define ysyx_23060124_OPT_BRCH_BLT `ysyx_23060124_OPT_WIDTH'b0010_0000_00000
-`define ysyx_23060124_OPT_BRCH_BLTU `ysyx_23060124_OPT_WIDTH'b0100_0000_00000
-`define ysyx_23060124_OPT_BRCH_BGEU `ysyx_23060124_OPT_WIDTH'b1000_0000_00000
-
 module ysyx_23060124_EXU(
     input                               clock                      ,
     input                               i_rst_n                    ,
@@ -16,6 +6,11 @@ module ysyx_23060124_EXU(
     input              [32 - 1:0]       src2                       ,
     input              [32 - 1:0]       csr_rs2                    ,
     input                               if_unsigned                ,
+    //control signal
+    input                               i_load                     ,
+    input                               i_store                    ,
+    input                               i_brch                     ,
+
     input              [32 - 1:0]       i_pc                       ,
     input              [32 - 1:0]       imm                        ,
     input              [3 - 1:0]        exu_opt                    ,
@@ -33,13 +28,14 @@ module ysyx_23060124_EXU(
     output             [   7:0]         M_AXI_AWLEN                ,
     output             [   2:0]         M_AXI_AWSIZE               ,
     output             [   1:0]         M_AXI_AWBURST              ,
+    output             [4-1 : 0]        M_AXI_AWID                 ,
 
     //write data channel
     output                              M_AXI_WVALID               ,
     input                               M_AXI_WREADY               ,
     output             [32-1 : 0]       M_AXI_WDATA                ,
     output             [4-1 : 0]        M_AXI_WSTRB                ,
-    input                               M_AXI_WLAST                ,
+    output                              M_AXI_WLAST                ,
 
     //read data channel
     input              [32-1 : 0]       M_AXI_RDATA                ,
@@ -70,10 +66,7 @@ module ysyx_23060124_EXU(
     output reg                          o_pre_ready                 
 );
 
-`define ysyx_23060124_EXU_SEL_REG 2'b00
-`define ysyx_23060124_EXU_SEL_IMM 2'b01
-`define ysyx_23060124_EXU_SEL_PC4 2'b10
-`define ysyx_23060124_EXU_SEL_PCI 2'b11
+
 /******************parameter******************/
 parameter BEQ   = 3'b000;
 parameter BNE   = 3'b001;
@@ -81,10 +74,18 @@ parameter BLT   = 3'b100;
 parameter BGE   = 3'b101;
 parameter BLTU  = 3'b110;
 parameter BGEU  = 3'b111;
+//EXU_SRC_SEL
+localparam EXU_SEL_REG = 2'b00;
+localparam EXU_SEL_IMM = 2'b01;
+localparam EXU_SEL_PC4 = 2'b10;
+localparam EXU_SEL_PCI = 2'b11;
 
-wire lsu_post_valid;  
+wire                   [32-1:0]         sel_src2                   ;
+wire                   [32-1:0]         alu_src1,alu_src2          ;
+wire                   [32-1:0]         alu_res, lsu_res           ;
+wire                                    carry, brch_res            ;
+wire                                    lsu_post_valid             ;
 
-// assign o_pre_ready = 1'b1;
 always @(posedge  clock or negedge i_rst_n) begin
   if(~i_rst_n) begin
     o_pre_ready <= 1'b0;
@@ -98,24 +99,18 @@ always @(posedge  clock or negedge i_rst_n) begin
   else o_pre_ready <= o_pre_ready;
 end
 
+assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
 assign o_post_valid = lsu_post_valid;
 
-wire                   [32-1:0]         sel_src2                   ;
-wire                   [32-1:0]         alu_src1,alu_src2          ;
-wire                   [32-1:0]         alu_res, lsu_res           ;
-wire                                    carry, brch_res            ;
+assign alu_src1 = (i_src_sel == EXU_SEL_REG) ? src1 :
+                  (i_src_sel == EXU_SEL_IMM) ? src1 :
+                  (i_src_sel == EXU_SEL_PC4) ? i_pc :
+                  (i_src_sel == EXU_SEL_PCI) ? i_pc : 32'b0;
 
-assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
-
-assign alu_src1 = (i_src_sel == `ysyx_23060124_EXU_SEL_REG) ? src1 :
-                  (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? src1 :
-                  (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? i_pc :
-                  (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? i_pc : 32'b0;
-
-assign alu_src2 = (i_src_sel == `ysyx_23060124_EXU_SEL_REG) ? sel_src2 :
-                  (i_src_sel == `ysyx_23060124_EXU_SEL_IMM) ? imm :
-                  (i_src_sel == `ysyx_23060124_EXU_SEL_PC4) ? 32'h4 :
-                  (i_src_sel == `ysyx_23060124_EXU_SEL_PCI) ? imm : 32'b0;
+assign alu_src2 = (i_src_sel == EXU_SEL_REG) ? sel_src2 :
+                  (i_src_sel == EXU_SEL_IMM) ? imm :
+                  (i_src_sel == EXU_SEL_PC4) ? 32'h4 :
+                  (i_src_sel == EXU_SEL_PCI) ? imm : 32'b0;
 
 ysyx_23060124_ALU exu_alu(
     .src1                              (alu_src1                  ),
@@ -134,6 +129,8 @@ ysyx_23060124_LSU exu_lsu(
     .load_opt                          (load_opt                  ),
     .store_opt                         (store_opt                 ),
     .lsu_res                           (lsu_res                   ),
+    .i_load                            (i_load                    ),
+    .i_store                           (i_store                   ),
   //lsu ->exu sram axi
   //write address channel  
     .M_AXI_AWADDR                      (M_AXI_AWADDR              ),
@@ -142,6 +139,8 @@ ysyx_23060124_LSU exu_lsu(
     .M_AXI_AWLEN                       (M_AXI_AWLEN               ),
     .M_AXI_AWSIZE                      (M_AXI_AWSIZE              ),
     .M_AXI_AWBURST                     (M_AXI_AWBURST             ),
+    .M_AXI_AWID                        (M_AXI_AWID                ),
+
   //write data channel
     .M_AXI_WVALID                      (M_AXI_WVALID              ),
     .M_AXI_WREADY                      (M_AXI_WREADY              ),
@@ -174,15 +173,15 @@ ysyx_23060124_LSU exu_lsu(
     .o_post_valid                      (lsu_post_valid            ) 
 );
 
-assign brch_res = (brch_opt == BEQ)   ? (alu_res == 0)  :
-                  (brch_opt == BNE)   ? (alu_res != 0)  :
-                  (brch_opt == BLT)   ? (carry == 1'b1) :
-                  (brch_opt == BGE)   ? (carry == 1'b0) :
-                  (brch_opt == BLTU)  ? (carry == 1'b1) :
-                  (brch_opt == BGEU)  ? (carry == 1'b0) :
+assign brch_res = (brch_opt == BEQ )   ? (alu_src1 == alu_src2)  :
+                  (brch_opt == BNE )   ? (alu_src1 != alu_src2)  :
+                  (brch_opt == BLT )   ? (alu_res == 32'b1) :
+                  (brch_opt == BGE )   ? (alu_res == 32'b0) :
+                  (brch_opt == BLTU)   ? (alu_res == 32'b1) :
+                  (brch_opt == BGEU)   ? (alu_res == 32'b0) :
                   1'b0;
 
-assign o_res = (|load_opt) ? lsu_res : (|brch_opt ? {31'b0, brch_res} : alu_res);
+assign o_res = i_load ? lsu_res : (i_brch ? {31'b0, brch_res} : alu_res);
 assign o_zero = ~(|o_res);
 
 endmodule

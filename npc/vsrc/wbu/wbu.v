@@ -9,14 +9,12 @@ module ysyx_23060124_WBU (
   input i_brch,
   input i_jal,
   input i_jalr,
-  input i_csrr,
   input i_mret,
   input i_ecall,
   input [32 - 1:0] i_pc,
   // ecall and mret
   input [32 - 1:0] i_mepc,
   input [32 - 1:0] i_mtvec,
-  input [32 - 1:0] i_csrr_rd,
   // 
   input [32 - 1:0] i_rs1,
   input [32 - 1:0] i_imm,
@@ -37,7 +35,6 @@ wire [32 - 1:0] imm;
 wire brch;
 wire jal;
 wire jalr;
-wire csrr;
 wire mret;
 wire ecall;
 wire [32 - 1:0] mtvec;
@@ -50,7 +47,6 @@ assign imm           =  i_pre_valid && o_pre_ready ? i_imm       :  'b0;
 assign brch          =  i_pre_valid && o_pre_ready ? i_brch      :  'b0;
 assign jal           =  i_pre_valid && o_pre_ready ? i_jal       :  'b0;
 assign jalr          =  i_pre_valid && o_pre_ready ? i_jalr      :  'b0;
-assign csrr          =  i_pre_valid && o_pre_ready ? i_csrr      :  'b0;
 assign mret          =  i_pre_valid && o_pre_ready ? i_mret      :  'b0;
 assign ecall         =  i_pre_valid && o_pre_ready ? i_ecall     :  'b0;
 assign mtvec         =  i_pre_valid && o_pre_ready ? i_mtvec     :  'b0;

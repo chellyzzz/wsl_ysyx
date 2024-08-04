@@ -8,6 +8,7 @@ module ysyx_23060124_Xbar(
     input                               IFU_RREADY                 ,
     output                              IFU_RLAST                  ,
     output             [4-1 : 0]        IFU_RID                    ,
+
     input              [32-1 : 0]       IFU_ARADDR                 ,
     input                               IFU_ARVALID                ,
     output                              IFU_ARREADY                ,
@@ -15,10 +16,12 @@ module ysyx_23060124_Xbar(
     input              [   7:0]         IFU_ARLEN                  ,
     input              [   2:0]         IFU_ARSIZE                 ,
     input              [   1:0]         IFU_ARBURST                ,
+
     output             [   1:0]         IFU_BRESP                  ,
     output                              IFU_BVALID                 ,
     input                               IFU_BREADY                 ,
     output             [4-1 : 0]        IFU_BID                    ,
+
     input              [32-1 : 0]       IFU_AWADDR                 ,
     input                               IFU_AWVALID                ,
     output                              IFU_AWREADY                ,
@@ -26,6 +29,7 @@ module ysyx_23060124_Xbar(
     input              [   7:0]         IFU_AWLEN                  ,
     input              [   2:0]         IFU_AWSIZE                 ,
     input              [   1:0]         IFU_AWBURST                ,
+
     input              [32-1 : 0]       IFU_WDATA                  ,
     input              [4-1 : 0]        IFU_WSTRB                  ,
     input                               IFU_WVALID                 ,
@@ -39,6 +43,7 @@ module ysyx_23060124_Xbar(
     input                               LSU_RREADY                 ,
     output                              LSU_RLAST                  ,
     output             [4-1 : 0]        LSU_RID                    ,
+
     input              [32-1 : 0]       LSU_ARADDR                 ,
     input                               LSU_ARVALID                ,
     output                              LSU_ARREADY                ,
@@ -46,10 +51,12 @@ module ysyx_23060124_Xbar(
     input              [   7:0]         LSU_ARLEN                  ,
     input              [   2:0]         LSU_ARSIZE                 ,
     input              [   1:0]         LSU_ARBURST                ,
+    
     output             [   1:0]         LSU_BRESP                  ,
     output                              LSU_BVALID                 ,
     input                               LSU_BREADY                 ,
     output             [4-1 : 0]        LSU_BID                    ,
+
     input              [32-1 : 0]       LSU_AWADDR                 ,
     input                               LSU_AWVALID                ,
     output                              LSU_AWREADY                ,
@@ -57,12 +64,12 @@ module ysyx_23060124_Xbar(
     input              [   7:0]         LSU_AWLEN                  ,
     input              [   2:0]         LSU_AWSIZE                 ,
     input              [   1:0]         LSU_AWBURST                ,
+
     input              [32-1 : 0]       LSU_WDATA                  ,
     input              [4-1 : 0]        LSU_WSTRB                  ,
     input                               LSU_WVALID                 ,
     input                               LSU_WLAST                  ,
     output                              LSU_WREADY                 ,
-
 
         //clint
     output             [  32-1:0]       CLINT_AWADDR               ,
@@ -72,22 +79,26 @@ module ysyx_23060124_Xbar(
     output             [   7:0]         CLINT_AWLEN                ,
     output             [   2:0]         CLINT_AWSIZE               ,
     output             [   1:0]         CLINT_AWBURST              ,
+
     output             [  32-1:0]       CLINT_WDATA                ,
     output             [  4-1:0]        CLINT_WSTRB                ,
     output                              CLINT_WVALID               ,
     input                               CLINT_WREADY               ,
-    input                               CLINT_WLAST                ,
+    output                              CLINT_WLAST                ,
+
     input              [   1:0]         CLINT_BRESP                ,
     input                               CLINT_BVALID               ,
     output                              CLINT_BREADY               ,
     input              [4-1 : 0]        CLINT_BID                  ,
-    output             [  32-1:0]       CLINT_ARADDR               ,
+    
+    output             [32-1:0]         CLINT_ARADDR               ,
     output             [4-1 : 0]        CLINT_ARID                 ,
     output                              CLINT_ARVALID              ,
     input                               CLINT_ARREADY              ,
     output             [   7:0]         CLINT_ARLEN                ,
     output             [   2:0]         CLINT_ARSIZE               ,
     output             [   1:0]         CLINT_ARBURST              ,
+
     input              [  32-1:0]       CLINT_RDATA                ,
     input              [   1:0]         CLINT_RRESP                ,
     input                               CLINT_RVALID               ,
@@ -107,7 +118,7 @@ module ysyx_23060124_Xbar(
     output             [  4-1:0]        SRAM_WSTRB                 ,
     output                              SRAM_WVALID                ,
     input                               SRAM_WREADY                ,
-    input                               SRAM_WLAST                 ,
+    output                              SRAM_WLAST                 ,
     input              [   1:0]         SRAM_BRESP                 ,
     input                               SRAM_BVALID                ,
     output                              SRAM_BREADY                ,
@@ -255,16 +266,33 @@ assign CPU_AWLEN   = (IN_STATE == IFU_ACCESS) ? IFU_AWLEN   : (IN_STATE == LSU_A
 assign CPU_AWSIZE  = (IN_STATE == IFU_ACCESS) ? IFU_AWSIZE  : (IN_STATE == LSU_ACCESS) ? LSU_AWSIZE  : 0;
 assign CPU_AWBURST = (IN_STATE == IFU_ACCESS) ? IFU_AWBURST : (IN_STATE == LSU_ACCESS) ? LSU_AWBURST : 0;
 assign CPU_AWID    = (IN_STATE == IFU_ACCESS) ? IFU_AWID    : (IN_STATE == LSU_ACCESS) ? LSU_AWID    : 0;
+assign CPU_AWREADY = (OUT_STATE == SRAM_ACCESS) ? SRAM_AWREADY : (OUT_STATE == CLINT_ACCESS) ? CLINT_AWREADY : 0;
+
 assign CPU_WDATA   = (IN_STATE == IFU_ACCESS) ? IFU_WDATA   : (IN_STATE == LSU_ACCESS) ? LSU_WDATA   : 0;
 assign CPU_WVALID  = (IN_STATE == IFU_ACCESS) ? IFU_WVALID  : (IN_STATE == LSU_ACCESS) ? LSU_WVALID  : 0;
 assign CPU_WSTRB   = (IN_STATE == IFU_ACCESS) ? IFU_WSTRB   : (IN_STATE == LSU_ACCESS) ? LSU_WSTRB   : 0;
+assign CPU_WLAST   = (IN_STATE == IFU_ACCESS) ? IFU_WLAST   : (IN_STATE == LSU_ACCESS) ? LSU_WLAST   : 0;
+assign CPU_WREADY  = (OUT_STATE == SRAM_ACCESS) ? SRAM_WREADY  : (OUT_STATE == CLINT_ACCESS) ? CLINT_WREADY  : 0;
+
 assign CPU_BREADY  = (IN_STATE == IFU_ACCESS) ? IFU_BREADY  : (IN_STATE == LSU_ACCESS) ? LSU_BREADY  : 0;
+assign CPU_BVALID  = (OUT_STATE == SRAM_ACCESS) ? SRAM_BVALID  : (OUT_STATE == CLINT_ACCESS) ? CLINT_BVALID  : 0;
+assign CPU_BRESP   = (OUT_STATE == SRAM_ACCESS) ? SRAM_BRESP   : (OUT_STATE == CLINT_ACCESS) ? CLINT_BRESP   : 0;
+assign CPU_BID     = (OUT_STATE == SRAM_ACCESS) ? SRAM_BID     : (OUT_STATE == CLINT_ACCESS) ? CLINT_BID     : 0;
+
 assign CPU_ARADDR  = (IN_STATE == IFU_ACCESS) ? IFU_ARADDR  : (IN_STATE == LSU_ACCESS) ? LSU_ARADDR  : 0;
 assign CPU_ARVALID = (IN_STATE == IFU_ACCESS) ? IFU_ARVALID : (IN_STATE == LSU_ACCESS) ? LSU_ARVALID : 0;
 assign CPU_ARLEN   = (IN_STATE == IFU_ACCESS) ? IFU_ARLEN   : (IN_STATE == LSU_ACCESS) ? LSU_ARLEN   : 0;
 assign CPU_ARSIZE  = (IN_STATE == IFU_ACCESS) ? IFU_ARSIZE  : (IN_STATE == LSU_ACCESS) ? LSU_ARSIZE  : 0;
 assign CPU_ARBURST = (IN_STATE == IFU_ACCESS) ? IFU_ARBURST : (IN_STATE == LSU_ACCESS) ? LSU_ARBURST : 0;
 assign CPU_ARID    = (IN_STATE == IFU_ACCESS) ? IFU_ARID    : (IN_STATE == LSU_ACCESS) ? LSU_ARID    : 0;
+assign CPU_ARREADY = (OUT_STATE == SRAM_ACCESS) ? SRAM_ARREADY : (OUT_STATE == CLINT_ACCESS) ? CLINT_ARREADY : 0;
+
+// CPU signals
+assign CPU_RVALID  = (OUT_STATE == SRAM_ACCESS) ? SRAM_RVALID  : (OUT_STATE == CLINT_ACCESS) ? CLINT_RVALID  : 0;
+assign CPU_RDATA   = (OUT_STATE == SRAM_ACCESS) ? SRAM_RDATA   : (OUT_STATE == CLINT_ACCESS) ? CLINT_RDATA   : 0;
+assign CPU_RRESP   = (OUT_STATE == SRAM_ACCESS) ? SRAM_RRESP   : (OUT_STATE == CLINT_ACCESS) ? CLINT_RRESP   : 0;
+assign CPU_RLAST   = (OUT_STATE == SRAM_ACCESS) ? SRAM_RLAST   : (OUT_STATE == CLINT_ACCESS) ? CLINT_RLAST   : 0;
+assign CPU_RID     = (OUT_STATE == SRAM_ACCESS) ? SRAM_RID     : (OUT_STATE == CLINT_ACCESS) ? CLINT_RID     : 0;
 assign CPU_RREADY  = (IN_STATE == IFU_ACCESS) ? IFU_RREADY  : (IN_STATE == LSU_ACCESS) ? LSU_RREADY  : 0;
 
 // IFU signals
@@ -300,6 +328,7 @@ assign SRAM_AWID    = (OUT_STATE == SRAM_ACCESS) ? CPU_AWID    : 0;
 assign SRAM_WDATA   = (OUT_STATE == SRAM_ACCESS) ? CPU_WDATA   : 0;
 assign SRAM_WVALID  = (OUT_STATE == SRAM_ACCESS) ? CPU_WVALID  : 0;
 assign SRAM_WSTRB   = (OUT_STATE == SRAM_ACCESS) ? CPU_WSTRB   : 0;
+assign SRAM_WLAST   = (OUT_STATE == SRAM_ACCESS) ? CPU_WLAST   : 0;
 assign SRAM_BREADY  = (OUT_STATE == SRAM_ACCESS) ? CPU_BREADY  : 0;
 assign SRAM_ARADDR  = (OUT_STATE == SRAM_ACCESS) ? CPU_ARADDR  : 0;
 assign SRAM_ARID    = (OUT_STATE == SRAM_ACCESS) ? CPU_ARID    : 0;
@@ -319,6 +348,7 @@ assign CLINT_AWID    = (OUT_STATE == CLINT_ACCESS) ? CPU_AWID    : 0;
 assign CLINT_WDATA   = (OUT_STATE == CLINT_ACCESS) ? CPU_WDATA   : 0;
 assign CLINT_WVALID  = (OUT_STATE == CLINT_ACCESS) ? CPU_WVALID  : 0;
 assign CLINT_WSTRB   = (OUT_STATE == CLINT_ACCESS) ? CPU_WSTRB   : 0;
+assign CLINT_WLAST   = (OUT_STATE == CLINT_ACCESS) ? CPU_WLAST   : 0;
 assign CLINT_BREADY  = (OUT_STATE == CLINT_ACCESS) ? CPU_BREADY  : 0;
 assign CLINT_ARADDR  = (OUT_STATE == CLINT_ACCESS) ? CPU_ARADDR  : 0;
 assign CLINT_ARVALID = (OUT_STATE == CLINT_ACCESS) ? CPU_ARVALID : 0;
@@ -331,17 +361,6 @@ assign CLINT_ARLEN   = (OUT_STATE == CLINT_ACCESS) ? CPU_ARLEN   : 0;
 assign CLINT_ARSIZE  = (OUT_STATE == CLINT_ACCESS) ? CPU_ARSIZE  : 0;
 assign CLINT_ARBURST = (OUT_STATE == CLINT_ACCESS) ? CPU_ARBURST : 0;
 
-// CPU signals
-assign CPU_AWREADY = (OUT_STATE == SRAM_ACCESS) ? SRAM_AWREADY : (OUT_STATE == CLINT_ACCESS) ? CLINT_AWREADY : 0;
-assign CPU_WREADY  = (OUT_STATE == SRAM_ACCESS) ? SRAM_WREADY  : (OUT_STATE == CLINT_ACCESS) ? CLINT_WREADY  : 0;
-assign CPU_BVALID  = (OUT_STATE == SRAM_ACCESS) ? SRAM_BVALID  : (OUT_STATE == CLINT_ACCESS) ? CLINT_BVALID  : 0;
-assign CPU_ARREADY = (OUT_STATE == SRAM_ACCESS) ? SRAM_ARREADY : (OUT_STATE == CLINT_ACCESS) ? CLINT_ARREADY : 0;
-assign CPU_RVALID  = (OUT_STATE == SRAM_ACCESS) ? SRAM_RVALID  : (OUT_STATE == CLINT_ACCESS) ? CLINT_RVALID  : 0;
-assign CPU_BRESP   = (OUT_STATE == SRAM_ACCESS) ? SRAM_BRESP   : (OUT_STATE == CLINT_ACCESS) ? CLINT_BRESP   : 0;
-assign CPU_RDATA   = (OUT_STATE == SRAM_ACCESS) ? SRAM_RDATA   : (OUT_STATE == CLINT_ACCESS) ? CLINT_RDATA   : 0;
-assign CPU_RRESP   = (OUT_STATE == SRAM_ACCESS) ? SRAM_RRESP   : (OUT_STATE == CLINT_ACCESS) ? CLINT_RRESP   : 0;
-assign CPU_BID     = (OUT_STATE == SRAM_ACCESS) ? SRAM_BID     : (OUT_STATE == CLINT_ACCESS) ? CLINT_BID     : 0;
-assign CPU_RLAST   = (OUT_STATE == SRAM_ACCESS) ? SRAM_RLAST   : (OUT_STATE == CLINT_ACCESS) ? CLINT_RLAST   : 0;
-assign CPU_RID     = (OUT_STATE == SRAM_ACCESS) ? SRAM_RID     : (OUT_STATE == CLINT_ACCESS) ? CLINT_RID     : 0;
 
 endmodule
+

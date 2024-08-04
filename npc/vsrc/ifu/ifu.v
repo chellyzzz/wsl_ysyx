@@ -1,5 +1,3 @@
- 
-
 module ysyx_23060124_IFU
 (
     input              [32-1:0]         i_pc_next                  ,
@@ -24,7 +22,7 @@ module ysyx_23060124_IFU
     input                               M_AXI_WREADY               ,
     output             [32-1 : 0]       M_AXI_WDATA                ,
     output             [4-1 : 0]        M_AXI_WSTRB                ,
-    input                               M_AXI_WLAST                ,
+    output                              M_AXI_WLAST                ,
 
     //read data channel
     input              [32 - 1 : 0]     M_AXI_RDATA                ,
@@ -60,7 +58,7 @@ reg                                     INIT_AXI_TXN               ;
     // AXI4LITE signals
 reg                                     axi_arvalid                ;
 reg                                     axi_rready                 ;
-reg                    [32-1:0]       axi_araddr                 ;
+reg                    [32-1:0]         axi_araddr                 ;
 reg                    [32-1:0]         axi_rdata                  ;
 reg                    [32-1:0]         pc_next                    ;
 
@@ -91,7 +89,8 @@ wire                                    M_AXI_ARESETN              ;
     assign M_AXI_WVALID = 1'b0;
     assign M_AXI_WDATA = 32'b0;
     assign M_AXI_WSTRB = 4'b0; 
-  
+    assign M_AXI_WLAST = 1'b0;
+    
     //Write Response (B)
     assign M_AXI_BREADY = 1'b0;
 

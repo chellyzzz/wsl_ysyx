@@ -1,19 +1,16 @@
- 
-
 module ysyx_23060124_RegisterFile (
-  input  clock,
-  input i_rst_n,
-  input i_ecall,
-  input i_mret,
-  input [32-1:0] wdata,
-  input [5-1:0] waddr,
-  input [5-1:0] raddr1,
-  input [5-1:0] raddr2,
-  output [32-1:0] rdata1,
-  output [32-1:0] rdata2,
-  output [32-1:0] o_mret_a5,
-  input wen,
-  output a0_zero
+    input                               clock                      ,
+    input                               i_rst_n                    ,
+    input                               i_ecall                    ,
+    input              [32-1:0]         wdata                      ,
+    input              [5-1:0]          waddr                      ,
+    input              [5-1:0]          raddr1                     ,
+    input              [5-1:0]          raddr2                     ,
+    output             [32-1:0]         rdata1                     ,
+    output             [32-1:0]         rdata2                     ,
+    output             [32-1:0]         o_mret_a5                  ,
+    input                               wen                        ,
+    output                              a0_zero                     
 );
   reg [32-1:0] rf [32 - 1:0];
 

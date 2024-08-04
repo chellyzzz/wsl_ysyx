@@ -121,7 +121,7 @@ bool difftest_step(vaddr_t pc, vaddr_t npc){
     return 1;
   }
 
-  if(cpu.pc == 0xa00055b8  || cpu.pc == 0xa0005718+4 || cpu.pc == 0xa0005718+8){
+  if(cpu.pc == 0xa0000010 || cpu.pc == 0xa0000030 || cpu.pc == 0xa0000034){
     is_skip_ref = true;
   }
 

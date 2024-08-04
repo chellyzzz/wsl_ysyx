@@ -29,7 +29,7 @@ int cycles = 0;
 int instr_count = 0;
 
 #define MAX_INST_TO_PRINT 11
-#define PC_WAVE_START 0xa0000000
+#define PC_WAVE_START 0xa0000048
 #ifdef CONFIG_WP
 bool wp_check();
 #endif
@@ -228,7 +228,11 @@ void cpu_exec(uint64_t n){
         Log("npc: %s at pc = " FMT_WORD,
         (hit_goodtrap() ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
           ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED)),
-        cpu.pc);        
+        cpu.pc);       
+        printf("train cycles: %d\n", cycles);
+        printf("train instrs: %d\n", instr_count);
+        float ipc = (float)instr_count / (float)cycles;
+        printf("train IPC: %f\n", ipc); 
         break;
       }
         exec_once(&s);
@@ -242,10 +246,6 @@ void cpu_exec(uint64_t n){
           break;
         }
     }
-    printf("train cycles: %d\n", cycles);
-    printf("train instrs: %d\n", instr_count);
-    float ipc = (float)instr_count / (float)cycles;
-    printf("train IPC: %f\n", ipc);
     return;
 }
 bool if_end(){

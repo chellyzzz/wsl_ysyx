@@ -89,20 +89,97 @@ wire                   [ISA_WIDTH-1:0]  mcause, mstatus, mepc, mtvec, mret_a5;
 wire [3-1:0] exu_opt, brch_opt;
 wire [3-1:0] load_opt, store_opt;
 
-wire idu_wen, csr_wen, wbu_wen, wbu_csr_wen;
-wire [ISA_WIDTH-1:0] pc_next, ifu_pc_next;
-wire [2-1:0] i_src_sel;
-wire brch,jal,jalr;                    // idu -> pcu.
-wire ecall,mret;                       // idu -> pcu.
-wire zero;                             // exu -> pcu.
-wire a0_zero;                           //  if a0 is zero, a0_zero == 1
-wire if_unsigned;                      // if_unsigned == 1, unsigned; else signed.
-wire if_csrr;  // if csrrw or csrrs, then 1;
-wire pc_update_en;
+wire                                    idu_wen, csr_wen, wbu_wen, wbu_csr_wen;
+wire                   [ISA_WIDTH-1:0]  pc_next, ifu_pc_next       ;
+wire                   [2-1:0]          i_src_sel                  ;
+wire                                    brch,jal,jalr              ;// idu -> pcu.
+wire                                    if_store,if_load           ;// idu -> exu.
+wire                                    ecall,mret                 ;// idu -> pcu.
+wire                                    zero                       ;// exu -> pcu.
+wire                                    a0_zero                    ;//  if a0 is zero, a0_zero == 1
+wire                                    if_unsigned                ;// if_unsigned == 1, unsigned; else signed.
+wire                                    pc_update_en               ;
 //
-wire ifu2idu_valid, idu2ifu_ready;
-wire idu2exu_valid, exu2idu_ready;
-wire exu2wbu_valid, wbu2exu_ready;
+wire                                    ifu2idu_valid, idu2ifu_ready;
+wire                                    idu2exu_valid, exu2idu_ready;
+wire                                    exu2wbu_valid, wbu2exu_ready;
+
+
+
+//write address channel  
+wire                   [32-1 : 0]       IFU_SRAM_AXI_AWADDR,LSU_SRAM_AXI_AWADDR;
+wire                                    IFU_SRAM_AXI_AWVALID, LSU_SRAM_AXI_AWVALID;
+wire                                    IFU_SRAM_AXI_AWREADY, LSU_SRAM_AXI_AWREADY;
+wire                   [   7:0]         IFU_SRAM_AXI_AWLEN    ,LSU_SRAM_AXI_AWLEN;
+wire                   [   2:0]         IFU_SRAM_AXI_AWSIZE   ,LSU_SRAM_AXI_AWSIZE;
+wire                   [   1:0]         IFU_SRAM_AXI_AWBURST  ,LSU_SRAM_AXI_AWBURST;
+wire                   [   3:0]         IFU_SRAM_AXI_AWID,  LSU_SRAM_AXI_AWID;
+//write data channel,
+wire                                    IFU_SRAM_AXI_WVALID, LSU_SRAM_AXI_WVALID;
+wire                                    IFU_SRAM_AXI_WREADY, LSU_SRAM_AXI_WREADY;
+wire                   [32-1 : 0]       IFU_SRAM_AXI_WDATA         ;
+wire                   [32-1 : 0]       LSU_SRAM_AXI_WDATA         ;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_WSTRB, LSU_SRAM_AXI_WSTRB;
+wire                                    IFU_SRAM_AXI_WLAST,LSU_SRAM_AXI_WLAST;
+//read data channel
+wire                   [32-1 : 0]       IFU_SRAM_AXI_RDATA         ;
+wire                   [32-1 : 0]       LSU_SRAM_AXI_RDATA         ;
+wire                   [   1:0]         IFU_SRAM_AXI_RRESP, LSU_SRAM_AXI_RRESP;
+wire                                    IFU_SRAM_AXI_RVALID, LSU_SRAM_AXI_RVALID;
+wire                                    IFU_SRAM_AXI_RREADY, LSU_SRAM_AXI_RREADY;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_RID,LSU_SRAM_AXI_RID;
+wire                                    IFU_SRAM_AXI_RLAST,LSU_SRAM_AXI_RLAST;
+    
+//read adress channel
+wire                   [32-1 : 0]       IFU_SRAM_AXI_ARADDR, LSU_SRAM_AXI_ARADDR;
+wire                                    IFU_SRAM_AXI_ARVALID, LSU_SRAM_AXI_ARVALID;
+wire                                    IFU_SRAM_AXI_ARREADY, LSU_SRAM_AXI_ARREADY;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_ARID,LSU_SRAM_AXI_ARID;
+wire                   [   7:0]         IFU_SRAM_AXI_ARLEN   ,LSU_SRAM_AXI_ARLEN;
+wire                   [   2:0]         IFU_SRAM_AXI_ARSIZE  ,LSU_SRAM_AXI_ARSIZE;
+wire                   [   1:0]         IFU_SRAM_AXI_ARBURST ,LSU_SRAM_AXI_ARBURST;
+//write back channel
+wire                   [   1:0]         IFU_SRAM_AXI_BRESP, LSU_SRAM_AXI_BRESP;
+wire                                    IFU_SRAM_AXI_BVALID, LSU_SRAM_AXI_BVALID;
+wire                                    IFU_SRAM_AXI_BREADY, LSU_SRAM_AXI_BREADY;
+wire                   [4-1 : 0]        IFU_SRAM_AXI_BID,LSU_SRAM_AXI_BID;
+
+//write address channel  
+wire                   [32-1 : 0]       CLINT_AXI_AWADDR           ;
+wire                                    CLINT_AXI_AWVALID          ;
+wire                                    CLINT_AXI_AWREADY          ;
+wire                   [   7:0]         CLINT_AXI_AWLEN            ;
+wire                   [   2:0]         CLINT_AXI_AWSIZE           ;
+wire                   [   1:0]         CLINT_AXI_AWBURST          ;
+wire                   [   3:0]         CLINT_AXI_AWID             ;
+//write data channel,
+wire                                    CLINT_AXI_WVALID           ;
+wire                                    CLINT_AXI_WREADY           ;
+wire                   [32-1 : 0]       CLINT_AXI_WDATA            ;
+wire                   [4-1 : 0]        CLINT_AXI_WSTRB            ;
+wire                                    CLINT_AXI_WLAST            ;
+//read data channel
+wire                   [32-1 : 0]       CLINT_AXI_RDATA            ;
+wire                   [   1:0]         CLINT_AXI_RRESP            ;
+wire                                    CLINT_AXI_RVALID           ;
+wire                                    CLINT_AXI_RREADY           ;
+wire                   [4-1 : 0]        CLINT_AXI_RID              ;
+wire                                    CLINT_AXI_RLAST            ;
+    
+//read adress channel
+wire                   [32-1 : 0]       CLINT_AXI_ARADDR           ;
+wire                                    CLINT_AXI_ARVALID          ;
+wire                                    CLINT_AXI_ARREADY          ;
+wire                   [4-1 : 0]        CLINT_AXI_ARID             ;
+wire                   [   7:0]         CLINT_AXI_ARLEN            ;
+wire                   [   2:0]         CLINT_AXI_ARSIZE           ;
+wire                   [   1:0]         CLINT_AXI_ARBURST          ;
+//write back channel
+wire                   [   1:0]         CLINT_AXI_BRESP            ;
+wire                                    CLINT_AXI_BVALID           ;
+wire                                    CLINT_AXI_BREADY           ;
+wire                   [4-1 : 0]        CLINT_AXI_BID              ;
+
 
 /******************combinational logic****************/
 // stdrst
@@ -118,7 +195,6 @@ ysyx_23060124_RegisterFile regfile1(
     .clock                             (clock                     ),
     .i_rst_n                           (rst_n_sync                ),
     .i_ecall                           (ecall                     ),
-    .i_mret                            (mret                      ),
     .waddr                             (addr_rd                   ),
     .wdata                             (rd                        ),
     .raddr1                            (addr_rs1                  ),
@@ -212,55 +288,18 @@ ysyx_23060124_IDU idu1(
     .o_brch_opt                        (brch_opt                  ),
     .o_wen                             (idu_wen                   ),
     .o_csr_wen                         (csr_wen                   ),
-    .o_csrr                            (if_csrr                   ),
     .o_src_sel                         (i_src_sel                 ),
     .o_if_unsigned                     (if_unsigned               ),
     .o_ecall                           (ecall                     ),
     .o_mret                            (mret                      ),
+    .o_load                            (if_load                   ),
+    .o_store                           (if_store                  ),
     .o_brch                            (brch                      ),
     .o_jal                             (jal                       ),
     .o_jalr                            (jalr                      ),
     .o_pre_ready                       (idu2ifu_ready             ),
     .o_post_valid                      (idu2exu_valid             ) 
 );
-
-//write address channel  
-wire                   [32-1 : 0]       IFU_SRAM_AXI_AWADDR,LSU_SRAM_AXI_AWADDR;
-wire                                    IFU_SRAM_AXI_AWVALID, LSU_SRAM_AXI_AWVALID;
-wire                                    IFU_SRAM_AXI_AWREADY, LSU_SRAM_AXI_AWREADY;
-wire                   [   7:0]         IFU_SRAM_AXI_AWLEN    ,LSU_SRAM_AXI_AWLEN;
-wire                   [   2:0]         IFU_SRAM_AXI_AWSIZE   ,LSU_SRAM_AXI_AWSIZE;
-wire                   [   1:0]         IFU_SRAM_AXI_AWBURST  ,LSU_SRAM_AXI_AWBURST;
-wire                   [   3:0]         IFU_SRAM_AXI_AWID,  LSU_SRAM_AXI_AWID;
-//write data channel,
-wire                                    IFU_SRAM_AXI_WVALID, LSU_SRAM_AXI_WVALID;
-wire                                    IFU_SRAM_AXI_WREADY, LSU_SRAM_AXI_WREADY;
-wire                   [32-1 : 0]       IFU_SRAM_AXI_WDATA         ;
-wire                   [32-1 : 0]       LSU_SRAM_AXI_WDATA         ;
-wire                   [4-1 : 0]        IFU_SRAM_AXI_WSTRB, LSU_SRAM_AXI_WSTRB;
-wire                                    IFU_SRAM_AXI_WLAST,LSU_SRAM_AXI_WLAST;
-//read data channel
-wire                   [32-1 : 0]       IFU_SRAM_AXI_RDATA         ;
-wire                   [32-1 : 0]       LSU_SRAM_AXI_RDATA         ;
-wire                   [   1:0]         IFU_SRAM_AXI_RRESP, LSU_SRAM_AXI_RRESP;
-wire                                    IFU_SRAM_AXI_RVALID, LSU_SRAM_AXI_RVALID;
-wire                                    IFU_SRAM_AXI_RREADY, LSU_SRAM_AXI_RREADY;
-wire                   [4-1 : 0]        IFU_SRAM_AXI_RID,LSU_SRAM_AXI_RID;
-wire                                    IFU_SRAM_AXI_RLAST,LSU_SRAM_AXI_RLAST;
-    
-//read adress channel
-wire                   [32-1 : 0]       IFU_SRAM_AXI_ARADDR, LSU_SRAM_AXI_ARADDR;
-wire                                    IFU_SRAM_AXI_ARVALID, LSU_SRAM_AXI_ARVALID;
-wire                                    IFU_SRAM_AXI_ARREADY, LSU_SRAM_AXI_ARREADY;
-wire                   [4-1 : 0]        IFU_SRAM_AXI_ARID,LSU_SRAM_AXI_ARID;
-wire                   [   7:0]         IFU_SRAM_AXI_ARLEN   ,LSU_SRAM_AXI_ARLEN;
-wire                   [   2:0]         IFU_SRAM_AXI_ARSIZE  ,LSU_SRAM_AXI_ARSIZE;
-wire                   [   1:0]         IFU_SRAM_AXI_ARBURST ,LSU_SRAM_AXI_ARBURST;
-//write back channel
-wire                   [   1:0]         IFU_SRAM_AXI_BRESP, LSU_SRAM_AXI_BRESP;
-wire                                    IFU_SRAM_AXI_BVALID, LSU_SRAM_AXI_BVALID;
-wire                                    IFU_SRAM_AXI_BREADY, LSU_SRAM_AXI_BREADY;
-wire                   [4-1 : 0]        IFU_SRAM_AXI_BID,LSU_SRAM_AXI_BID;
 
 ysyx_23060124_EXU exu1(
     .clock                             (clock                     ),
@@ -270,6 +309,11 @@ ysyx_23060124_EXU exu1(
     .src2                              (rs2                       ),
     .csr_rs2                           (csr_rs2                   ),
     .if_unsigned                       (if_unsigned               ),
+    //control signal
+    .i_load                            (if_load                   ),
+    .i_store                           (if_store                  ),
+    .i_brch                            (brch                      ),
+
     .i_pc                              (ifu_pc_next               ),
     .imm                               (imm                       ),
     .exu_opt                           (exu_opt                   ),
@@ -287,6 +331,7 @@ ysyx_23060124_EXU exu1(
     .M_AXI_AWLEN                       (LSU_SRAM_AXI_AWLEN        ),
     .M_AXI_AWSIZE                      (LSU_SRAM_AXI_AWSIZE       ),
     .M_AXI_AWBURST                     (LSU_SRAM_AXI_AWBURST      ),
+    .M_AXI_AWID                        (LSU_SRAM_AXI_AWID         ),
   //write data channel
     .M_AXI_WVALID                      (LSU_SRAM_AXI_WVALID       ),
     .M_AXI_WREADY                      (LSU_SRAM_AXI_WREADY       ),
@@ -329,12 +374,10 @@ ysyx_23060124_WBU wbu1(
     .i_wen                             (idu_wen                   ),
     .i_csr_wen                         (csr_wen                   ),
     .i_jalr                            (jalr                      ),
-    .i_csrr                            (if_csrr                   ),
     .i_mret                            (mret                      ),
     .i_ecall                           (ecall                     ),
     .i_mepc                            (mepc                      ),
     .i_mtvec                           (mtvec                     ),
-    .i_csrr_rd                         (csr_rs2                   ),
     .i_rs1                             (rs1                       ),
     .i_pc                              (ifu_pc_next               ),
     .i_imm                             (imm                       ),
@@ -476,41 +519,6 @@ ysyx_23060124_Xbar xbar
     .SRAM_RID                          (io_master_rid             ) 
 );
 
-//write address channel  
-wire                   [32-1 : 0]       CLINT_AXI_AWADDR           ;
-wire                                    CLINT_AXI_AWVALID          ;
-wire                                    CLINT_AXI_AWREADY          ;
-wire                   [   7:0]         CLINT_AXI_AWLEN            ;
-wire                   [   2:0]         CLINT_AXI_AWSIZE           ;
-wire                   [   1:0]         CLINT_AXI_AWBURST          ;
-wire                   [   3:0]         CLINT_AXI_AWID             ;
-//write data channel,
-wire                                    CLINT_AXI_WVALID           ;
-wire                                    CLINT_AXI_WREADY           ;
-wire                   [32-1 : 0]       CLINT_AXI_WDATA            ;
-wire                   [4-1 : 0]        CLINT_AXI_WSTRB            ;
-wire                                    CLINT_AXI_WLAST            ;
-//read data channel
-wire                   [32-1 : 0]       CLINT_AXI_RDATA            ;
-wire                   [   1:0]         CLINT_AXI_RRESP            ;
-wire                                    CLINT_AXI_RVALID           ;
-wire                                    CLINT_AXI_RREADY           ;
-wire                   [4-1 : 0]        CLINT_AXI_RID              ;
-wire                                    CLINT_AXI_RLAST            ;
-    
-//read adress channel
-wire                   [32-1 : 0]       CLINT_AXI_ARADDR           ;
-wire                                    CLINT_AXI_ARVALID          ;
-wire                                    CLINT_AXI_ARREADY          ;
-wire                   [4-1 : 0]        CLINT_AXI_ARID             ;
-wire                   [   7:0]         CLINT_AXI_ARLEN            ;
-wire                   [   2:0]         CLINT_AXI_ARSIZE           ;
-wire                   [   1:0]         CLINT_AXI_ARBURST          ;
-//write back channel
-wire                   [   1:0]         CLINT_AXI_BRESP            ;
-wire                                    CLINT_AXI_BVALID           ;
-wire                                    CLINT_AXI_BREADY           ;
-wire                   [4-1 : 0]        CLINT_AXI_BID              ;
 
 CLINT clint
 (
@@ -555,3 +563,4 @@ CLINT clint
 );
 
 endmodule
+

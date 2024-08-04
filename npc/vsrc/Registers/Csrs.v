@@ -1,20 +1,20 @@
  
 
 module ysyx_23060124_CSR_RegisterFile (
-  input  clock,
-  input rst,
-  input csr_wen,
-  input i_ecall,
-  input i_mret,
-  input [32-1:0] i_pc,
-  input [12-1:0] csr_addr,
-  input [32-1:0] csr_wdata,
-  input [32 - 1:0] i_mret_a5,
-  output [32-1:0] o_mcause,
-  output [32-1:0] o_mstatus,
-  output [32-1:0] o_mepc,
-  output [32-1:0] o_mtvec,
-  output reg [32-1:0] csr_rdata
+    input                               clock                      ,
+    input                               rst                        ,
+    input                               csr_wen                    ,
+    input                               i_ecall                    ,
+    input                               i_mret                     ,
+    input              [32-1:0]         i_pc                       ,
+    input              [12-1:0]         csr_addr                   ,
+    input              [32-1:0]         csr_wdata                  ,
+    input              [32 - 1:0]       i_mret_a5                  ,
+    output             [32-1:0]         o_mcause                   ,
+    output             [32-1:0]         o_mstatus                  ,
+    output             [32-1:0]         o_mepc                     ,
+    output             [32-1:0]         o_mtvec                    ,
+    output             [32-1:0]         csr_rdata                   
 );
 // ysyx_23060124
 wire [32-1:0] mvendorid , marchid;
@@ -51,21 +51,16 @@ always @(posedge  clock) begin
     end
 end
 
-always @(csr_addr) begin
-    case (csr_addr)
-        12'h300: csr_rdata = mstatus;
-        12'h341: csr_rdata = mepc;
-        12'h342: csr_rdata = mcause;
-        12'h305: csr_rdata = mtvec;
-        12'hf11: csr_rdata = mvendorid;
-        12'hf12: csr_rdata = marchid;
-        default: csr_rdata = 0; // Safe default value to avoid latches
-    endcase
-end
+assign csr_rdata    = csr_addr == 12'hf11 ? mvendorid :
+                      csr_addr == 12'hf12 ? marchid :
+                      csr_addr == 12'h300 ? mstatus :
+                      csr_addr == 12'h341 ? mepc :
+                      csr_addr == 12'h342 ? mcause :
+                      csr_addr == 12'h305 ? mtvec : 32'b0;
 
-assign o_mcause = i_ecall ? mcause : 0;
-assign o_mstatus = i_ecall || i_mret ? mstatus : 0;
-assign o_mepc = i_ecall || i_mret ? mepc : 0;
-assign o_mtvec = i_ecall ? mtvec : 0;
+assign o_mcause     = i_ecall ? mcause              : 32'b0;
+assign o_mstatus    = i_ecall || i_mret ? mstatus   : 32'b0;
+assign o_mepc       = i_ecall || i_mret ? mepc      : 32'b0;
+assign o_mtvec      = i_ecall ? mtvec               : 32'b0;
 
 endmodule
