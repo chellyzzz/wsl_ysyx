@@ -27,6 +27,23 @@ typedef concat(__GUEST_ISA__, _ISADecodeInfo) ISADecodeInfo;
 // monitor
 extern unsigned char isa_logo[];
 void init_isa();
+//in cpu-exec
+extern int cycles;
+extern int ins_cnt;
+extern int ifu_cnt;
+
+//in dpic
+extern int load_cnt;
+extern int store_cnt;
+extern int brch_cnt;
+extern int csr_cnt;
+extern int jal_cnt;
+extern int ifu_delay_start;
+extern int ifu_delay_end;
+extern int load_delay_start;
+extern int load_delay_end;
+extern int store_delay_start;
+extern int store_delay_end;
 
 // reg
 extern CPU_state cpu;

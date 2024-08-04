@@ -562,5 +562,59 @@ CLINT clint
     .S_AXI_WLAST                       (CLINT_AXI_WLAST           ) 
 );
 
+
+import "DPI-C" function void load_cnt_dpic   ();
+import "DPI-C" function void csr_cnt_dpic    ();
+import "DPI-C" function void brch_cnt_dpic   ();
+import "DPI-C" function void jal_cnt_dpic    ();
+import "DPI-C" function void store_cnt_dpic  ();
+import "DPI-C" function void ifu_start  ();
+import "DPI-C" function void ifu_end  ();
+import "DPI-C" function void load_start  ();
+import "DPI-C" function void load_end  ();
+import "DPI-C" function void store_start  ();
+import "DPI-C" function void store_end  ();
+
+always @(posedge clock) begin
+  if(if_load && exu2idu_ready) begin
+    load_cnt_dpic();
+  end
+  if(if_store && exu2idu_ready) begin
+    store_cnt_dpic();
+  end
+  if(brch && exu2idu_ready) begin
+    brch_cnt_dpic();
+  end
+  if((jal || jalr) && exu2idu_ready) begin
+    jal_cnt_dpic();
+  end
+  if(csr_wen && exu2idu_ready) begin
+    csr_cnt_dpic();
+  end
+end
+
+always @(posedge clock) begin
+  if(IFU_SRAM_AXI_ARREADY && IFU_SRAM_AXI_ARVALID) begin
+    ifu_start();
+  end
+  else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RVALID) begin
+    ifu_end();
+  end
+
+  if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
+    load_start();
+  end
+  else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
+    load_end();
+  end
+  
+  if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
+    store_start();
+  end
+  else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
+    store_end();
+  end
+end
+
 endmodule
 
