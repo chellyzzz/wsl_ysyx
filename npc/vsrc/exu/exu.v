@@ -80,24 +80,14 @@ localparam EXU_SEL_IMM = 2'b01;
 localparam EXU_SEL_PC4 = 2'b10;
 localparam EXU_SEL_PCI = 2'b11;
 
+
 wire                   [32-1:0]         sel_src2                   ;
 wire                   [32-1:0]         alu_src1,alu_src2          ;
 wire                   [32-1:0]         alu_res, lsu_res           ;
 wire                                    carry, brch_res            ;
 wire                                    lsu_post_valid             ;
 
-always @(posedge  clock or negedge i_rst_n) begin
-  if(~i_rst_n) begin
-    o_pre_ready <= 1'b0;
-  end
-  else if(i_pre_valid && ~o_pre_ready) begin
-    o_pre_ready <= 1'b1;
-  end
-  else if(o_pre_ready && i_post_ready) begin
-    o_pre_ready <= 1'b0;
-  end
-  else o_pre_ready <= o_pre_ready;
-end
+reg                    [  31:0]         alu_src1_reg, alu_src2_reg ;
 
 assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
 assign o_post_valid = lsu_post_valid;
@@ -112,13 +102,40 @@ assign alu_src2 = (i_src_sel == EXU_SEL_REG) ? sel_src2 :
                   (i_src_sel == EXU_SEL_PC4) ? 32'h4 :
                   (i_src_sel == EXU_SEL_PCI) ? imm : 32'b0;
 
+always @(posedge  clock or negedge i_rst_n) begin
+  if(~i_rst_n) begin
+    o_pre_ready <= 1'b0;
+  end
+  else if(i_pre_valid && ~o_pre_ready) begin
+    o_pre_ready <= 1'b1;
+  end
+  else if(i_pre_valid && o_pre_ready) begin
+    o_pre_ready <= 1'b0;
+  end
+  else o_pre_ready <= o_pre_ready;
+end
+
+always @(posedge  clock or negedge i_rst_n) begin
+  if(~i_rst_n) begin
+    alu_src1_reg <= 32'b0;
+    alu_src2_reg <= 32'b0;
+  end
+  else if(i_pre_valid && o_pre_ready) begin
+    alu_src1_reg <= alu_src1;
+    alu_src2_reg <= alu_src2;
+  end
+  else begin
+    alu_src1_reg <= alu_src1_reg;
+    alu_src2_reg <= alu_src2_reg;
+  end
+end
+
 ysyx_23060124_ALU exu_alu(
-    .src1                              (alu_src1                  ),
-    .src2                              (alu_src2                  ),
+    .src1                              (alu_src1_reg              ),
+    .src2                              (alu_src2_reg              ),
     .if_unsigned                       (if_unsigned               ),
     .opt                               (exu_opt                   ),
-    .res                               (alu_res                   ),
-    .carry                             (carry                     ) 
+    .res                               (alu_res                   ) 
 );
 
 ysyx_23060124_LSU exu_lsu(
@@ -173,8 +190,8 @@ ysyx_23060124_LSU exu_lsu(
     .o_post_valid                      (lsu_post_valid            ) 
 );
 
-assign brch_res = (brch_opt == BEQ )   ? (alu_src1 == alu_src2)  :
-                  (brch_opt == BNE )   ? (alu_src1 != alu_src2)  :
+assign brch_res = (brch_opt == BEQ )   ? (alu_src1_reg == alu_src2_reg)  :
+                  (brch_opt == BNE )   ? (alu_src1_reg != alu_src2_reg)  :
                   (brch_opt == BLT )   ? (alu_res == 32'b1) :
                   (brch_opt == BGE )   ? (alu_res == 32'b0) :
                   (brch_opt == BLTU)   ? (alu_res == 32'b1) :

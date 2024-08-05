@@ -1,7 +1,8 @@
 
 module ysyx_23060124_IDU (
+    input                               clock                      ,
     input              [32-1:0]         ins                        ,
-    input                               i_rst_n                    ,
+    input                               reset                      ,
     input                               i_pre_valid                ,
     input                               i_post_ready               ,
     output             [32-1:0]         o_imm                      ,
@@ -24,8 +25,8 @@ module ysyx_23060124_IDU (
     output                              o_brch                     ,
     output                              o_jal                      ,
     output                              o_jalr                     ,
-    output                              o_pre_ready                ,
-    output                              o_post_valid                
+    output reg                          o_pre_ready                ,
+    output reg                          o_post_valid                
 );
 /************************parameter**********************/
 //TYPE_R_FUN3
@@ -66,9 +67,23 @@ localparam FUN3_EXCPT = 3'b000;
 localparam RS2_ECALL   =  5'b00000;
 localparam RS2_MRET    =  5'b00010;
 
+always @(posedge clock or posedge reset) begin
+    if(reset) begin
+        o_pre_ready <= 1'b1;
+        o_post_valid <= 1'b0;   
+    end
+    else if(i_pre_valid && o_pre_ready) begin
+        o_post_valid <= 1'b1;
+    end
+    else if(o_post_valid && i_post_ready) begin
+        o_post_valid <= 1'b0;
+    end
+    else begin
+        o_post_valid <= o_post_valid;
+        o_pre_ready <= o_pre_ready;
+    end
+end
 
-assign o_pre_ready = i_post_ready;
-assign o_post_valid = i_pre_valid;
 
 wire [2:0] func3  = ins[14:12];
 wire [6:0] opcode  = ins[6:0];

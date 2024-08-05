@@ -27,7 +27,7 @@ image: $(IMAGE).elf
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
 
 run: image
-	$(MAKE) -C $(NPC_HOME) run IMAGE=$(IMAGE).bin
+	$(MAKE) -C $(NPC_HOME) run IMAGE=$(IMAGE).bin ARCH=$(ARCH)
 
 sim: image
 	$(MAKE) -C $(NPC_HOME) sim IMAGE=$(IMAGE).bin

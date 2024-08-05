@@ -1,31 +1,29 @@
- 
-
 module ysyx_23060124_WBU (
-  input  clock,
-  input i_rst_pcu,
-  input i_pre_valid,
-  input i_wen,
-  input i_csr_wen,
-  input i_brch,
-  input i_jal,
-  input i_jalr,
-  input i_mret,
-  input i_ecall,
-  input [32 - 1:0] i_pc,
+    input                               clock                      ,
+    input                               reset                      ,
+    input                               i_pre_valid                ,
+    input                               i_wen                      ,
+    input                               i_csr_wen                  ,
+    input                               i_brch                     ,
+    input                               i_jal                      ,
+    input                               i_jalr                     ,
+    input                               i_mret                     ,
+    input                               i_ecall                    ,
+    input              [32 - 1:0]       i_pc                       ,
   // ecall and mret
-  input [32 - 1:0] i_mepc,
-  input [32 - 1:0] i_mtvec,
+    input              [32 - 1:0]       i_mepc                     ,
+    input              [32 - 1:0]       i_mtvec                    ,
   // 
-  input [32 - 1:0] i_rs1,
-  input [32 - 1:0] i_imm,
-  input [32 - 1:0] i_res,
-  output [32 - 1:0] o_pc_next,
-  output [32 - 1:0] o_rd_wdata,
-  output [32 - 1:0] o_csr_rd,
-  output o_pre_ready,
-  output o_wbu_wen,
-  output o_wbu_csr_wen,
-  output o_pc_update
+    input              [32 - 1:0]       i_rs1                      ,
+    input              [32 - 1:0]       i_imm                      ,
+    input              [32 - 1:0]       i_res                      ,
+    output             [32 - 1:0]       o_pc_next                  ,
+    output             [32 - 1:0]       o_rd_wdata                 ,
+    output             [32 - 1:0]       o_csr_rd                   ,
+    output reg                          o_pre_ready                ,
+    output                              o_wbu_wen                  ,
+    output                              o_wbu_csr_wen              ,
+    output                              o_pc_update                 
 );
 
 wire [32 - 1:0] pc;
@@ -63,7 +61,12 @@ assign o_pc_next =    jal ? (pc + imm) :
                       (mret ? mepc : pc + 4))));
 
 
+
+always @(posedge clock or posedge reset) begin
+  if(reset) begin
+    o_pre_ready <= 1'b1;
+  end
+end
 assign o_pc_update = i_pre_valid && o_pre_ready;
-assign o_pre_ready = 1'b1;
 
 endmodule

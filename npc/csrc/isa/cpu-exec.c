@@ -30,7 +30,6 @@
 CPU_state cpu = {};
 int cycles = 0;
 int ins_cnt = 0;
-int ifu_cnt = 0;
 
 #define MAX_INST_TO_PRINT 11
 #define PC_WAVE_START 0xa0000048
@@ -75,9 +74,9 @@ void reg_update(){
       exit(1);
     }
   }
-
-  for(int i = 0; i < 32; i++){
-    cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile1__DOT__rf[i] ;
+  cpu.gpr[0] = 0;
+  for(int i = 0; i < 16; i++){
+    cpu.gpr[i+1] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile1__DOT__rf[i] ;
   }
   cpu.csr.mcause = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mcause;
   cpu.csr.mstatus = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mstatus;
@@ -153,9 +152,6 @@ void exec_once(Decode *s){
     }
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu1__DOT__lsu_post_valid){
       decode_pc(s);
-    }
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu2idu_valid){
-      ifu_cnt ++;
     }
     #ifdef CONFIG_WAVE
     if(wave_enable){
@@ -239,12 +235,11 @@ void cpu_exec(uint64_t n){
         printf("\nPerformance counters\n");
         printf("    cycles      : %d\n", cycles);
         printf("    instrs      : %d\n", ins_cnt);
-        printf("    Fetch instrs: %d\n", ifu_cnt/2);
-        printf("        Fetch per cycles: %d\n", (ifu_delay_end - ifu_delay_start)/ins_cnt);
+        printf("              Fetch per cycles: %d\n", (ifu_delay_end - ifu_delay_start)/ins_cnt);
         printf("    Load  instrs: %d\n", load_cnt);
-        printf("        Load per cycles: %d\n", (load_delay_end - load_delay_start)/load_cnt);
+        printf("              Load  per cycles: %d\n", (load_delay_end - load_delay_start)/load_cnt);
         printf("    Store instrs: %d\n", store_cnt);
-        printf("        Store per cycles: %d\n", (store_delay_end - store_delay_start)/store_cnt);
+        printf("              Store per cycles: %d\n", (store_delay_end - store_delay_start)/store_cnt);
         printf("    Brch  instrs: %d\n", brch_cnt);
         printf("    Jal   instrs: %d\n", jal_cnt);
         printf("    csr   instrs: %d\n", csr_cnt);

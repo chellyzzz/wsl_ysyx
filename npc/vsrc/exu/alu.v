@@ -3,8 +3,7 @@ module ysyx_23060124_ALU (
     input              [32-1:0]         src2                       ,
     input                               if_unsigned                ,
     input              [3-1:0]          opt                        ,
-    output             [32-1:0]         res                        ,
-    output                              carry                       
+    output             [32-1:0]         res                        
 );
 /***************parameter***************/
 parameter ADD =  3'b000;

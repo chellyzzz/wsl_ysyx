@@ -1,4 +1,11 @@
+ifeq ($(ARCH), riscv32e-ysyxSoC)
 TOPNAME = ysyxSoCFull
+else ifeq ($(ARCH), riscv32e-npc)
+TOPNAME = ysyx_23060124
+else
+TOPNAME = ysyxSoCFull  # 默认值，可以根据你的实际情况设置
+endif
+
 NXDC_FILES = constr/top.nxdc
 
 VNAME = V$(TOPNAME)
@@ -73,7 +80,6 @@ default: run
 
 compile: $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
-	echo $(INC_PATH)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	$(VERILATOR) $(C_FLAGS) $(VERILATOR_FLAGS) \
 	--top-module $(TOPNAME) $^ \

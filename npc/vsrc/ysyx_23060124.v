@@ -193,7 +193,6 @@ ysyx_23060124_stdrst u_stdrst(
 
 ysyx_23060124_RegisterFile regfile1(
     .clock                             (clock                     ),
-    .i_rst_n                           (rst_n_sync                ),
     .i_ecall                           (ecall                     ),
     .waddr                             (addr_rd                   ),
     .wdata                             (rd                        ),
@@ -273,8 +272,9 @@ ysyx_23060124_IFU ifu1
 );
 
 ysyx_23060124_IDU idu1(
+    .clock                             (clock                     ),
     .ins                               (ins                       ),
-    .i_rst_n                           (rst_n_sync                ),
+    .reset                             (reset                     ),
     .i_pre_valid                       (ifu2idu_valid             ),
     .i_post_ready                      (exu2idu_ready             ),
     .o_imm                             (imm                       ),
@@ -367,7 +367,7 @@ ysyx_23060124_EXU exu1(
 
 ysyx_23060124_WBU wbu1(
     .clock                             (clock                     ),
-    .i_rst_pcu                         (rst_n_sync                ),
+    .reset                             (reset                     ),
     .i_pre_valid                       (exu2wbu_valid             ),
     .i_brch                            (brch                      ),
     .i_jal                             (jal                       ),
@@ -607,7 +607,7 @@ always @(posedge clock) begin
   else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
     load_end();
   end
-  
+
   if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
     store_start();
   end
