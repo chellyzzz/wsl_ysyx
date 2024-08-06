@@ -23,7 +23,7 @@
 
 static uint8_t *serial_base = NULL;
 
-#ifdef CONFIG_DEVICE
+
 static void serial_putc(char ch) {
   MUXDEF(CONFIG_TARGET_AM, putch(ch), putc(ch, stderr));
 }
@@ -49,5 +49,3 @@ void init_serial() {
 #endif
 
 }
-
-#endif

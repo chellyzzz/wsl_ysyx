@@ -73,7 +73,6 @@ void sdl_clear_event_queue() {
 #endif
 }
 
-#ifdef CONFIG_DEVICE
 void init_device() {
   IFDEF(CONFIG_TARGET_AM, ioe_init());
   init_map();
@@ -88,4 +87,3 @@ void init_device() {
 
   IFNDEF(CONFIG_TARGET_AM, init_alarm());
 }
-#endif
