@@ -1,7 +1,7 @@
 module ysyx_23060124__icache #(
     parameter                           ADDR_WIDTH = 32            ,
     parameter                           DATA_WIDTH = 32            ,
-    parameter                           CACHE_SIZE = 16            ,// Number of cache blocks 
+    parameter                           CACHE_SIZE = 8            ,// Number of cache blocks 
     parameter                           BLOCK_SIZE = 4              // Block size in bytes
 ) (
     input  wire                         clk                        ,
@@ -25,7 +25,7 @@ module ysyx_23060124__icache #(
 
     wire [TAG_BITS-1:0] tag = addr[ADDR_WIDTH-1:INDEX_BITS+OFFSET_BITS];
     wire [INDEX_BITS-1:0] index = addr[OFFSET_BITS+INDEX_BITS-1:OFFSET_BITS];
-    // wire [OFFSET_BITS-1:0] offset = addr[OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] offset = addr[OFFSET_BITS-1:0];
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
