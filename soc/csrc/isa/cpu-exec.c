@@ -43,7 +43,7 @@ static VerilatedVcdC* vcd;
 static word_t instr;
 extern bool wave_enable;
 
-#define MAX_DEADS 100000
+#define MAX_DEADS 1000
 bool dead_detector = true;
 int dead_cycles   = 0;
 

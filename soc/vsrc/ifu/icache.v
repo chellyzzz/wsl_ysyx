@@ -211,13 +211,11 @@ reg                    [WAY_NUMS-1:0]   cache_valid                ;
 // Cache control logic 
 always @(posedge clk)
 begin
-    if(~rst_n_sync) begin
-        // Reset cache
-        integer i;
-        for (i = 0; i < WAY_NUMS; i = i + 1) begin
-            cache_valid[i] <= 'b0;
+    if(~rst_n_sync) 
+        begin
+            cache_valid <= 'b0;
         end
-    end
+    
     else if(M_AXI_RLAST && ~M_AXI_RREADY) begin
         cache_tag[index] <= tag;
         cache_valid[index] <= 1'b1;

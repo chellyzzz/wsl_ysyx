@@ -80,6 +80,7 @@ wire                                    M_AXI_ARESETN              ;
 // AXI4LITE signals
 reg                                     axi_awvalid                ;
 reg                                     axi_wvalid                 ;
+reg                                     axi_wlast                  ;
 reg                                     axi_arvalid                ;
 reg                                     axi_rready                 ;
 reg                    [32-1:0]         axi_rdata                  ;
@@ -115,7 +116,7 @@ assign wstrb =  (store_opt == SB) ? 4'b0001 :
                 (store_opt == SH) ? 4'b0011 :
                 (store_opt == SW) ? 4'b1111 : 4'b0000;
 assign M_AXI_WSTRB = wstrb << shift;
-assign M_AXI_WLAST = 1'b1;
+assign M_AXI_WLAST = axi_wlast;
 
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
@@ -157,7 +158,7 @@ always @(posedge clock)begin
       o_post_valid <= 1'b0; 
     end
     else begin
-      if(is_ls && (M_AXI_BREADY || M_AXI_RREADY))begin
+      if(is_ls && (M_AXI_BREADY || M_AXI_RLAST))begin
         o_post_valid <= 1'b1;
       end
       else if(not_ls && o_pre_ready_d1)begin
@@ -222,17 +223,19 @@ always @(posedge M_AXI_ACLK)
 	   begin                                                                         
 	     if (M_AXI_ARESETN == 0)                                                    
 	       begin                                                                     
-	         axi_wvalid <= 1'b0;                                                     
+	         axi_wvalid <= 1'b0;       
+           axi_wlast <= 1'b1;                                              
 	       end                                                                       
 	     //Signal a new address/data command is available by user logic              
 	     else if (txn_pulse_store == 1'b1)                                                
 	       begin                                                                     
-	         axi_wvalid <= 1'b1;                                                     
+	         axi_wvalid <= 1'b1;       
+           axi_wlast <= 1'b1;                                              
 	       end                                                                       
 	     //Data accepted by interconnect/slave (issue of M_AXI_WREADY by slave)      
 	     else if (M_AXI_WREADY && axi_wvalid)                                        
 	       begin                                                                     
-	        axi_wvalid <= 1'b0;                                                      
+	        axi_wvalid <= 1'b0;         
 	       end                                                                       
 	   end                                                                           
 
