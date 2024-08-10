@@ -19,7 +19,7 @@ module ysyx_23060124_RegisterFile (
   assign rdata1 = (raddr1 == 0) ? 0 : rf[raddr1[3:0]];
   assign rdata2 = (raddr2 == 0) ? 0 : rf[raddr2[3:0]];
 
-  assign a0_zero = ~|rf[10]; 
+//TODO: not a5
   assign o_mret_a5 = i_ecall ? rf[15] : 0;
 
 endmodule

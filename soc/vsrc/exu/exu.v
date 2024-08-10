@@ -2,9 +2,8 @@ module ysyx_23060124_EXU(
     input                               clock                      ,
     input                               i_rst_n                    ,
     input                               csr_src_sel                ,
-    input              [32 - 1:0]       src1                       ,
-    input              [32 - 1:0]       src2                       ,
-    input              [32 - 1:0]       csr_rs2                    ,
+    input              [32 - 1:0]       alu_src1                   ,
+    input              [32 - 1:0]       alu_src2                   ,
     input                               if_unsigned                ,
     //control signal
     input                               i_load                     ,
@@ -12,14 +11,12 @@ module ysyx_23060124_EXU(
     input                               i_brch                     ,
 
     input              [32 - 1:0]       i_pc                       ,
-    input              [32 - 1:0]       imm                        ,
     input              [3 - 1:0]        exu_opt                    ,
     input              [3 - 1:0]        load_opt                   ,
     input              [3 - 1:0]        store_opt                  ,
     input              [3 - 1:0]        brch_opt                   ,
     input              [2 - 1:0]        i_src_sel                  ,
     output             [32 - 1:0]       o_res                      ,
-    output                              o_zero                     ,
   //axi interface
     //write address channel  
     output             [32-1 : 0]       M_AXI_AWADDR               ,
@@ -81,26 +78,12 @@ localparam EXU_SEL_PC4 = 2'b10;
 localparam EXU_SEL_PCI = 2'b11;
 
 
-wire                   [32-1:0]         sel_src2                   ;
-wire                   [32-1:0]         alu_src1,alu_src2          ;
 wire                   [32-1:0]         alu_res, lsu_res           ;
 wire                                    carry, brch_res            ;
 wire                                    lsu_post_valid             ;
 
-reg                    [  31:0]         alu_src1_reg, alu_src2_reg ;
-
 assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
 assign o_post_valid = lsu_post_valid;
-
-assign alu_src1 = (i_src_sel == EXU_SEL_REG) ? src1 :
-                  (i_src_sel == EXU_SEL_IMM) ? src1 :
-                  (i_src_sel == EXU_SEL_PC4) ? i_pc :
-                  (i_src_sel == EXU_SEL_PCI) ? i_pc : 32'b0;
-
-assign alu_src2 = (i_src_sel == EXU_SEL_REG) ? sel_src2 :
-                  (i_src_sel == EXU_SEL_IMM) ? imm :
-                  (i_src_sel == EXU_SEL_PC4) ? 32'h4 :
-                  (i_src_sel == EXU_SEL_PCI) ? imm : 32'b0;
 
 always @(posedge  clock or negedge i_rst_n) begin
   if(~i_rst_n) begin
@@ -131,8 +114,8 @@ always @(posedge  clock or negedge i_rst_n) begin
 end
 
 ysyx_23060124_ALU exu_alu(
-    .src1                              (alu_src1_reg              ),
-    .src2                              (alu_src2_reg              ),
+    .src1                              (alu_src1                  ),
+    .src2                              (alu_src2                  ),
     .if_unsigned                       (if_unsigned               ),
     .opt                               (exu_opt                   ),
     .res                               (alu_res                   ) 
@@ -199,6 +182,5 @@ assign brch_res = (brch_opt == BEQ )   ? (alu_src1_reg == alu_src2_reg)  :
                   1'b0;
 
 assign o_res = i_load ? lsu_res : (i_brch ? {31'b0, brch_res} : alu_res);
-assign o_zero = ~(|o_res);
 
 endmodule

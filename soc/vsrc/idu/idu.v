@@ -1,11 +1,11 @@
 
 module ysyx_23060124_IDU (
     input                               clock                      ,
-    input              [32-1:0]         ins                        ,
+    input              [  31:0]         ins                        ,
     input                               reset                      ,
     input                               i_pre_valid                ,
     input                               i_post_ready               ,
-    output             [32-1:0]         o_imm                      ,
+    output             [  31:0]         o_imm                      ,
     output             [5-1:0]          o_rd                       ,
     output             [5-1:0]          o_rs1                      ,
     output             [5-1:0]          o_rs2                      ,
@@ -25,7 +25,8 @@ module ysyx_23060124_IDU (
     output                              o_brch                     ,
     output                              o_jal                      ,
     output                              o_jalr                     ,
-    output                              o_fence_i               ,
+    output                              o_fence_i                  ,
+
     output reg                          o_pre_ready                ,
     output reg                          o_post_valid                
 );
@@ -169,5 +170,7 @@ assign o_brch  = (opcode == TYPE_B)      ?  'b1: 'b0;
 assign o_jal   = (opcode == TYPE_JAL)    ?  'b1: 'b0;
 assign o_jalr  = (opcode == TYPE_JALR)   ?  'b1: 'b0;
 assign o_fence_i = (opcode == TYPE_FENCE)&&(func3 == 3'b001) ? 'b1: 'b0;
+
+
 
 endmodule

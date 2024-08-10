@@ -95,8 +95,6 @@ wire                   [2-1:0]          i_src_sel                  ;
 wire                                    brch,jal,jalr              ;// idu -> pcu.
 wire                                    if_store,if_load           ;// idu -> exu.
 wire                                    ecall,mret                 ;// idu -> pcu.
-wire                                    zero                       ;// exu -> pcu.
-wire                                    a0_zero                    ;//  if a0 is zero, a0_zero == 1
 wire                                    if_unsigned                ;// if_unsigned == 1, unsigned; else signed.
 wire                                    pc_update_en               ;
 //
@@ -207,8 +205,7 @@ ysyx_23060124_RegisterFile regfile1(
     .rdata1                            (rs1                       ),
     .rdata2                            (rs2                       ),
     .o_mret_a5                         (mret_a5                   ),
-    .wen                               (wbu_wen                   ),
-    .a0_zero                           (a0_zero                   ) 
+    .wen                               (wbu_wen                   )
 );
 
 ysyx_23060124_CSR_RegisterFile Csrs(
@@ -326,28 +323,92 @@ ysyx_23060124_IDU idu1(
     .o_post_valid                      (idu2exu_valid             ) 
 );
 
-ysyx_23060124_EXU exu1(
+wire                   [  31:0]         idu2exu_pc_next            ;
+wire                   [  31:0]         idu2exu_alu_rs1            ;
+wire                   [  31:0]         idu2exu_alu_rs2            ;
+wire                   [   4:0]         idu2exu_rd                 ;
+wire                   [   2:0]         idu2exu_exu_opt            ;
+wire                   [   2:0]         idu2exu_load_opt           ;
+wire                   [   2:0]         idu2exu_store_opt          ;
+wire                   [   2:0]         idu2exu_brch_opt           ;
+wire                                    idu2exu_wen                ;
+wire                                    idu2exu_csr_wen            ;
+wire                                    idu2exu_if_unsigned        ;
+wire                                    idu2exu_mret               ;
+wire                                    idu2exu_ecall              ;
+wire                                    idu2exu_load               ;
+wire                                    idu2exu_store              ;
+wire                                    idu2exu_brch               ;
+wire                                    idu2exu_jal                ;
+wire                                    idu2exu_jalr               ;
+
+ysyx_23060124_idu_ifu_regs idu2ifu_regs(
     .clock                             (clock                     ),
-    .i_rst_n                           (rst_n_sync                ),
-    .csr_src_sel                       (csr_wen                   ),
+    .reset                             (reset                     ),
+
+    .pc                                (ifu_pc_next               ),
+    .i_imm                             (imm                       ),
+    .i_csr_addr                        (csr_addr                  ),
     .src1                              (rs1                       ),
     .src2                              (rs2                       ),
     .csr_rs2                           (csr_rs2                   ),
-    .if_unsigned                       (if_unsigned               ),
-    //control signal
+    .csr_src_sel                       (csr_wen                   ),
+    .i_exu_opt                         (exu_opt                   ),
+    .i_load_opt                        (load_opt                  ),
+    .i_store_opt                       (store_opt                 ),
+    .i_brch_opt                        (brch_opt                  ),
+    .i_wen                             (idu_wen                   ),
+    .i_csr_wen                         (csr_wen                   ),
+    .i_src_sel                         (i_src_sel                 ),
+    .i_if_unsigned                     (if_unsigned               ),
+    .i_mret                            (ecall                     ),
+    .i_ecall                           (mret                      ),
     .i_load                            (if_load                   ),
     .i_store                           (if_store                  ),
     .i_brch                            (brch                      ),
+    .i_jal                             (jal                       ),
+    .i_jalr                            (jalr                      ),
+    .i_fence_i                         (fence_i                   ),
+    
+    .o_pc_next                         (idu2exu_pc_next           ),
+    .o_alu_rs1                         (idu2exu_alu_rs1           ),
+    .o_alu_rs2                         (idu2exu_alu_rs2           ),
+    .o_rd                              (idu2exu_rd                ),
+    .o_exu_opt                         (idu2exu_exu_opt           ),
+    .o_load_opt                        (idu2exu_load_opt          ),
+    .o_store_opt                       (idu2exu_store_opt         ),
+    .o_brch_opt                        (idu2exu_brch_opt          ),
+    .o_wen                             (idu2exu_wen               ),
+    .o_csr_wen                         (idu2exu_csr_wen           ),
+    .o_if_unsigned                     (idu2exu_if_unsigned       ),
+    .o_mret                            (idu2exu_mret              ),
+    .o_ecall                           (idu2exu_ecall             ),
+    .o_load                            (idu2exu_load              ),
+    .o_store                           (idu2exu_store             ),
+    .o_brch                            (idu2exu_brch              ),
+    .o_jal                             (idu2exu_jal               ),
+    .o_jalr                            (idu2exu_jalr              ) 
+);
 
-    .i_pc                              (ifu_pc_next               ),
-    .imm                               (imm                       ),
-    .exu_opt                           (exu_opt                   ),
-    .load_opt                          (load_opt                  ),
-    .store_opt                         (store_opt                 ),
-    .brch_opt                          (brch_opt                  ),
-    .i_src_sel                         (i_src_sel                 ),
+ysyx_23060124_EXU exu1(
+    .clock                             (clock                     ),
+    .i_rst_n                           (rst_n_sync                ),
+    .csr_src_sel                       (idu2exu_csr_wen           ),
+    .alu_src1                          (idu2exu_alu_rs1           ),
+    .alu_src2                          (idu2exu_alu_rs2           ),
+    .if_unsigned                       (idu2exu_if_unsigned       ),
+    //control signal
+    .i_load                            (idu2exu_if_load           ),
+    .i_store                           (idu2exu_if_store          ),
+    .i_brch                            (idu2exu_brch              ),
+    .i_pc                              (idu2exu_ifu_pc_next       ),
+    .imm                               (idu2exu_imm               ),
+    .exu_opt                           (idu2exu_exu_opt           ),
+    .load_opt                          (idu2exu_load_opt          ),
+    .store_opt                         (idu2exu_store_opt         ),
+    .brch_opt                          (idu2exu_brch_opt          ),
+    .i_src_sel                         (idu2exu_i_src_sel         ),
     .o_res                             (res                       ),
-    .o_zero                            (zero                      ),
   //lsu -> sram axi
   //write address channel  
     .M_AXI_AWADDR                      (LSU_SRAM_AXI_AWADDR       ),
@@ -588,62 +649,62 @@ CLINT clint
 );
 
 
-// import "DPI-C" function void load_cnt_dpic   ();
-// import "DPI-C" function void csr_cnt_dpic    ();
-// import "DPI-C" function void brch_cnt_dpic   ();
-// import "DPI-C" function void jal_cnt_dpic    ();
-// import "DPI-C" function void store_cnt_dpic  ();
-// import "DPI-C" function void ifu_start  ();
-// import "DPI-C" function void ifu_end  ();
-// import "DPI-C" function void load_start  ();
-// import "DPI-C" function void load_end  ();
-// import "DPI-C" function void store_start  ();
-// import "DPI-C" function void store_end  ();
+import "DPI-C" function void load_cnt_dpic   ();
+import "DPI-C" function void csr_cnt_dpic    ();
+import "DPI-C" function void brch_cnt_dpic   ();
+import "DPI-C" function void jal_cnt_dpic    ();
+import "DPI-C" function void store_cnt_dpic  ();
+import "DPI-C" function void ifu_start  ();
+import "DPI-C" function void ifu_end  ();
+import "DPI-C" function void load_start  ();
+import "DPI-C" function void load_end  ();
+import "DPI-C" function void store_start  ();
+import "DPI-C" function void store_end  ();
 
 
-// always @(posedge clock) begin
-//   if(if_load && exu2idu_ready) begin
-//     load_cnt_dpic();
-//   end
-//   if(if_store && exu2idu_ready) begin
-//     store_cnt_dpic();
-//   end
-//   if(brch && exu2idu_ready) begin
-//     brch_cnt_dpic();
-//   end
-//   if((jal || jalr) && exu2idu_ready) begin
-//     jal_cnt_dpic();
-//   end
-//   if(csr_wen && exu2idu_ready) begin
-//     csr_cnt_dpic();
-//   end
-// end
+always @(posedge clock) begin
+  if(if_load && exu2idu_ready) begin
+    load_cnt_dpic();
+  end
+  if(if_store && exu2idu_ready) begin
+    store_cnt_dpic();
+  end
+  if(brch && exu2idu_ready) begin
+    brch_cnt_dpic();
+  end
+  if((jal || jalr) && exu2idu_ready) begin
+    jal_cnt_dpic();
+  end
+  if(csr_wen && exu2idu_ready) begin
+    csr_cnt_dpic();
+  end
+end
 
-// always @(posedge clock) begin
-//   if(pc_update_en) begin
-//     ifu_start();
-//   end
-//   else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RVALID) begin
-//     ifu_end();
-//   end
-//   else if(hit && ifu2cache_req) begin
-//     ifu_end();
-//   end
+always @(posedge clock) begin
+  if(pc_update_en) begin
+    ifu_start();
+  end
+  else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RVALID) begin
+    ifu_end();
+  end
+  else if(hit && ifu2cache_req) begin
+    ifu_end();
+  end
 
-//   if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
-//     load_start();
-//   end
-//   else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
-//     load_end();
-//   end
+  if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
+    load_start();
+  end
+  else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
+    load_end();
+  end
 
-//   if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
-//     store_start();
-//   end
-//   else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
-//     store_end();
-//   end
-// end
+  if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
+    store_start();
+  end
+  else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
+    store_end();
+  end
+end
 
 endmodule
 

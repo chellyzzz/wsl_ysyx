@@ -241,16 +241,16 @@ assign data = hit ? cache_data[index][offset] : ((M_AXI_RLAST && ~M_AXI_RREADY) 
 assign hit  = (req && cache_valid[index] && cache_tag[index] == tag);
 
 
-// import "DPI-C" function void cache_hit ();
-// import "DPI-C" function void cache_miss ();
+import "DPI-C" function void cache_hit ();
+import "DPI-C" function void cache_miss ();
 
-// always @(posedge clk) begin
-//   if(hit && req) begin
-//     cache_hit();
-//   end
-//   else if(~hit && req) begin
-//     cache_miss();
-//   end
-// end
+always @(posedge clk) begin
+  if(hit && req) begin
+    cache_hit();
+  end
+  else if(~hit && req) begin
+    cache_miss();
+  end
+end
 
 endmodule

@@ -51,13 +51,25 @@ always @(posedge clock)
 // only for ifu
 //----------------------------
 
-ysyx_23060124_Reg #(.WIDTH(32), .RESET_VAL(RESET_PC)) next_pc_reg(
-    .clock                             (clock                     ),
-    .rst                               (rst_n_sync                ),
-    .din                               (i_pc_next                 ),
-    .dout                              (pc_next                   ),
-    .wen                               (i_pc_update               ) 
-);
+// ysyx_23060124_Reg #(.WIDTH(32), .RESET_VAL(RESET_PC)) next_pc_reg(
+//     .clock                             (clock                     ),
+//     .rst                               (rst_n_sync                ),
+//     .din                               (i_pc_next                 ),
+//     .dout                              (pc_next                   ),
+//     .wen                               (i_pc_update               ) 
+// );
+
+wire [32-1:0] pc;
+wire [32-1:0] ins;
+always @(posedge  clock or negedge rst_n_sync) begin
+  if (~rst_n_sync) pc_next <= RESET_PC;
+  else if (i_pc_update) pc_next <= i_pc_next;
+  else pc_next <= pc_next + 4;
+end
+
+
+assign pc = pc_next;
+assign ins = icache_ins;
 
 always @(posedge  clock) begin
   if(~rst_n_sync) begin
@@ -78,8 +90,8 @@ always @(posedge  clock) begin
     o_pc_next <= RESET_PC;
   end
   else if(cache_valid) begin
-    o_ins <= icache_ins;
-    o_pc_next <= pc_next;
+    o_ins <= ins;
+    o_pc_next <= pc;
   end
 end
 
