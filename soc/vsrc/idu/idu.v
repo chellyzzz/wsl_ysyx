@@ -25,6 +25,7 @@ module ysyx_23060124_IDU (
     output                              o_brch                     ,
     output                              o_jal                      ,
     output                              o_jalr                     ,
+    output                              o_fence_i               ,
     output reg                          o_pre_ready                ,
     output reg                          o_post_valid                
 );
@@ -46,17 +47,17 @@ localparam EXU_SEL_IMM = 2'b01;
 localparam EXU_SEL_PC4 = 2'b10;
 localparam EXU_SEL_PCI = 2'b11;
 
-localparam TYPE_I      =  7'b0010011;
-localparam TYPE_I_LOAD =  7'b0000011;
-localparam TYPE_JALR   =  7'b1100111;
-localparam TYPE_EBRK  = 7'b1110011;
-localparam TYPE_S     = 7'b0100011;
-localparam TYPE_R     = 7'b0110011;
-localparam TYPE_AUIPC = 7'b0010111;
-localparam TYPE_LUI   = 7'b0110111;
-localparam TYPE_JAL   = 7'b1101111;
-localparam TYPE_B     = 7'b1100011;
-
+localparam TYPE_I       =  7'b0010011;
+localparam TYPE_I_LOAD  =  7'b0000011;
+localparam TYPE_JALR    =  7'b1100111;
+localparam TYPE_EBRK    = 7'b1110011;
+localparam TYPE_S       = 7'b0100011;
+localparam TYPE_R       = 7'b0110011;
+localparam TYPE_AUIPC   = 7'b0010111;
+localparam TYPE_LUI     = 7'b0110111;
+localparam TYPE_JAL     = 7'b1101111;
+localparam TYPE_B       = 7'b1100011;
+localparam TYPE_FENCE   = 7'b0001111;
 //TYPE_I_FUN3
 localparam FUN3_SRL_SRA =  3'b101;
 //CSRR
@@ -167,5 +168,6 @@ assign o_store = (opcode == TYPE_S)      ?  'b1: 'b0;
 assign o_brch  = (opcode == TYPE_B)      ?  'b1: 'b0;
 assign o_jal   = (opcode == TYPE_JAL)    ?  'b1: 'b0;
 assign o_jalr  = (opcode == TYPE_JALR)   ?  'b1: 'b0;
+assign o_fence_i = (opcode == TYPE_FENCE)&&(func3 == 3'b001) ? 'b1: 'b0;
 
 endmodule

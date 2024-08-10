@@ -56,6 +56,7 @@ reg                                     axi_arready                ;
 reg                    [32-1 : 0]       axi_rdata                  ;
 reg                    [   1:0]         axi_rresp                  ;
 reg                                     axi_rvalid                 ;
+reg                                     axi_rlast                  ;
 reg                                     aw_en                      ;
 
 // clint 
@@ -76,7 +77,7 @@ assign S_AXI_ARREADY    = axi_arready;
 assign S_AXI_RDATA    = axi_rdata;
 assign S_AXI_RRESP    = axi_rresp;
 assign S_AXI_RVALID    = axi_rvalid;
-assign S_AXI_RLAST    = 1'b1;
+assign S_AXI_RLAST    = axi_rlast;
 assign S_AXI_RID    = 4'b0;
 assign S_AXI_BID    = 4'b0;
 
@@ -249,6 +250,7 @@ begin
     begin
         axi_rvalid <= 0;
         axi_rresp  <= 0;
+        axi_rlast  <= 0;    
     end 
     else
     begin    
@@ -263,6 +265,7 @@ begin
             // Read data is accepted by the master
             axi_rvalid <= 1'b0;
             axi_rresp <= 2'b0; // 'IDLE' response
+            axi_rlast <= 1'b0;
         end                
     end
 end    
@@ -284,10 +287,12 @@ begin
         if (slv_reg_rden && S_AXI_ARADDR == MTIME_REG_ADDR_LOW)
         begin
             axi_rdata <= reg_mtime[32-1 : 0];     // register read data
+            axi_rlast <= 1'b1;
         end
         else if (slv_reg_rden && S_AXI_AWADDR == MTIME_REG_ADDR_HIGH)
         begin
             axi_rdata <= reg_mtime[64-1 : 32];     // register read data
+            axi_rlast <= 1'b1;
         end
     end
 end    

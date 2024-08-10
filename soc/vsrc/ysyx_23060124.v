@@ -110,6 +110,7 @@ wire                                    ifu2cache_req              ;
 wire                   [ISA_WIDTH-1:0]  icache_ins                 ;
 wire                   [ISA_WIDTH-1:0]  req_addr                   ;
 wire                                    icache_valid               ;
+wire                                    fence_i                    ;
 //TODO: delete req_addr
 //write address channel  
 wire                   [32-1 : 0]       IFU_SRAM_AXI_AWADDR,LSU_SRAM_AXI_AWADDR;
@@ -233,7 +234,8 @@ ysyx_23060124__icache icache1(
     .addr                              (req_addr                  ),
     .req                               (ifu2cache_req             ),
     .data                              (icache_ins                ),
-    .valid                             (icache_valid               ),
+    .valid                             (icache_valid              ),
+    .fence_i                           (fence_i                   ),
     //AXI4 Master
   //ifu -> sram axi
   //write address channel  
@@ -319,6 +321,7 @@ ysyx_23060124_IDU idu1(
     .o_brch                            (brch                      ),
     .o_jal                             (jal                       ),
     .o_jalr                            (jalr                      ),
+    .o_fence_i                         (fence_i                   ),
     .o_pre_ready                       (idu2ifu_ready             ),
     .o_post_valid                      (idu2exu_valid             ) 
 );
@@ -585,62 +588,62 @@ CLINT clint
 );
 
 
-import "DPI-C" function void load_cnt_dpic   ();
-import "DPI-C" function void csr_cnt_dpic    ();
-import "DPI-C" function void brch_cnt_dpic   ();
-import "DPI-C" function void jal_cnt_dpic    ();
-import "DPI-C" function void store_cnt_dpic  ();
-import "DPI-C" function void ifu_start  ();
-import "DPI-C" function void ifu_end  ();
-import "DPI-C" function void load_start  ();
-import "DPI-C" function void load_end  ();
-import "DPI-C" function void store_start  ();
-import "DPI-C" function void store_end  ();
+// import "DPI-C" function void load_cnt_dpic   ();
+// import "DPI-C" function void csr_cnt_dpic    ();
+// import "DPI-C" function void brch_cnt_dpic   ();
+// import "DPI-C" function void jal_cnt_dpic    ();
+// import "DPI-C" function void store_cnt_dpic  ();
+// import "DPI-C" function void ifu_start  ();
+// import "DPI-C" function void ifu_end  ();
+// import "DPI-C" function void load_start  ();
+// import "DPI-C" function void load_end  ();
+// import "DPI-C" function void store_start  ();
+// import "DPI-C" function void store_end  ();
 
 
-always @(posedge clock) begin
-  if(if_load && exu2idu_ready) begin
-    load_cnt_dpic();
-  end
-  if(if_store && exu2idu_ready) begin
-    store_cnt_dpic();
-  end
-  if(brch && exu2idu_ready) begin
-    brch_cnt_dpic();
-  end
-  if((jal || jalr) && exu2idu_ready) begin
-    jal_cnt_dpic();
-  end
-  if(csr_wen && exu2idu_ready) begin
-    csr_cnt_dpic();
-  end
-end
+// always @(posedge clock) begin
+//   if(if_load && exu2idu_ready) begin
+//     load_cnt_dpic();
+//   end
+//   if(if_store && exu2idu_ready) begin
+//     store_cnt_dpic();
+//   end
+//   if(brch && exu2idu_ready) begin
+//     brch_cnt_dpic();
+//   end
+//   if((jal || jalr) && exu2idu_ready) begin
+//     jal_cnt_dpic();
+//   end
+//   if(csr_wen && exu2idu_ready) begin
+//     csr_cnt_dpic();
+//   end
+// end
 
-always @(posedge clock) begin
-  if(pc_update_en) begin
-    ifu_start();
-  end
-  else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RVALID) begin
-    ifu_end();
-  end
-  else if(hit && ifu2cache_req) begin
-    ifu_end();
-  end
+// always @(posedge clock) begin
+//   if(pc_update_en) begin
+//     ifu_start();
+//   end
+//   else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RVALID) begin
+//     ifu_end();
+//   end
+//   else if(hit && ifu2cache_req) begin
+//     ifu_end();
+//   end
 
-  if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
-    load_start();
-  end
-  else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
-    load_end();
-  end
+//   if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
+//     load_start();
+//   end
+//   else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
+//     load_end();
+//   end
 
-  if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
-    store_start();
-  end
-  else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
-    store_end();
-  end
-end
+//   if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
+//     store_start();
+//   end
+//   else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
+//     store_end();
+//   end
+// end
 
 endmodule
 

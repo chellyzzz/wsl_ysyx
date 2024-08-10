@@ -2,8 +2,8 @@ module ysyx_23060124__icache #(
     parameter                           ADDR_WIDTH = 32            ,
     parameter                           DATA_WIDTH = 32            ,
     parameter                           CACHE_SIZE = 16            ,// Number of cache blocks 
-    parameter                           WAY_NUMS = 2               ,// Block size in bytes
-    parameter                           BYTES_NUMS = 8             ,
+    parameter                           WAY_NUMS = 4               ,// Block size in bytes
+    parameter                           BYTES_NUMS = 4             ,
     parameter                           BLOCK_SIZE = 4*BYTES_NUMS   // Block size in bytes e.g 4bytes
 )
 (
@@ -51,6 +51,8 @@ module ysyx_23060124__icache #(
     input  wire        [ADDR_WIDTH-1:0] addr                       ,
     input  wire                         req                        ,// 请求信号
     output wire        [DATA_WIDTH-1:0] data                       ,
+
+    input  wire                         fence_i                    ,
     output                              valid                       
 );
 
@@ -220,6 +222,9 @@ begin
         cache_tag[index] <= tag;
         cache_valid[index] <= 1'b1;
     end
+    else if(fence_i) begin
+        cache_valid <= 'b0;
+    end
 end
 
 
@@ -236,16 +241,16 @@ assign data = hit ? cache_data[index][offset] : ((M_AXI_RLAST && ~M_AXI_RREADY) 
 assign hit  = (req && cache_valid[index] && cache_tag[index] == tag);
 
 
-import "DPI-C" function void cache_hit ();
-import "DPI-C" function void cache_miss ();
+// import "DPI-C" function void cache_hit ();
+// import "DPI-C" function void cache_miss ();
 
-always @(posedge clk) begin
-  if(hit && req) begin
-    cache_hit();
-  end
-  else if(~hit && req) begin
-    cache_miss();
-  end
-end
+// always @(posedge clk) begin
+//   if(hit && req) begin
+//     cache_hit();
+//   end
+//   else if(~hit && req) begin
+//     cache_miss();
+//   end
+// end
 
 endmodule
