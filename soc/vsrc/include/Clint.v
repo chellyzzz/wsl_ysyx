@@ -46,20 +46,20 @@ localparam MTIME_REG_ADDR_LOW = 32'h0200_0000;
 localparam MTIME_REG_ADDR_HIGH = 32'h0200_0004;
 
 /**********************regs******************************/
-reg [32-1 : 0] 	axi_awaddr;
-reg  	axi_awready;
-reg  	axi_wready;
-reg [1 : 0] 	axi_bresp;
-reg  	axi_bvalid;
-reg [32-1 : 0] 	axi_araddr;
-reg  	axi_arready;
-reg [32-1 : 0] 	axi_rdata;
-reg [1 : 0] 	axi_rresp;
-reg  	axi_rvalid;
-reg	 aw_en;
+reg                    [32-1 : 0]       axi_awaddr                 ;
+reg                                     axi_awready                ;
+reg                                     axi_wready                 ;
+reg                    [   1:0]         axi_bresp                  ;
+reg                                     axi_bvalid                 ;
+reg                    [32-1 : 0]       axi_araddr                 ;
+reg                                     axi_arready                ;
+reg                    [32-1 : 0]       axi_rdata                  ;
+reg                    [   1:0]         axi_rresp                  ;
+reg                                     axi_rvalid                 ;
+reg                                     aw_en                      ;
 
 // clint 
-reg [64-1:0]	reg_mtime;
+reg                    [64-1:0]         reg_mtime                  ;
 
 /**********************wire******************************/
 wire	 slv_reg_rden;
@@ -68,15 +68,15 @@ wire [32-1:0]	 reg_data_out;
 
 // I/O Connections assignments
 
-assign S_AXI_AWREADY	= axi_awready;
-assign S_AXI_WREADY	= axi_wready;
-assign S_AXI_BRESP	= axi_bresp;
-assign S_AXI_BVALID	= axi_bvalid;
-assign S_AXI_ARREADY	= axi_arready;
-assign S_AXI_RDATA	= axi_rdata;
-assign S_AXI_RRESP	= axi_rresp;
-assign S_AXI_RVALID	= axi_rvalid;
-assign S_AXI_RLAST	= 1'b1;
+assign S_AXI_AWREADY    = axi_awready;
+assign S_AXI_WREADY    = axi_wready;
+assign S_AXI_BRESP    = axi_bresp;
+assign S_AXI_BVALID    = axi_bvalid;
+assign S_AXI_ARREADY    = axi_arready;
+assign S_AXI_RDATA    = axi_rdata;
+assign S_AXI_RRESP    = axi_rresp;
+assign S_AXI_RVALID    = axi_rvalid;
+assign S_AXI_RLAST    = 1'b1;
 assign S_AXI_RID    = 4'b0;
 assign S_AXI_BID    = 4'b0;
 

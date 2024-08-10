@@ -96,6 +96,9 @@ menuconfig:
 
 sim: run wave
 
+combined :
+	cat $(find ./vsrc/ -name "*.v") > combined.v
+
 clean:
 	rm -rf $(BUILD_DIR)
 

@@ -7,7 +7,7 @@ module ysyx_23060124_Reg #(parameter WIDTH = 1, parameter RESET_VAL = 0) (
 );
 
   always @(posedge  clock or negedge rst) begin
-    if (!rst) dout <= RESET_VAL;
+    if (~rst) dout <= RESET_VAL;
     else if (wen) dout <= din;
   end
   

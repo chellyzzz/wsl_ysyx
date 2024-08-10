@@ -203,7 +203,7 @@ wire                   [4-1 : 0]        CPU_BID                    ;
                     end
                 end
                 IFU_ACCESS: begin
-                    if (CPU_BREADY || CPU_RREADY) begin
+                    if (CPU_BREADY || (CPU_RLAST && CPU_RREADY)) begin
                         IN_STATE <= IN_IDLE;
                     end
                 end
@@ -242,7 +242,7 @@ wire                   [4-1 : 0]        CPU_BID                    ;
                     end
                 end
                 SRAM_ACCESS: begin
-                    if (SRAM_BREADY || SRAM_RREADY) begin
+                    if (SRAM_BREADY || (SRAM_RLAST && SRAM_RREADY)) begin
                             OUT_STATE <= OUT_IDLE;
                     end
                 end

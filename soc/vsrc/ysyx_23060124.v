@@ -108,7 +108,9 @@ wire                                    hit                        ;
 wire                                    mem_valid                  ;
 wire                                    ifu2cache_req              ;
 wire                   [ISA_WIDTH-1:0]  icache_ins                 ;
-
+wire                   [ISA_WIDTH-1:0]  req_addr                   ;
+wire                                    icache_valid               ;
+//TODO: delete req_addr
 //write address channel  
 wire                   [32-1 : 0]       IFU_SRAM_AXI_AWADDR,LSU_SRAM_AXI_AWADDR;
 wire                                    IFU_SRAM_AXI_AWVALID, LSU_SRAM_AXI_AWVALID;
@@ -227,22 +229,12 @@ ysyx_23060124_CSR_RegisterFile Csrs(
 
 ysyx_23060124__icache icache1(
     .clk                               (clock                     ),
-    .rst                               (reset                     ),
-    .addr                              (IFU_SRAM_AXI_ARADDR       ),
+    .rst_n_sync                        (rst_n_sync                ),
+    .addr                              (req_addr                  ),
     .req                               (ifu2cache_req             ),
-    .data                              (icache_ins                 ),
-    .hit                               (hit                       ),
-    .mem_data                          (IFU_SRAM_AXI_RDATA        ),
-    .mem_valid                         (IFU_SRAM_AXI_RREADY       ) 
-);
-
-ysyx_23060124_IFU ifu1
-(
-    .i_pc_next                         (pc_next                   ),
-    .clock                             (clock                     ),
-    .ifu_rst                           (rst_n_sync                ),
-    .i_pc_update                       (pc_update_en              ),
-    .o_ins                             (ins                       ),
+    .data                              (icache_ins                ),
+    .valid                             (icache_valid               ),
+    //AXI4 Master
   //ifu -> sram axi
   //write address channel  
     .M_AXI_AWADDR                      (IFU_SRAM_AXI_AWADDR       ),
@@ -278,15 +270,26 @@ ysyx_23060124_IFU ifu1
     .M_AXI_BRESP                       (IFU_SRAM_AXI_BRESP        ),
     .M_AXI_BVALID                      (IFU_SRAM_AXI_BVALID       ),
     .M_AXI_BREADY                      (IFU_SRAM_AXI_BREADY       ),
-    .M_AXI_BID                         (IFU_SRAM_AXI_BID          ),
+    .M_AXI_BID                         (IFU_SRAM_AXI_BID          )
+);
 
+ysyx_23060124_IFU ifu1
+(
+    .i_pc_next                         (pc_next                   ),
+    .clock                             (clock                     ),
+    .rst_n_sync                        (rst_n_sync                ),
+    .i_pc_update                       (pc_update_en              ),
+    .o_ins                             (ins                       ),
   //ifu -> idu handshake
     .i_post_ready                      (idu2ifu_ready             ),
     .o_post_valid                      (ifu2idu_valid             ),
     .o_pc_next                         (ifu_pc_next               ),
   //cache -> ifu
+    .cache_valid                       (icache_valid               ),
     .icache_ins                        (icache_ins                ),
     .req                               (ifu2cache_req             ),
+    .req_addr                          (req_addr                  ),
+    .M_AXI_RLAST                       (IFU_SRAM_AXI_RLAST        ),
     .hit                               (hit                       )
 );
 
@@ -593,8 +596,7 @@ import "DPI-C" function void load_start  ();
 import "DPI-C" function void load_end  ();
 import "DPI-C" function void store_start  ();
 import "DPI-C" function void store_end  ();
-import "DPI-C" function void cache_hit ();
-import "DPI-C" function void cache_miss ();
+
 
 always @(posedge clock) begin
   if(if_load && exu2idu_ready) begin
@@ -624,12 +626,7 @@ always @(posedge clock) begin
   else if(hit && ifu2cache_req) begin
     ifu_end();
   end
-  if(hit && ifu2cache_req) begin
-    cache_hit();
-  end
-  else if(~hit && ifu2cache_req) begin
-    cache_miss();
-  end
+
   if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
     load_start();
   end
