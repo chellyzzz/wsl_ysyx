@@ -3,20 +3,19 @@ module ysyx_23060124_IDU (
     input                               clock                      ,
     input              [  31:0]         ins                        ,
     input                               reset                      ,
-    input                               i_pre_valid                ,
-    input                               i_post_ready               ,
+
     output             [  31:0]         o_imm                      ,
-    output             [5-1:0]          o_rd                       ,
-    output             [5-1:0]          o_rs1                      ,
-    output             [5-1:0]          o_rs2                      ,
-    output             [12-1:0]         o_csr_addr                 ,
-    output             [3-1:0]          o_exu_opt                  ,
-    output             [3-1:0]          o_load_opt                 ,
-    output             [3-1:0]          o_store_opt                ,
-    output             [3-1:0]          o_brch_opt                 ,
+    output             [   4:0]         o_rd                       ,
+    output             [   4:0]         o_rs1                      ,
+    output             [   4:0]         o_rs2                      ,
+    output             [  11:0]         o_csr_addr                 ,
+    output             [   2:0]         o_exu_opt                  ,
+    output             [   2:0]         o_load_opt                 ,
+    output             [   2:0]         o_store_opt                ,
+    output             [   2:0]         o_brch_opt                 ,
     output                              o_wen                      ,
     output                              o_csr_wen                  ,
-    output             [2-1:0]          o_src_sel                  ,
+    output             [   1:0]         o_src_sel                  ,
     output                              o_if_unsigned              ,
     output                              o_mret                     ,
     output                              o_ecall                    ,
@@ -25,10 +24,7 @@ module ysyx_23060124_IDU (
     output                              o_brch                     ,
     output                              o_jal                      ,
     output                              o_jalr                     ,
-    output                              o_fence_i                  ,
-
-    output reg                          o_pre_ready                ,
-    output reg                          o_post_valid                
+    output                              o_fence_i                  
 );
 /************************parameter**********************/
 //TYPE_R_FUN3
@@ -69,30 +65,12 @@ localparam FUN3_EXCPT = 3'b000;
 localparam RS2_ECALL   =  5'b00000;
 localparam RS2_MRET    =  5'b00010;
 
-always @(posedge clock or posedge reset) begin
-    if(reset) begin
-        o_pre_ready <= 1'b1;
-        o_post_valid <= 1'b0;   
-    end
-    else if(i_pre_valid && o_pre_ready) begin
-        o_post_valid <= 1'b1;
-    end
-    else if(o_post_valid && i_post_ready) begin
-        o_post_valid <= 1'b0;
-    end
-    else begin
-        o_post_valid <= o_post_valid;
-        o_pre_ready <= o_pre_ready;
-    end
-end
-
-
 wire [2:0] func3  = ins[14:12];
 wire [6:0] opcode  = ins[6:0];
 wire [6:0] func7 = ins[31:25];
-wire [5-1:0] rs1 = ins[19:15];
-wire [5-1:0] rs2 = ins[24:20];
-wire [5-1:0] rd  = ins[11:7];
+wire [4:0] rs1 = ins[19:15];
+wire [4:0] rs2 = ins[24:20];
+wire [4:0] rd  = ins[11:7];
 
 assign o_imm = (opcode == TYPE_I || opcode == TYPE_I_LOAD) ? {{20{ins[31]}}, ins[31:20]} :
                (opcode == TYPE_LUI || opcode == TYPE_AUIPC) ? {{0{ins[31]}}, ins[31:12], 12'b0} :

@@ -26,6 +26,7 @@ wire [31:0] slt_res;
 wire [31:0] sltu_res;
 wire [63:0] temp;
 
+//TODO: combine add and sub
 assign temp = {{{32{src1[31]}},src1} >> src2[4:0]};
 assign add_res = if_unsigned ? src1 - src2 : src1 + src2;
 assign and_res = src1 & src2;

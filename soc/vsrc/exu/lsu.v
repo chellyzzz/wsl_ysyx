@@ -161,7 +161,7 @@ always @(posedge clock)begin
       if(is_ls && (M_AXI_BREADY || M_AXI_RLAST))begin
         o_post_valid <= 1'b1;
       end
-      else if(not_ls && o_pre_ready_d1)begin
+      else if(not_ls && o_pre_ready_d1 && i_pre_valid)begin
         o_post_valid <= 1'b1;
       end
       else begin

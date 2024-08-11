@@ -1,7 +1,14 @@
-module ysyx_23060124_idu_ifu_regs (
+module ysyx_23060124_idu_exu_regs (
     input              [  31:0]         i_pc                       ,
     input                               clock                      ,
     input                               reset                      ,
+    // handshake signals
+    input                               i_pre_valid                ,
+    input                               i_post_ready               ,
+    output                              o_pre_ready                ,
+    output                              o_post_valid               ,
+    //
+    input                               i_rf_valid                 ,
     input              [  31:0]         i_imm                      ,
     input              [  11:0]         i_csr_addr                 ,
     input              [  31:0]         src1                       ,
@@ -34,7 +41,7 @@ module ysyx_23060124_idu_ifu_regs (
     output reg         [  31:0]         o_pc_next                  ,
     output reg         [  31:0]         o_alu_rs1                  ,
     output reg         [  31:0]         o_alu_rs2                  ,
-    output reg         [  31:0]         o_imm                      ,
+    output reg         [  31:0]         o_agu_rs2                  ,
     output reg         [   4:0]         o_rd                       ,
     output reg         [   2:0]         o_exu_opt                  ,
     output reg         [   2:0]         o_load_opt                 ,
@@ -61,7 +68,7 @@ localparam EXU_SEL_PCI = 2'b11;
 wire                   [  31:0]         alu_src1                   ;
 wire                   [  31:0]         alu_src2                   ;
 wire                   [32-1:0]         sel_src2                   ;
-
+wire                   [  31:0]         agu_src2                   ;
 assign sel_src2 = csr_src_sel ? csr_rs2 : src2;
 assign alu_src1 = (i_src_sel == EXU_SEL_REG) ? src1 :
                   (i_src_sel == EXU_SEL_IMM) ? src1 :
@@ -69,16 +76,41 @@ assign alu_src1 = (i_src_sel == EXU_SEL_REG) ? src1 :
                   (i_src_sel == EXU_SEL_PCI) ? i_pc : 32'b0;
 
 assign alu_src2 = (i_src_sel == EXU_SEL_REG) ? sel_src2 :
-                  (i_src_sel == EXU_SEL_IMM) ? imm :
+                  (i_src_sel == EXU_SEL_IMM) ? i_imm :
                   (i_src_sel == EXU_SEL_PC4) ? 32'h4 :
-                  (i_src_sel == EXU_SEL_PCI) ? imm : 32'b0;
+                  (i_src_sel == EXU_SEL_PCI) ? i_imm : 32'b0;
+
+assign agu_src2 =   i_brch ? i_imm :
+                    i_jal  ? i_imm  :
+                    i_jalr ? src1   :
+                    32'h4;
+
+reg                                     pre_ready                  ;
+reg                                     post_valid                 ;
+
+assign o_post_valid = i_rf_valid ? post_valid : 1'b0;
+assign o_pre_ready  = i_rf_valid ? pre_ready  : 1'b0; 
+always @(posedge clock or posedge reset) begin
+    if(reset) begin
+        pre_ready <= 1'b1;
+        post_valid <= 1'b0;   
+    end
+    else if(i_pre_valid && i_rf_valid) begin
+        pre_ready <= 1'b1;  
+        post_valid <= 1'b1;
+    end
+    else begin
+        post_valid <= post_valid;
+        pre_ready <= pre_ready;
+    end
+end
 
 always @(posedge clock or posedge reset) begin
     if(reset) begin
         o_pc_next <= 32'b0;
         o_alu_rs1 <= 32'b0;
         o_alu_rs2 <= 32'b0;
-        o_imm <= 32'b0;
+        o_agu_rs2 <= 32'b0;
         o_rd <= 5'b0;
         o_exu_opt <= 3'b0;
         o_load_opt <= 3'b0;
@@ -95,11 +127,11 @@ always @(posedge clock or posedge reset) begin
         o_jal <= 1'b0;
         o_jalr <= 1'b0;
     end
-    else begin
+    else if(i_rf_valid) begin
         o_pc_next <= i_pc;
         o_alu_rs1 <= alu_src1;      
         o_alu_rs2 <= alu_src2;   
-        o_imm <= i_imm;
+        o_agu_rs2 <= agu_src2;
         o_rd <= i_rd;
         o_exu_opt <= i_exu_opt;
         o_load_opt <= i_load_opt;

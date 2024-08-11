@@ -238,19 +238,19 @@ assign valid =  hit || (M_AXI_RLAST && ~M_AXI_RREADY);
 // assign data =   valid ? ( (offset == 2'b11) ? M_AXI_RDATA : cache_data[index][offset]) :32'b0;
 assign data = hit ? cache_data[index][offset] : ((M_AXI_RLAST && ~M_AXI_RREADY) ? ( (offset == {{OFFSET_BITS-2}{1'b1}}) ? M_AXI_RDATA : cache_data[index][offset]) :32'b0);
 
-assign hit  = (req && cache_valid[index] && cache_tag[index] == tag);
+assign hit  =  cache_valid[index] && cache_tag[index] == tag;
 
 
-import "DPI-C" function void cache_hit ();
-import "DPI-C" function void cache_miss ();
+// import "DPI-C" function void cache_hit ();
+// import "DPI-C" function void cache_miss ();
 
-always @(posedge clk) begin
-  if(hit && req) begin
-    cache_hit();
-  end
-  else if(~hit && req) begin
-    cache_miss();
-  end
-end
+// always @(posedge clk) begin
+//   if(hit && req) begin
+//     cache_hit();
+//   end
+//   else if(~hit && req) begin
+//     cache_miss();
+//   end
+// end
 
 endmodule

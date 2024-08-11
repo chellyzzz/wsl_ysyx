@@ -119,8 +119,8 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, VysyxSoCFull* top_sdb, 
 }
 
 void decode_pc(Decode* s){
-  s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu1__DOT__pc;
-  s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu1__DOT__pc + 4;
+  s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_pc_next;
+  s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_pc_next + 4;
   s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next;
   s->isa.inst.val = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ins;
   instr = s->isa.inst.val;

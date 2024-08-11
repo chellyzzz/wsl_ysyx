@@ -1,10 +1,9 @@
 module ysyx_23060124_EXU(
     input                               clock                      ,
     input                               i_rst_n                    ,
-    input                               csr_src_sel                ,
     input              [  31:0]         alu_src1                   ,
     input              [  31:0]         alu_src2                   ,
-    input              [  31:0]         imm                        ,
+    input              [  31:0]         agu_src2                   ,
     input                               if_unsigned                ,
     //control signal
     input                               i_load                     ,
@@ -17,6 +16,7 @@ module ysyx_23060124_EXU(
     input              [   2:0]         store_opt                  ,
     input              [   2:0]         brch_opt                   ,
     output             [  31:0]         o_res                      ,
+    output             [  31:0]         o_pc_next                  ,
   //axi interface
     //write address channel  
     output             [  31:0]         M_AXI_AWADDR               ,
@@ -76,19 +76,18 @@ parameter BGEU  = 3'b111;
 wire                   [  31:0]         alu_res, lsu_res           ;
 wire                                    carry, brch_res            ;
 wire                                    lsu_post_valid             ;
-wire                   [  31:0]         agu_src1, agu_src2         ;
 
 assign o_post_valid = lsu_post_valid;
 
 always @(posedge  clock or negedge i_rst_n) begin
   if(~i_rst_n) begin
-    o_pre_ready <= 1'b0;
+    o_pre_ready <= 1'b1;
   end
   else if(i_pre_valid && ~o_pre_ready) begin
     o_pre_ready <= 1'b1;
   end
   else if(i_pre_valid && o_pre_ready) begin
-    o_pre_ready <= 1'b0;
+    o_pre_ready <= 1'b1;
   end
   else o_pre_ready <= o_pre_ready;
 end
@@ -102,31 +101,10 @@ ysyx_23060124_ALU exu_alu(
     .res                               (alu_res                   ) 
 );
 
-assign o_pc_next =    jal ? (pc + imm) : 
-                      (jalr ? (rs1 + imm) : 
-                      (brch && res[0] ? pc + imm : 
-                      (ecall ? mtvec :
-                      (mret ? mepc : pc + 4))));
-
-assign agu_src1 = jal ? pc:
-                  jalr ? rs1:
-                  brch ? pc:
-                  ecall ? pc:
-                  mret ? pc:
-                  pc;
-
-assign agu_src2 = jal ? imm:
-                  jalr ? imm:
-                  brch ? imm:
-                  ecall ? mtvec:
-                  mret ? mepc:
-                  32'b0;
-
 ysyx_23060124_AGU exu_agu(
-    .src1                              (agu_src1                  ),
+    .src1                              (i_pc                      ),
     .src2                              (agu_src2                  ),
-    .opt                               (exu_opt                   ),
-    .res                               (alu_res                   ) 
+    .res                               (o_pc_next                 ) 
 );
 
 ysyx_23060124_LSU exu_lsu(
@@ -181,7 +159,6 @@ ysyx_23060124_LSU exu_lsu(
     .o_post_valid                      (lsu_post_valid            ) 
 );
 
-assign pc_next = i_pc + imm;
 
 assign brch_res = (~i_brch)            ? 1'b0 : 
 //TODO: combine BEQ and BNE
