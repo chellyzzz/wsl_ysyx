@@ -8,8 +8,7 @@ module ysyx_23060124_RegisterFile (
     output             [32-1:0]         rdata1                     ,
     output             [32-1:0]         rdata2                     ,
     output             [32-1:0]         o_mret_a5                  ,
-    input                               wen                        ,
-    output                              a0_zero                     
+    input                               wen                        
 );
   reg [32-1:0] rf [16 - 1:1];
   always @(posedge  clock) begin

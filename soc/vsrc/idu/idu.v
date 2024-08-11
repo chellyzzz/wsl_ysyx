@@ -148,7 +148,8 @@ assign o_load_opt =   (opcode == TYPE_I_LOAD) ? func3 : 3'b111;
 assign o_store_opt =  (opcode == TYPE_S) ? func3 : 3'b111;
 
 assign o_brch_opt =   (opcode == TYPE_B) ? func3 : 3'b010;
-                    
+
+//TODO: jalr, jal, ecall, mret, fence_i                
 assign o_src_sel =    (opcode == TYPE_I)       ? EXU_SEL_IMM:
                       (opcode == TYPE_R)       ? EXU_SEL_REG:
                       (opcode == TYPE_LUI)     ? EXU_SEL_IMM:
@@ -162,15 +163,13 @@ assign o_src_sel =    (opcode == TYPE_I)       ? EXU_SEL_IMM:
                       (opcode == TYPE_EBRK && func3 == FUN3_CSRRS) ? EXU_SEL_REG:
                       'b0;
                     
-assign o_ecall = (opcode == TYPE_EBRK)&&(rs2 == RS2_ECALL) &&(func3 == FUN3_EXCPT) ? 'b1: 'b0;
-assign o_mret =  (opcode == TYPE_EBRK)&&(rs2 == RS2_MRET ) &&(func3 == FUN3_EXCPT) ? 'b1: 'b0;
-assign o_load  = (opcode == TYPE_I_LOAD) ?  'b1: 'b0;
-assign o_store = (opcode == TYPE_S)      ?  'b1: 'b0;
-assign o_brch  = (opcode == TYPE_B)      ?  'b1: 'b0;
-assign o_jal   = (opcode == TYPE_JAL)    ?  'b1: 'b0;
-assign o_jalr  = (opcode == TYPE_JALR)   ?  'b1: 'b0;
-assign o_fence_i = (opcode == TYPE_FENCE)&&(func3 == 3'b001) ? 'b1: 'b0;
-
-
+assign o_ecall      = (opcode == TYPE_EBRK)&&(rs2 == RS2_ECALL) &&(func3 == FUN3_EXCPT) ? 'b1: 'b0;
+assign o_mret       = (opcode == TYPE_EBRK)&&(rs2 == RS2_MRET ) &&(func3 == FUN3_EXCPT) ? 'b1: 'b0;
+assign o_load       = (opcode == TYPE_I_LOAD) ?  'b1: 'b0;
+assign o_store      = (opcode == TYPE_S)      ?  'b1: 'b0;
+assign o_brch       = (opcode == TYPE_B)      ?  'b1: 'b0;
+assign o_jal        = (opcode == TYPE_JAL)    ?  'b1: 'b0;
+assign o_jalr       = (opcode == TYPE_JALR)   ?  'b1: 'b0;
+assign o_fence_i    = (opcode == TYPE_FENCE)&&(func3 == 3'b001) ? 'b1: 'b0;
 
 endmodule

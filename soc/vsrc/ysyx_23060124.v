@@ -326,6 +326,7 @@ ysyx_23060124_IDU idu1(
 wire                   [  31:0]         idu2exu_pc_next            ;
 wire                   [  31:0]         idu2exu_alu_rs1            ;
 wire                   [  31:0]         idu2exu_alu_rs2            ;
+wire                   [  31:0]         idu2exu_imm                ;
 wire                   [   4:0]         idu2exu_rd                 ;
 wire                   [   2:0]         idu2exu_exu_opt            ;
 wire                   [   2:0]         idu2exu_load_opt           ;
@@ -346,11 +347,12 @@ ysyx_23060124_idu_ifu_regs idu2ifu_regs(
     .clock                             (clock                     ),
     .reset                             (reset                     ),
 
-    .pc                                (ifu_pc_next               ),
+    .i_pc                              (ifu_pc_next               ),
     .i_imm                             (imm                       ),
     .i_csr_addr                        (csr_addr                  ),
     .src1                              (rs1                       ),
     .src2                              (rs2                       ),
+    .i_rd                              (addr_rd                   ),
     .csr_rs2                           (csr_rs2                   ),
     .csr_src_sel                       (csr_wen                   ),
     .i_exu_opt                         (exu_opt                   ),
@@ -373,6 +375,7 @@ ysyx_23060124_idu_ifu_regs idu2ifu_regs(
     .o_pc_next                         (idu2exu_pc_next           ),
     .o_alu_rs1                         (idu2exu_alu_rs1           ),
     .o_alu_rs2                         (idu2exu_alu_rs2           ),
+    .o_imm                             (idu2exu_imm               ),
     .o_rd                              (idu2exu_rd                ),
     .o_exu_opt                         (idu2exu_exu_opt           ),
     .o_load_opt                        (idu2exu_load_opt          ),
@@ -396,19 +399,36 @@ ysyx_23060124_EXU exu1(
     .csr_src_sel                       (idu2exu_csr_wen           ),
     .alu_src1                          (idu2exu_alu_rs1           ),
     .alu_src2                          (idu2exu_alu_rs2           ),
+    .imm                               (idu2exu_imm               ),
     .if_unsigned                       (idu2exu_if_unsigned       ),
     //control signal
-    .i_load                            (idu2exu_if_load           ),
-    .i_store                           (idu2exu_if_store          ),
+    .i_load                            (idu2exu_load           ),
+    .i_store                           (idu2exu_store          ),
     .i_brch                            (idu2exu_brch              ),
-    .i_pc                              (idu2exu_ifu_pc_next       ),
-    .imm                               (idu2exu_imm               ),
+    .i_pc                              (idu2exu_pc_next           ),
+    .i_jal                             (idu2exu_jal               ),
+    .i_jalr                            (idu2exu_jalr              ),
+    .i_mret                            (idu2exu_mret              ),
+    .i_ecall                           (idu2exu_ecall             ),
+    .i_wen                             (idu2exu_wen               ),
+    .i_csr_wen                         (idu2exu_csr_wen           ),
+
     .exu_opt                           (idu2exu_exu_opt           ),
     .load_opt                          (idu2exu_load_opt          ),
     .store_opt                         (idu2exu_store_opt         ),
     .brch_opt                          (idu2exu_brch_opt          ),
-    .i_src_sel                         (idu2exu_i_src_sel         ),
     .o_res                             (res                       ),
+
+    .o_pc_next                         (exu_wbu_pc_next           ),
+    .o_brch                            (brch                      ),
+    .o_jal                             (jal                       ),
+    .o_jalr                            (jalr                      ),  
+    .o_wen                             (idu2exu_wen               ),
+    .o_csr_wen                         (idu2exu_csr_wen           ),
+    .o_rd                              (idu2exu_rd                ), 
+    .o_csr_rd                          (csr_rd                    ),
+    .o_ecall                           (idu2exu_ecall             ),
+    .o_mret                            (idu2exu_mret              ),
   //lsu -> sram axi
   //write address channel  
     .M_AXI_AWADDR                      (LSU_SRAM_AXI_AWADDR       ),

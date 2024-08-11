@@ -26,6 +26,7 @@ module ysyx_23060124_WBU (
     output                              o_pc_update                 
 );
 
+//TODO: res and pc+Imm
 wire [32 - 1:0] pc;
 wire [32 - 1:0] res;
 wire [32 - 1:0] rs1;
@@ -52,15 +53,15 @@ assign mepc          =  i_pre_valid && o_pre_ready ? i_mepc      :  'b0;
 assign o_wbu_wen     =  i_pre_valid && o_pre_ready ? i_wen       :  1'b0;
 assign o_wbu_csr_wen =  i_pre_valid && o_pre_ready ? i_csr_wen   :  1'b0;
 
-assign o_rd_wdata = jal || jalr ? pc + 4 : res;
+assign o_rd_wdata = res;
+
 assign o_csr_rd  = res;
+
 assign o_pc_next =    jal ? (pc + imm) : 
                       (jalr ? (rs1 + imm) : 
                       (brch && res[0] ? pc + imm : 
                       (ecall ? mtvec :
                       (mret ? mepc : pc + 4))));
-
-
 
 always @(posedge clock or posedge reset) begin
   if(reset) begin
