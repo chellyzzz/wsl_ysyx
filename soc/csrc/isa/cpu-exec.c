@@ -43,7 +43,7 @@ static VerilatedVcdC* vcd;
 static word_t instr;
 extern bool wave_enable;
 
-#define MAX_DEADS 1000
+#define MAX_DEADS 10000
 bool dead_detector = true;
 int dead_cycles   = 0;
 
@@ -64,7 +64,7 @@ void reg_update(){
   ins_cnt ++;
   // if()
   if(dead_detector){
-    if(cpu.pc == top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next){
+    if(cpu.pc == top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_pc_next){
       dead_cycles ++;
     }else{
       dead_cycles = 0;
@@ -82,7 +82,7 @@ void reg_update(){
   cpu.csr.mstatus = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mstatus;
   cpu.csr.mepc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mepc;
   cpu.csr.mtvec = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next;
+  cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_pc_next;
   #ifdef PC_WAVE_START
   if(cpu.pc == PC_WAVE_START){
     wave_enable = true;
@@ -121,8 +121,8 @@ void verilator_sync_init(VerilatedContext* contextp_sdb, VysyxSoCFull* top_sdb, 
 void decode_pc(Decode* s){
   s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_pc_next;
   s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_pc_next + 4;
-  s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next;
-  s->isa.inst.val = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ins;
+  s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_pc_next;
+  s->isa.inst.val = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu2idu_ins;
   instr = s->isa.inst.val;
   #ifdef CONFIG_ITRACE
       disasm_pc(s);

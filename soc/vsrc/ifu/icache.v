@@ -56,7 +56,7 @@ module ysyx_23060124__icache #(
     output                              valid                       
 );
 
-localparam RINDEX_BITS = $clog2(BYTES_NUMS); //index = log2(CACHE_SIZE) = 4 = n
+localparam RINDEX = $clog2(BYTES_NUMS); //index = log2(CACHE_SIZE) = 4 = n
 localparam INDEX_BITS = $clog2(WAY_NUMS); //index = log2(CACHE_SIZE) = 2 = n
 localparam OFFSET_BITS = $clog2(BLOCK_SIZE); //offset = log2(BLOCK_SIZE) = 4 = m
 localparam TAG_BITS = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS; //tag = 32 - 4 - 2 = 26
@@ -69,7 +69,7 @@ wire                                    hit                        ;
 reg                                     INIT_AXI_TXN               ;
 reg                                     axi_arvalid                ;
 reg                                     axi_rready                 ;
-reg                    [   RINDEX_BITS-1:0]read_index                 ;
+reg                    [   RINDEX-1:0]  read_index                 ;
 reg                    [  31:0]         araddr                     ;
 /******************************nets*****************************/
     // AXI clock signal
@@ -99,7 +99,7 @@ wire                                    M_AXI_ARESETN              ;
     assign M_AXI_BREADY = 1'b0;
 
     //Read Address (AR)
-    assign M_AXI_ARADDR = {addr[31:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
+    assign M_AXI_ARADDR = {araddr[31:OFFSET_BITS], {OFFSET_BITS{1'b0}}};
     assign M_AXI_ARVALID    = axi_arvalid;
     assign M_AXI_ARID = 'b0;
     assign M_AXI_ARLEN = BLOCK_SIZE/4 - 1;
@@ -119,12 +119,12 @@ wire                                    M_AXI_ARESETN              ;
         else if(req) begin
             araddr <= addr;
         end
-        else if(M_AXI_RVALID && ~M_AXI_RREADY) begin
-            araddr <= araddr + 4;
+        else if(M_AXI_RLAST && M_AXI_RREADY) begin
+            araddr <= 32'b0;
         end
-        else if(M_AXI_RLAST) begin
+        else if(M_AXI_RLAST && (!hit)) begin
             araddr <= addr;
-        end                                                                                 
+        end                                                                                            
 	    else                                                             
 	      araddr <= araddr;                                      
 	  end                                                                
@@ -151,7 +151,10 @@ wire                                    M_AXI_ARESETN              ;
     else if (axi_arvalid && M_AXI_ARREADY)                                         
         begin                                                                        
         axi_arvalid <= 1'b0;                                                       
-        end                                                                          
+        end
+    else if(M_AXI_RLAST && M_AXI_RREADY && (!hit)) begin
+        axi_arvalid <= 1'b1;
+    end                                                                    
     // retain the previous value                                                   
     end                                                                              
 
@@ -208,8 +211,7 @@ reg                    [WAY_NUMS-1:0]   cache_valid                ;
 
     wire [TAG_BITS-1:0]   tag = M_AXI_ARADDR[ADDR_WIDTH-1:INDEX_BITS+OFFSET_BITS]; // tag = M_AXI_ARADDR[31:6]
     wire [INDEX_BITS-1:0] index = M_AXI_ARADDR[OFFSET_BITS+INDEX_BITS-1:OFFSET_BITS]; // index = M_AXI_ARADDR[4+2:4]
-    // wire [OFFSET_BITS-1:0] offset = M_AXI_ARADDR[OFFSET_BITS-1:0]; // offset = M_AXI_ARADDR[3:0]
-    wire [OFFSET_BITS-3:0] offset = addr[OFFSET_BITS-1:2];
+
 // Cache control logic 
 always @(posedge clk)
 begin
@@ -234,11 +236,14 @@ always @(posedge clk) begin
         end
 end
 
-assign valid =  hit || (M_AXI_RLAST && ~M_AXI_RREADY);
-// assign data =   valid ? ( (offset == 2'b11) ? M_AXI_RDATA : cache_data[index][offset]) :32'b0;
-assign data = hit ? cache_data[index][offset] : ((M_AXI_RLAST && ~M_AXI_RREADY) ? ( (offset == {{OFFSET_BITS-2}{1'b1}}) ? M_AXI_RDATA : cache_data[index][offset]) :32'b0);
+assign valid =  hit;
+assign data = hit ? cache_data[hit_index][hit_offset] :32'b0;
 
-assign hit  =  cache_valid[index] && cache_tag[index] == tag;
+wire [TAG_BITS-1:0]    hit_tag = addr[ADDR_WIDTH-1:INDEX_BITS+OFFSET_BITS]                           ;
+wire [INDEX_BITS-1:0]  hit_index = addr[OFFSET_BITS+INDEX_BITS-1:OFFSET_BITS]                           ;
+wire [OFFSET_BITS-3:0] hit_offset = addr[OFFSET_BITS-1:2]                           ;
+
+assign hit  =  cache_valid[hit_index] && cache_tag[hit_index] == hit_tag;
 
 
 // import "DPI-C" function void cache_hit ();

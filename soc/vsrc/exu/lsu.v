@@ -6,7 +6,7 @@ module ysyx_23060124_LSU
     input              [32 - 1:0]       alu_res                    ,
     input              [3 - 1:0]        load_opt                   ,
     input              [3 - 1:0]        store_opt                  ,
-    output reg         [32 - 1:0]       lsu_res                    ,
+    output             [32 - 1:0]       lsu_res                    ,
     //
     input                               i_load                     ,
     input                               i_store                    ,
@@ -327,7 +327,7 @@ always @(posedge M_AXI_ACLK)
 
     always @( posedge M_AXI_ACLK )
     begin
-        if ( M_AXI_ARESETN == 1'b0 )
+        if ( M_AXI_ARESETN == 1'b0)
         begin
             axi_rdata  <= 0;
         end 
@@ -342,25 +342,32 @@ always @(posedge M_AXI_ACLK)
 
 assign read_res = axi_rdata >> 8 * shift;
 
-always @(posedge clock) begin
-    case(load_opt)
-    LB: begin 
-      lsu_res <= {{24{read_res[7]}}, read_res[7:0]}; 
-    end
-    LH: begin 
-      lsu_res <= {{16{read_res[15]}}, read_res[15:0]}; 
-      end
-    LW: begin 
-      lsu_res <= read_res[31:0]; 
-    end
-    LBU: begin 
-        lsu_res <= {24'b0, read_res[7:0]};
-      end
-    LHU: begin 
-        lsu_res <= {{16'b0}, read_res[15:0]};
-      end
-    default: begin lsu_res <= 32'b0; end
-    endcase
-end
+// always @(posedge clock) begin
+//     case(load_opt)
+//     LB: begin 
+//       lsu_res <= {{24{read_res[7]}}, read_res[7:0]}; 
+//     end
+//     LH: begin 
+//       lsu_res <= {{16{read_res[15]}}, read_res[15:0]}; 
+//       end
+//     LW: begin 
+//       lsu_res <= read_res[31:0]; 
+//     end
+//     LBU: begin 
+//         lsu_res <= {24'b0, read_res[7:0]};
+//       end
+//     LHU: begin 
+//         lsu_res <= {{16'b0}, read_res[15:0]};
+//       end
+//     default: begin lsu_res <= 32'b0; end
+//     endcase
+// end
+
+assign lsu_res =  (load_opt == LB)  ? {{24{read_res[7]}}, read_res[7:0]}:
+                  (load_opt == LH)  ? {{16{read_res[15]}}, read_res[15:0]}:
+                  (load_opt == LW)  ? read_res[31:0]:
+                  (load_opt == LBU) ? {24'b0, read_res[7:0]}:
+                  (load_opt == LHU) ? {{16'b0}, read_res[15:0]}:
+                  32'b0;
 
 endmodule

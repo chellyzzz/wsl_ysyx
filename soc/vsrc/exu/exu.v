@@ -1,14 +1,19 @@
 module ysyx_23060124_EXU(
     input                               clock                      ,
     input                               i_rst_n                    ,
-    input              [  31:0]         alu_src1                   ,
-    input              [  31:0]         alu_src2                   ,
+  input csr_src_sel,
+  input [`ysyx_23060124_ISA_WIDTH - 1:0] src1,
+  input [`ysyx_23060124_ISA_WIDTH - 1:0] src2,
+  input [`ysyx_23060124_ISA_WIDTH - 1:0] csr_rs2,
+    input    
+    input              [  31:0]         lsu_src2                   ,
     input              [  31:0]         agu_src2                   ,
     input                               if_unsigned                ,
     //control signal
     input                               i_load                     ,
     input                               i_store                    ,
     input                               i_brch                     ,
+    input                               i_src_sel                  ,
 
     input              [  31:0]         i_pc                       ,
     input              [   2:0]         exu_opt                    ,
@@ -60,7 +65,7 @@ module ysyx_23060124_EXU(
     input                               i_post_ready               ,
     input                               i_pre_valid                ,
     output                              o_post_valid               ,
-    output reg                          o_pre_ready                 
+    output                              o_pre_ready                 
 );
 
 
@@ -77,19 +82,22 @@ wire                   [  31:0]         alu_res, lsu_res           ;
 wire                                    carry, brch_res            ;
 wire                                    lsu_post_valid             ;
 
+reg pre_ready;
 assign o_post_valid = lsu_post_valid;
+assign o_pre_ready =  (i_load || i_store)  ?  (M_AXI_RLAST && M_AXI_RREADY)||(M_AXI_BREADY)  : 
+                      1'b1;
 
 always @(posedge  clock or negedge i_rst_n) begin
   if(~i_rst_n) begin
-    o_pre_ready <= 1'b1;
+    pre_ready <= 1'b1;
   end
-  else if(i_pre_valid && ~o_pre_ready) begin
-    o_pre_ready <= 1'b1;
+  else if(i_load || i_store) begin
+    pre_ready <= 1'b0;
   end
-  else if(i_pre_valid && o_pre_ready) begin
-    o_pre_ready <= 1'b1;
+  else if(M_AXI_RLAST && M_AXI_RREADY) begin
+    pre_ready <= 1'b1;
   end
-  else o_pre_ready <= o_pre_ready;
+  else pre_ready <= pre_ready;
 end
 
 
@@ -110,7 +118,7 @@ ysyx_23060124_AGU exu_agu(
 ysyx_23060124_LSU exu_lsu(
     .clock                             (clock                     ),
     .i_rst_n                           (i_rst_n                   ),
-    .lsu_src2                          (alu_src2                  ),
+    .lsu_src2                          (lsu_src2                  ),
     .alu_res                           (alu_res                   ),
     .load_opt                          (load_opt                  ),
     .store_opt                         (store_opt                 ),

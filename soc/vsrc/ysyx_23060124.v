@@ -204,6 +204,10 @@ ysyx_23060124_RegisterFile regfile1(
     .waddr                             (wbu_rd_addr               ),
     .wdata                             (rd_wdata                  ),
     .wen                               (wbu_wen                   ),
+//
+    .exu_rd                            (idu2exu_rd                ),
+    .wbu_rd                            (wbu_rd_addr               ),
+//    
 
     .raddr1                            (addr_rs1                  ),
     .raddr2                            (addr_rs2                  ),
@@ -286,11 +290,10 @@ ysyx_23060124_IFU ifu1
     .clock                             (clock                     ),
     .rst_n_sync                        (rst_n_sync                ),
     .i_pc_update                       (pc_update_en              ),
-    .o_ins                             (ins                       ),
+    .ins                               (ins                       ),
   //ifu -> idu handshake
     .i_post_ready                      (idu2ifu_ready             ),
-    .o_post_valid                      (ifu2idu_valid             ),
-    .o_pc_next                         (ifu_pc_next               ),
+    .pc_next                           (ifu_pc_next               ),
   //cache -> ifu
     .cache_valid                       (icache_valid              ),
     .icache_ins                        (icache_ins                ),
@@ -298,9 +301,26 @@ ysyx_23060124_IFU ifu1
     .req_addr                          (req_addr                  ) 
 );
 
+wire [31:0] ifu2idu_ins;
+wire [31:0] ifu2idu_pc;
+ysyx_23060124_ifu_idu_regs ifu2idu_regs(
+    .i_pc                              (ifu_pc_next               ),
+    .o_pc                              (ifu2idu_pc                ),
+    .i_ins                             (ins                       ),
+    .o_ins                             (ifu2idu_ins               ),
+    .clock                             (clock                     ),
+    .reset                             (reset  || pc_update_en    ),
+
+    .i_cache_valid                     (icache_valid              ),
+    .i_pre_valid                       (pc_update_en              ),
+    .i_post_ready                      (idu2ifu_ready             ),
+    .o_post_valid                      (ifu2idu_valid             ) 
+);
+
+
 ysyx_23060124_IDU idu1(
     .clock                             (clock                     ),
-    .ins                               (ins                       ),
+    .ins                               (ifu2idu_ins               ),
     .reset                             (reset                     ),
 
     .o_imm                             (imm                       ),
@@ -326,10 +346,11 @@ ysyx_23060124_IDU idu1(
     .o_fence_i                         (fence_i                   )
 );
 
-wire                   [  31:0]         idu2exu_pc_next            ;
+wire                   [  31:0]         idu2exu_pc            ;
 wire                   [  31:0]         idu2exu_alu_rs1            ;
 wire                   [  31:0]         idu2exu_alu_rs2            ;
-wire                   [  31:0]         idu2exu_agu_rs2                ;
+wire                   [  31:0]         idu2exu_agu_rs2            ;
+wire                   [  31:0]         idu2exu_lsu_rs2            ;
 wire                   [   4:0]         idu2exu_rd                 ;
 wire                   [   2:0]         idu2exu_exu_opt            ;
 wire                   [   2:0]         idu2exu_load_opt           ;
@@ -346,20 +367,21 @@ wire                                    idu2exu_brch               ;
 wire                                    idu2exu_jal                ;
 wire                                    idu2exu_jalr               ;
 
-ysyx_23060124_idu_exu_regs idu2ifu_regs(
+ysyx_23060124_idu_exu_regs idu2exu_regs(
     .clock                             (clock                     ),
-    .reset                             (reset                     ),
+    .reset                             (reset || pc_update_en     ),
     .i_pre_valid                       (ifu2idu_valid             ),
     .i_post_ready                      (exu2idu_ready             ),
     .o_pre_ready                       (idu2ifu_ready             ),
     .o_post_valid                      (idu2exu_valid             ),
 
     .i_rf_valid                        (idu_vaild                 ),
-    .i_pc                              (ifu_pc_next               ),
+    .i_pc                              (ifu2idu_pc                ),
     .i_imm                             (imm                       ),
     .i_csr_addr                        (csr_addr                  ),
     .src1                              (rs1                       ),
     .src2                              (rs2                       ),
+ 
     .i_rd                              (addr_rd                   ),
     .csr_rs2                           (csr_rs2                   ),
     .csr_src_sel                       (csr_wen                   ),
@@ -380,10 +402,11 @@ ysyx_23060124_idu_exu_regs idu2ifu_regs(
     .i_jalr                            (jalr                      ),
     .i_fence_i                         (fence_i                   ),
     
-    .o_pc_next                         (idu2exu_pc_next           ),
+    .o_pc                              (idu2exu_pc                ),
     .o_alu_rs1                         (idu2exu_alu_rs1           ),
     .o_alu_rs2                         (idu2exu_alu_rs2           ),
     .o_agu_rs2                         (idu2exu_agu_rs2           ),
+    .o_lsu_rs2                         (idu2exu_lsu_rs2           ),
     .o_rd                              (idu2exu_rd                ),
     .o_exu_opt                         (idu2exu_exu_opt           ),
     .o_load_opt                        (idu2exu_load_opt          ),
@@ -407,12 +430,13 @@ ysyx_23060124_EXU exu1(
     .alu_src1                          (idu2exu_alu_rs1           ),
     .alu_src2                          (idu2exu_alu_rs2           ),
     .agu_src2                          (idu2exu_agu_rs2           ),
+    .lsu_src2                          (idu2exu_lsu_rs2           ),
     .if_unsigned                       (idu2exu_if_unsigned       ),
     //control signal
     .i_load                            (idu2exu_load              ),
     .i_store                           (idu2exu_store             ),
     .i_brch                            (idu2exu_brch              ),
-    .i_pc                              (idu2exu_pc_next           ),
+    .i_pc                              (idu2exu_pc           ),
 
     .exu_opt                           (idu2exu_exu_opt           ),
     .load_opt                          (idu2exu_load_opt          ),
@@ -479,7 +503,7 @@ wire                   [  31:0]         exu2wbu_res                ;
 
 ysyx_23060124_exu_wbu_regs exu_wbu_regs (
     .clock                             (clock                     ),
-    .reset                             (reset                     ),
+    .reset                             (reset || pc_update_en     ),
     .i_brch                            (idu2exu_brch              ),
     .i_jal                             (idu2exu_jal               ),
     .i_wen                             (idu2exu_wen               ),
@@ -507,7 +531,10 @@ ysyx_23060124_exu_wbu_regs exu_wbu_regs (
     .o_ecall                           (exu2wbu_ecall             ),
     .o_mepc                            (exu2wbu_mepc              ),
     .o_mtvec                           (exu2wbu_mtvec             ),
-    .o_res                             (exu2wbu_res               )
+    .o_res                             (exu2wbu_res               ),
+
+    .i_post_ready                       (wbu2exu_ready             ),
+    .o_post_valid                       (exu2wbu_valid             )
 );
 
 ysyx_23060124_WBU wbu1(

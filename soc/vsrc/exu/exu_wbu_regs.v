@@ -32,9 +32,10 @@ module ysyx_23060124_exu_wbu_regs (
     output reg         [  31:0]         o_mepc                     ,
     output reg         [  31:0]         o_mtvec                    ,
     //
-    output reg         [  31:0]         o_res                      
+    output reg         [  31:0]         o_res                      ,
+    input                               i_post_ready               ,
+    input                               o_post_valid                
 );
-
 
 always @(posedge clock or posedge reset) begin
     if(reset) begin
@@ -52,7 +53,7 @@ always @(posedge clock or posedge reset) begin
         o_mtvec     <= 'b0; 
         o_res       <= 'b0; 
     end
-    else begin
+    else if(i_post_ready && o_post_valid) begin
         o_pc_next   <= i_pc_next;
         o_csr_addr  <= i_csr_addr;
         o_rd_addr   <= i_rd_addr;
@@ -67,6 +68,20 @@ always @(posedge clock or posedge reset) begin
         o_mtvec     <= i_mtvec;
         o_res       <= i_res;
     end
-
+    else if(i_post_ready && ~o_post_valid) begin
+        o_pc_next   <= 'b0; 
+        o_csr_addr  <= 'b0; 
+        o_rd_addr   <= 'b0; 
+        o_wen       <= 'b0; 
+        o_csr_wen   <= 'b0; 
+        o_brch      <= 'b0; 
+        o_jal       <= 'b0; 
+        o_jalr      <= 'b0; 
+        o_mret      <= 'b0; 
+        o_ecall     <= 'b0; 
+        o_mepc      <= 'b0; 
+        o_mtvec     <= 'b0; 
+        o_res       <= 'b0; 
+    end
 end
 endmodule   
