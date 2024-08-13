@@ -8,6 +8,7 @@ module ysyx_23060124_exu_wbu_regs (
     //TODO: combine addr_rd and csr_addr into one input
     //TODO: i_csr_wen adn i_wen into one input
     input                               i_jalr                     ,
+    input                               i_ebreak                   ,
     input                               i_mret                     ,
     input                               i_ecall                    ,
     input              [  31:0]         i_mepc                     ,
@@ -31,8 +32,10 @@ module ysyx_23060124_exu_wbu_regs (
     output reg                          o_ecall                    ,
     output reg         [  31:0]         o_mepc                     ,
     output reg         [  31:0]         o_mtvec                    ,
+    output reg                          o_ebreak                   ,
     //
     output reg         [  31:0]         o_res                      ,
+    output reg                          o_next                     ,
     input                               i_post_ready               ,
     input                               o_post_valid                
 );
@@ -52,6 +55,8 @@ always @(posedge clock or posedge reset) begin
         o_mepc      <= 'b0; 
         o_mtvec     <= 'b0; 
         o_res       <= 'b0; 
+        o_ebreak    <= 'b0;
+        o_next      <= 'b0;
     end
     else if(i_post_ready && o_post_valid) begin
         o_pc_next   <= i_pc_next;
@@ -59,7 +64,8 @@ always @(posedge clock or posedge reset) begin
         o_rd_addr   <= i_rd_addr;
         o_wen       <= i_wen;
         o_csr_wen   <= i_csr_wen;
-        o_brch      <= i_brch && i_res[0];
+        // o_brch      <= i_brch && i_res[0];
+        o_brch      <= i_brch;
         o_jal       <= i_jal;
         o_jalr      <= i_jalr;
         o_mret      <= i_mret;
@@ -67,6 +73,8 @@ always @(posedge clock or posedge reset) begin
         o_mepc      <= i_mepc;
         o_mtvec     <= i_mtvec;
         o_res       <= i_res;
+        o_ebreak    <= i_ebreak;
+        o_next      <= 1'b1;
     end
     else if(i_post_ready && ~o_post_valid) begin
         o_pc_next   <= 'b0; 
@@ -82,6 +90,8 @@ always @(posedge clock or posedge reset) begin
         o_mepc      <= 'b0; 
         o_mtvec     <= 'b0; 
         o_res       <= 'b0; 
+        o_ebreak    <= 'b0;
+        o_next      <= 'b0;
     end
 end
 endmodule   

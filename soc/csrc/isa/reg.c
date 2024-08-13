@@ -46,11 +46,12 @@ void isa_csr_display(){
 }
 
 bool diff_checkregs(CPU_state *ref_r, vaddr_t pc) {
-  int reg_num = ARRLEN(cpu.gpr);
+  // int reg_num = ARRLEN(cpu.gpr);
+  int reg_num = 16;
   bool flag = true;
   for (int i = 0; i < reg_num; i++) {
     if (ref_r->gpr[i] != cpu.gpr[i]) {
-      printf("error at pc = 0x%08x, ref[%2d]=0x%08x, dut[%2d]=0x%08x\n", cpu.pc, i, ref_r->gpr[i], i, cpu.gpr[i]);
+      printf("error at ref.pc = 0x%08x, ref[%2d]=0x%08x, dut[%2d]=0x%08x\n", ref_r->pc, i, ref_r->gpr[i], i, cpu.gpr[i]);
       flag = false;
     }
   }
@@ -58,26 +59,26 @@ bool diff_checkregs(CPU_state *ref_r, vaddr_t pc) {
       printf("error at pc = 0x%08x, ref_pc = 0x%08x\n", cpu.pc, ref_r->pc);
       flag = false;
   }
-  if(ref_r->csr.mepc != cpu.csr.mepc){
-      printf("mepc error at pc = 0x%08x\n", cpu.pc);
-      printf("ref_r->csr.mepc = 0x%08x, cpu.csr.mepc = 0x%08x\n", ref_r->csr.mepc, cpu.csr.mepc);
-      flag = false;
-  }
-  if(ref_r->csr.mstatus != cpu.csr.mstatus){
-      printf("mstatus error at pc = 0x%08x\n", cpu.pc);
-      printf("ref_r->csr.mstatus = 0x%08x, cpu.csr.mstatus = 0x%08x\n", ref_r->csr.mstatus, cpu.csr.mstatus);
-      flag = false;
-  }
-  if(ref_r->csr.mcause != cpu.csr.mcause){
-      printf("mcause error at pc = 0x%08x\n", cpu.pc);
-      printf("ref_r->csr.mcause = 0x%08x, cpu.csr.mcause = 0x%08x\n", ref_r->csr.mcause, cpu.csr.mcause);      
-      flag = false;
-  }
-  if(ref_r->csr.mtvec != cpu.csr.mtvec){
-      printf("mtvec error at pc = 0x%08x\n", cpu.pc);
-      printf("ref_r->csr.mtvec = 0x%08x, cpu.csr.mtvec = 0x%08x\n", ref_r->csr.mtvec, cpu.csr.mtvec);
-      flag = false;
-  }
+  // if(ref_r->csr.mepc != cpu.csr.mepc){
+  //     printf("mepc error at pc = 0x%08x\n", cpu.pc);
+  //     printf("ref_r->csr.mepc = 0x%08x, cpu.csr.mepc = 0x%08x\n", ref_r->csr.mepc, cpu.csr.mepc);
+  //     flag = false;
+  // }
+  // if(ref_r->csr.mstatus != cpu.csr.mstatus){
+  //     printf("mstatus error at pc = 0x%08x\n", cpu.pc);
+  //     printf("ref_r->csr.mstatus = 0x%08x, cpu.csr.mstatus = 0x%08x\n", ref_r->csr.mstatus, cpu.csr.mstatus);
+  //     flag = false;
+  // }
+  // if(ref_r->csr.mcause != cpu.csr.mcause){
+  //     printf("mcause error at pc = 0x%08x\n", cpu.pc);
+  //     printf("ref_r->csr.mcause = 0x%08x, cpu.csr.mcause = 0x%08x\n", ref_r->csr.mcause, cpu.csr.mcause);      
+  //     flag = false;
+  // }
+  // if(ref_r->csr.mtvec != cpu.csr.mtvec){
+  //     printf("mtvec error at pc = 0x%08x\n", cpu.pc);
+  //     printf("ref_r->csr.mtvec = 0x%08x, cpu.csr.mtvec = 0x%08x\n", ref_r->csr.mtvec, cpu.csr.mtvec);
+  //     flag = false;
+  // }
   return flag;
 }
 

@@ -1,46 +1,46 @@
-module ysyx_23060124_LSU 
+module ysyx_23060124_LSU
 (
     input                               clock                      ,
     input                               i_rst_n                    ,
-    input              [32 - 1:0]       lsu_src2                   ,
-    input              [32 - 1:0]       alu_res                    ,
-    input              [3 - 1:0]        load_opt                   ,
-    input              [3 - 1:0]        store_opt                  ,
-    output             [32 - 1:0]       lsu_res                    ,
+    input              [  31:0]         lsu_src2                   ,
+    input              [  31:0]         alu_res                    ,
+    input              [   2:0]         load_opt                   ,
+    input              [   2:0]         store_opt                  ,
+    output             [  31:0]         lsu_res                    ,
     //
     input                               i_load                     ,
     input                               i_store                    ,
 
     //axi interface
     //write address channel  
-    output             [32-1 : 0]       M_AXI_AWADDR               ,
+    output             [  31:0]         M_AXI_AWADDR               ,
     output                              M_AXI_AWVALID              ,
     input                               M_AXI_AWREADY              ,
     output             [   7:0]         M_AXI_AWLEN                ,
     output             [   2:0]         M_AXI_AWSIZE               ,
     output             [   1:0]         M_AXI_AWBURST              ,
-    output             [4-1 : 0]        M_AXI_AWID                 ,
+    output             [   3:0]         M_AXI_AWID                 ,
 
     //write data channel
     output                              M_AXI_WVALID               ,
     input                               M_AXI_WREADY               ,
-    output             [32-1 : 0]       M_AXI_WDATA                ,
-    output             [4-1 : 0]        M_AXI_WSTRB                ,
+    output             [  31:0]         M_AXI_WDATA                ,
+    output             [   3:0]         M_AXI_WSTRB                ,
     output                              M_AXI_WLAST                ,
 
     //read data channel
-    input              [32-1 : 0]       M_AXI_RDATA                ,
+    input              [  31:0]         M_AXI_RDATA                ,
     input              [   1:0]         M_AXI_RRESP                ,
     input                               M_AXI_RVALID               ,
     output                              M_AXI_RREADY               ,
-    input              [4-1 : 0]        M_AXI_RID                  ,
+    input              [   3:0]         M_AXI_RID                  ,
     input                               M_AXI_RLAST                ,
 
     //read adress channel
-    output             [32-1 : 0]       M_AXI_ARADDR               ,
+    output             [  31:0]         M_AXI_ARADDR               ,
     output                              M_AXI_ARVALID              ,
     input                               M_AXI_ARREADY              ,
-    output             [4-1 : 0]        M_AXI_ARID                 ,
+    output             [   3:0]         M_AXI_ARID                 ,
     output             [   7:0]         M_AXI_ARLEN                ,
     output             [   2:0]         M_AXI_ARSIZE               ,
     output             [   1:0]         M_AXI_ARBURST              ,
@@ -49,7 +49,7 @@ module ysyx_23060124_LSU
     input              [   1:0]         M_AXI_BRESP                ,
     input                               M_AXI_BVALID               ,
     output                              M_AXI_BREADY               ,
-    input              [4-1 : 0]        M_AXI_BID                  ,
+    input              [   3:0]         M_AXI_BID                  ,
   //lsu -> wbu handshake
     input                               o_pre_ready                ,
     input                               i_pre_valid                ,
@@ -67,8 +67,8 @@ parameter SB = 3'b000;
 parameter SH = 3'b001;
 parameter SW = 3'b010;
  
-reg [32 - 1 : 0]  store_addr, store_src2;
-reg [3 - 1 : 0]   store_opt_next;
+reg [31 : 0]  store_addr, store_src2;
+reg [2 : 0]   store_opt_next;
 
 
 wire                   [   3:0]         wstrb                      ;
@@ -83,10 +83,10 @@ reg                                     axi_wvalid                 ;
 reg                                     axi_wlast                  ;
 reg                                     axi_arvalid                ;
 reg                                     axi_rready                 ;
-reg                    [32-1:0]         axi_rdata                  ;
+reg                    [  31:0]         axi_rdata                  ;
 reg                                     axi_bready                 ;
-reg                    [32-1 : 0]       axi_awaddr                 ;
-reg                    [32-1 : 0]       axi_araddr                 ;
+reg                    [  31:0]         axi_awaddr                 ;
+reg                    [  31:0]         axi_araddr                 ;
 reg                                     init_txn_ff                ;
 reg                                     init_txn_ff2               ;
 reg                                     init_txn_edge              ;
@@ -95,12 +95,11 @@ reg                                     o_pre_ready_d1             ;
 wire                                    init_txn_pulse             ;
 wire                                    is_ls, not_ls              ;
 wire                   [   1:0]         shift                      ;
-wire                   [32-1:0]         read_res                   ;
 
 assign M_AXI_ARESETN = i_rst_n; 
 assign M_AXI_ACLK = clock;
-assign M_AXI_AWADDR    = alu_res;
-assign M_AXI_WDATA = lsu_src2 << 8*shift;
+assign M_AXI_AWADDR = alu_res;
+assign M_AXI_WDATA  = lsu_src2 << 8*shift;
 
 assign M_AXI_AWVALID	= axi_awvalid;
 assign M_AXI_AWLEN = 'b0;
@@ -121,13 +120,13 @@ assign M_AXI_WLAST = axi_wlast;
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
 //Read Address (AR)
-assign M_AXI_ARADDR	= alu_res;
+assign M_AXI_ARADDR = alu_res;
 assign M_AXI_ARVALID	= axi_arvalid;
 assign M_AXI_ARLEN = 'b0;
 assign M_AXI_ARSIZE =   (load_opt == LW ) ? 3'b010 :
                         (load_opt == LH || load_opt == LHU) ? 3'b001 :
                         (load_opt == LB || load_opt == LBU) ? 3'b000 : 3'b010;
-
+// assign M_AXI_ARSIZE = 3'b010;
 assign M_AXI_ARBURST = 2'b00;
 assign M_AXI_ARID = 0;
 //Read and Read Response (R)
@@ -158,7 +157,7 @@ always @(posedge clock)begin
       o_post_valid <= 1'b0; 
     end
     else begin
-      if(is_ls && (M_AXI_BREADY || M_AXI_RLAST))begin
+      if(is_ls && (M_AXI_BREADY || (M_AXI_RLAST && M_AXI_RREADY)))begin
         o_post_valid <= 1'b1;
       end
       else if(not_ls && o_pre_ready_d1 && i_pre_valid)begin
@@ -339,35 +338,21 @@ always @(posedge M_AXI_ACLK)
             end   
         end
     end
+// 8*shift = {shift, 3'b0}
+wire                   [  31:0]         res                        ;
 
-assign read_res = axi_rdata >> 8 * shift;
+// assign res = M_AXI_RDATA >> {shift, 3'b0};
+assign res =  (shift == 2'b00 ) ? M_AXI_RDATA:
+              (shift == 2'b01 ) ? {8'b0, M_AXI_RDATA[31:8]}:
+              (shift == 2'b10 ) ? {16'b0, M_AXI_RDATA[31:16]}:
+              (shift == 2'b11 ) ? {24'b0, M_AXI_RDATA[31:24]}:
+              32'b0;
 
-// always @(posedge clock) begin
-//     case(load_opt)
-//     LB: begin 
-//       lsu_res <= {{24{read_res[7]}}, read_res[7:0]}; 
-//     end
-//     LH: begin 
-//       lsu_res <= {{16{read_res[15]}}, read_res[15:0]}; 
-//       end
-//     LW: begin 
-//       lsu_res <= read_res[31:0]; 
-//     end
-//     LBU: begin 
-//         lsu_res <= {24'b0, read_res[7:0]};
-//       end
-//     LHU: begin 
-//         lsu_res <= {{16'b0}, read_res[15:0]};
-//       end
-//     default: begin lsu_res <= 32'b0; end
-//     endcase
-// end
-
-assign lsu_res =  (load_opt == LB)  ? {{24{read_res[7]}}, read_res[7:0]}:
-                  (load_opt == LH)  ? {{16{read_res[15]}}, read_res[15:0]}:
-                  (load_opt == LW)  ? read_res[31:0]:
-                  (load_opt == LBU) ? {24'b0, read_res[7:0]}:
-                  (load_opt == LHU) ? {{16'b0}, read_res[15:0]}:
+assign lsu_res =  (load_opt == LB)  ? {{24{res[7]}}, res[7:0]}:
+                  (load_opt == LH)  ? {{16{res[15]}}, res[15:0]}:
+                  (load_opt == LW)  ? res[31:0]:
+                  (load_opt == LBU) ? {24'b0, res[7:0]}:
+                  (load_opt == LHU) ? {{16'b0}, res[15:0]}:
                   32'b0;
 
 endmodule

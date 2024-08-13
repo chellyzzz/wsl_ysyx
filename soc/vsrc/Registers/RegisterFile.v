@@ -52,6 +52,8 @@ end
   // assign idu_vaild = scoreboard[raddr1[3:0]] && scoreboard[raddr2[3:0]];
 //TODO: not a5
   assign o_mret_a5 = i_ecall ? rf[15] : 0;
+
+  wire valid1, valid2;
   assign valid1 = (raddr1 != 5'b0)&&((raddr1 == exu_rd)||(raddr1 == wbu_rd));
   assign valid2 = (raddr2 != 5'b0)&&((raddr2 == exu_rd)||(raddr2 == wbu_rd));
 assign idu_vaild = ~(valid1 || valid2) ;

@@ -32,7 +32,7 @@ uint64_t cycles = 0;
 uint64_t ins_cnt = 0;
 
 #define MAX_INST_TO_PRINT 11
-#define PC_WAVE_START 0xa0000048
+#define PC_WAVE_START 0x30000018
 #ifdef CONFIG_WP
 bool wp_check();
 #endif
@@ -82,7 +82,7 @@ void reg_update(){
   cpu.csr.mstatus = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mstatus;
   cpu.csr.mepc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mepc;
   cpu.csr.mtvec = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_pc_next;
+  cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__pc_next;
   #ifdef PC_WAVE_START
   if(cpu.pc == PC_WAVE_START){
     wave_enable = true;
@@ -147,9 +147,8 @@ void exec_once(Decode *s){
     #ifdef CONFIG_NVBOARD
     nvboard_update();
     #endif
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2idu_ready){
-      reg_update();
-    }
+    reg_update();
+    
     if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu1__DOT__lsu_post_valid){
       decode_pc(s);
     }
@@ -165,7 +164,7 @@ void exec_once(Decode *s){
 static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
         int flag = 0;
         #ifdef CONFIG_DIFFTEST
-        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2idu_ready){
+        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu1__DOT__diff){
           if(!difftest_step(s->pc, s->dnpc)) {
             flag = 1;
           }
@@ -259,9 +258,9 @@ void cpu_exec(uint64_t n){
     return;
 }
 bool if_end(){
-  return instr == 0x100073;
+  return (top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_ebreak == 1);
 }
 
 int hit_goodtrap(){
-  return (cpu.gpr[10] == 0 && instr == 0x100073);
+  return if_end() && (cpu.gpr[10] == 0);
 }

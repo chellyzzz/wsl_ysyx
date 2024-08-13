@@ -2,8 +2,8 @@ module ysyx_23060124__icache #(
     parameter                           ADDR_WIDTH = 32            ,
     parameter                           DATA_WIDTH = 32            ,
     parameter                           CACHE_SIZE = 16            ,// Number of cache blocks 
-    parameter                           WAY_NUMS = 4               ,// Block size in bytes
-    parameter                           BYTES_NUMS = 4             ,
+    parameter                           WAY_NUMS = 2               ,// Block size in bytes
+    parameter                           BYTES_NUMS = 8             ,
     parameter                           BLOCK_SIZE = 4*BYTES_NUMS   // Block size in bytes e.g 4bytes
 )
 (
@@ -49,20 +49,18 @@ module ysyx_23060124__icache #(
     input  wire                         clk                        ,
     input  wire                         rst_n_sync                 ,
     input  wire        [ADDR_WIDTH-1:0] addr                       ,
-    input  wire                         req                        ,// 请求信号
     output wire        [DATA_WIDTH-1:0] data                       ,
 
     input  wire                         fence_i                    ,
-    output                              valid                       
+    output                              hit                       
 );
 
 localparam RINDEX = $clog2(BYTES_NUMS); //index = log2(CACHE_SIZE) = 4 = n
-localparam INDEX_BITS = $clog2(WAY_NUMS); //index = log2(CACHE_SIZE) = 2 = n
-localparam OFFSET_BITS = $clog2(BLOCK_SIZE); //offset = log2(BLOCK_SIZE) = 4 = m
-localparam TAG_BITS = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS; //tag = 32 - 4 - 2 = 26
+localparam INDEX_BITS = $clog2(WAY_NUMS); //index = log2(CACHE_SIZE) = 1
+localparam OFFSET_BITS = $clog2(BLOCK_SIZE); //offset = log2(BLOCK_SIZE) = 5 = m
+// localparam TAG_BITS = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS; //tag = 32 - 5  -1 = 26
+localparam TAG_BITS =ADDR_WIDTH - OFFSET_BITS;
 
-//ifu->icache
-wire                                    hit                        ;
 // AXI
 /******************************regs*****************************/
     // Initiate AXI transactions
@@ -71,6 +69,7 @@ reg                                     axi_arvalid                ;
 reg                                     axi_rready                 ;
 reg                    [   RINDEX-1:0]  read_index                 ;
 reg                    [  31:0]         araddr                     ;
+reg                                     idle                       ;
 /******************************nets*****************************/
     // AXI clock signal
 wire                                    M_AXI_ACLK                 ;
@@ -108,32 +107,35 @@ wire                                    M_AXI_ARESETN              ;
     //Read and Read Response (R)
     assign M_AXI_RREADY    = axi_rready;
     //Example design I/O
-
 // Next address after ARREADY indicates previous address acceptance  
+
+
 	  always @(posedge M_AXI_ACLK)                                       
 	  begin                                                              
 	    if (M_AXI_ARESETN == 0)                                          
 	      begin                                                          
-	        araddr <= 32'b0;                                           
+	        araddr <= 32'b0;    
+            idle <= 1'b1;                                       
 	      end
-        else if(req) begin
+        else if(!hit && idle) begin
             araddr <= addr;
+            idle <= 1'b0;
         end
         else if(M_AXI_RLAST && M_AXI_RREADY) begin
-            araddr <= 32'b0;
-        end
-        else if(M_AXI_RLAST && (!hit)) begin
-            araddr <= addr;
-        end                                                                                            
+            if(hit) begin
+                araddr <= 32'b0;
+                idle <= 1'b1;
+            end
+            else araddr <= addr;
+        end                                                                                  
 	    else                                                             
-	      araddr <= araddr;                                      
+	      araddr <= araddr;     
 	  end                                                                
-
 
 //----------------------------
 //Read Address Channel
 //----------------------------       
-    // A new axi_arvalid is asserted when there is a valid read address              
+    // A new axi_arvalid is asserted when there is a hit read address              
     // available by the master. start_single_read triggers a new read                
     // transaction                                                                   
     always @(posedge M_AXI_ACLK)                                                     
@@ -143,25 +145,26 @@ wire                                    M_AXI_ARESETN              ;
         axi_arvalid <= 1'b0;                                                       
         end                                                                          
     //Signal a new read address command is available by user logic                 
-    else if ((!hit) && req)                                                    
+    else if (!hit && idle)                                                    
         begin                                                                        
-        axi_arvalid <= 1'b1;                                                       
+        axi_arvalid <= 1'b1;     
         end                                                                          
     //RAddress accepted by interconnect/slave (issue of M_AXI_ARREADY by slave)    
     else if (axi_arvalid && M_AXI_ARREADY)                                         
         begin                                                                        
-        axi_arvalid <= 1'b0;                                                       
+        axi_arvalid <= 1'b0;
         end
     else if(M_AXI_RLAST && M_AXI_RREADY && (!hit)) begin
         axi_arvalid <= 1'b1;
-    end                                                                    
+    end       
+    else axi_arvalid <= axi_arvalid;                                                             
     // retain the previous value                                                   
     end                                                                              
 
     // read index
     always @(posedge M_AXI_ACLK)                                                     
     begin                                                                            
-    if ((!hit) && req)                                                   
+    if (M_AXI_ARVALID && M_AXI_ARREADY)                                                   
         begin                                                                        
         read_index <= 'b0;                                                       
         end                                                                          
@@ -177,7 +180,7 @@ wire                                    M_AXI_ARESETN              ;
 
 //The Read Data channel returns the results of the read request 
 //The master will accept the read data by asserting axi_rready
-//when there is a valid read data available.
+//when there is a hit read data available.
 //While not necessary per spec, it is advisable to reset READY signals in
 //case of differing reset latencies between master/slave.
 
@@ -209,7 +212,7 @@ reg                    [DATA_WIDTH-1:0] cache_data  [WAY_NUMS-1:0][BYTES_NUMS-1:
 reg                    [TAG_BITS-1:0]   cache_tag   [WAY_NUMS-1:0]                           ;
 reg                    [WAY_NUMS-1:0]   cache_valid                ;
 
-    wire [TAG_BITS-1:0]   tag = M_AXI_ARADDR[ADDR_WIDTH-1:INDEX_BITS+OFFSET_BITS]; // tag = M_AXI_ARADDR[31:6]
+    wire [TAG_BITS-1:0]   tag = M_AXI_ARADDR[ADDR_WIDTH-1:OFFSET_BITS]; // tag = M_AXI_ARADDR[31:6]
     wire [INDEX_BITS-1:0] index = M_AXI_ARADDR[OFFSET_BITS+INDEX_BITS-1:OFFSET_BITS]; // index = M_AXI_ARADDR[4+2:4]
 
 // Cache control logic 
@@ -219,9 +222,11 @@ begin
         begin
             cache_valid <= 'b0;
         end
-    
+    else if(M_AXI_ARVALID && M_AXI_ARREADY) begin
+        cache_tag[index]   <= tag;
+        cache_valid[index] <= 1'b0;                                                       
+    end
     else if(M_AXI_RLAST && ~M_AXI_RREADY) begin
-        cache_tag[index] <= tag;
         cache_valid[index] <= 1'b1;
     end
     else if(fence_i) begin
@@ -236,26 +241,28 @@ always @(posedge clk) begin
         end
 end
 
-assign valid =  hit;
-assign data = hit ? cache_data[hit_index][hit_offset] :32'b0;
 
-wire [TAG_BITS-1:0]    hit_tag = addr[ADDR_WIDTH-1:INDEX_BITS+OFFSET_BITS]                           ;
-wire [INDEX_BITS-1:0]  hit_index = addr[OFFSET_BITS+INDEX_BITS-1:OFFSET_BITS]                           ;
-wire [OFFSET_BITS-3:0] hit_offset = addr[OFFSET_BITS-1:2]                           ;
+//TODO: offset
+//TODO: hit_tag
+assign data = hit ? cache_data[hit_index][hit_offset[OFFSET_BITS-1:2]] :32'b0;
+
+wire [TAG_BITS-1:0]    hit_tag    = addr[ADDR_WIDTH-1 : OFFSET_BITS];
+wire [INDEX_BITS-1:0]  hit_index  = addr[OFFSET_BITS+INDEX_BITS-1 : OFFSET_BITS];
+wire [OFFSET_BITS-1:0] hit_offset = addr[OFFSET_BITS-1:0];
 
 assign hit  =  cache_valid[hit_index] && cache_tag[hit_index] == hit_tag;
 
 
-// import "DPI-C" function void cache_hit ();
-// import "DPI-C" function void cache_miss ();
+import "DPI-C" function void cache_hit ();
+import "DPI-C" function void cache_miss ();
 
-// always @(posedge clk) begin
-//   if(hit && req) begin
-//     cache_hit();
-//   end
-//   else if(~hit && req) begin
-//     cache_miss();
-//   end
-// end
+always @(posedge clk) begin
+  if(hit) begin
+    cache_hit();
+  end
+  else if(~hit) begin
+    cache_miss();
+  end
+end
 
 endmodule

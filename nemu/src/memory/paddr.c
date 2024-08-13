@@ -43,9 +43,17 @@ uint8_t* guest_to_host(paddr_t paddr) {
     return sram + paddr - SRAM_BASE;
   }
   else if(in_sdram(paddr)) {
+    if(paddr == 0xa0000b46){
+      uint8_t data = *(uint8_t *)(sdram + paddr - SDRAM_BASE);
+      printf("sdram data = 0x%x at 0x%x\n", data, paddr);
+    }
     return sdram + paddr - SDRAM_BASE;
   }
   else if(in_flash(paddr)) {
+    if(paddr >= 0x30000c14 && paddr <= 0x30000c14 + 0x4){
+      uint8_t data = *(uint8_t *)(flash + paddr - FLASH_BASE);
+      printf("flash data = 0x%x at 0x%x\n", data, paddr);
+    }
     return flash + paddr - FLASH_BASE;
   }
   else if(in_uart(paddr)) {

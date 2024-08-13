@@ -24,6 +24,7 @@ module ysyx_23060124_IDU (
     output                              o_brch                     ,
     output                              o_jal                      ,
     output                              o_jalr                     ,
+    output                              o_ebreak                   ,
     output                              o_fence_i                  
 );
 /************************parameter**********************/
@@ -101,7 +102,7 @@ assign o_wen = (opcode == TYPE_I     || opcode == TYPE_I_LOAD ||
                 opcode == TYPE_JALR  || opcode == TYPE_EBRK) ? 1'b1 : 1'b0;
 
 assign o_csr_wen =  (opcode == TYPE_EBRK ) ? 1'b1 : 1'b0;
-                 
+              
 assign o_if_unsigned =  (opcode == TYPE_I && func3 == SRL_SRA && func7 == 7'b0100000) ? 1'b1 :
                         (opcode == TYPE_R && func3 == SRL_SRA && func7 == 7'b0100000) ? 1'b1 :
                         (opcode == TYPE_R && func3 == ADD     && func7 == 7'b0100000) ? 1'b1 :
@@ -149,5 +150,5 @@ assign o_brch       = (opcode == TYPE_B)      ?  'b1: 'b0;
 assign o_jal        = (opcode == TYPE_JAL)    ?  'b1: 'b0;
 assign o_jalr       = (opcode == TYPE_JALR)   ?  'b1: 'b0;
 assign o_fence_i    = (opcode == TYPE_FENCE)&&(func3 == 3'b001) ? 'b1: 'b0;
-
+assign o_ebreak     = (ins == 32'h00100073);
 endmodule

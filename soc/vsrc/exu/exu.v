@@ -1,19 +1,21 @@
 module ysyx_23060124_EXU(
     input                               clock                      ,
     input                               i_rst_n                    ,
-  input csr_src_sel,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] src1,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] src2,
-  input [`ysyx_23060124_ISA_WIDTH - 1:0] csr_rs2,
-    input    
+    input              [32 - 1:0]       src1                       ,
+    input              [32 - 1:0]       src2                       ,
+    input              [  31:0]         i_imm                      ,
+    input              [32 - 1:0]       i_csr_src2                 ,
+    input                               i_csr_sel                  ,
     input              [  31:0]         lsu_src2                   ,
-    input              [  31:0]         agu_src2                   ,
     input                               if_unsigned                ,
     //control signal
     input                               i_load                     ,
     input                               i_store                    ,
     input                               i_brch                     ,
-    input                               i_src_sel                  ,
+    input                               i_jal                      ,
+    input                               i_jalr                     ,
+    input              [   1:0]         i_src_sel                  ,
+
 
     input              [  31:0]         i_pc                       ,
     input              [   2:0]         exu_opt                    ,
@@ -78,13 +80,62 @@ parameter BLTU  = 3'b110;
 parameter BGEU  = 3'b111;
 
 
+//EXU_SRC_SEL
+localparam EXU_SEL_REG = 2'b00;
+localparam EXU_SEL_IMM = 2'b01;
+localparam EXU_SEL_PC4 = 2'b10;
+localparam EXU_SEL_PCI = 2'b11;
+
+wire                   [  31:0]         alu_src1                   ;
+wire                   [  31:0]         alu_src2                   ;
+wire                   [  31:0]         sel_src2                   ;
+
+wire                   [  31:0]         agu_src1                   ;
+wire                   [  31:0]         agu_src2                   ;
+
+
+assign sel_src2 = i_csr_sel ? i_csr_src2 : src2;
+assign alu_src1 = (i_src_sel == EXU_SEL_REG) ? src1 :
+                  (i_src_sel == EXU_SEL_IMM) ? src1 :
+                  (i_src_sel == EXU_SEL_PC4) ? i_pc :
+                  (i_src_sel == EXU_SEL_PCI) ? i_pc : 32'b0;
+
+assign alu_src2 = (i_src_sel == EXU_SEL_REG) ? sel_src2 :
+                  (i_src_sel == EXU_SEL_IMM) ? i_imm :
+                  (i_src_sel == EXU_SEL_PC4) ? 32'h4 :
+                  (i_src_sel == EXU_SEL_PCI) ? i_imm : 32'b0;
+
+// assign o_pc_next =     i_jal ? (pc + i_imm) : 
+//                       (i_jalr ? (src1 + i_imm) : 
+//                       (i_brch && res[0] ? pc + i_imm : 
+//                       (i_ecall ? mtvec :
+//                       (i_mret ? mepc : pc + 4))));
+
+assign o_pc_next =    i_jal   ? i_pc + i_imm : 
+                      i_jalr  ? src1 + i_imm : 
+                      i_brch && o_res[0] ? i_pc + i_imm : 
+                      i_pc + 4;
+                      
+// assign agu_src2 =   i_brch ? i_imm :
+//                     i_jal  ? i_imm  :
+//                     i_jalr ? src1   :
+//                     i_pc;
+
+// assign agu_src2 =   i_brch ? i_imm :
+//                     i_jal  ? i_imm  :
+//                     i_jalr ? src1   :
+//                     32'h4;
+
 wire                   [  31:0]         alu_res, lsu_res           ;
 wire                                    carry, brch_res            ;
 wire                                    lsu_post_valid             ;
 
 reg pre_ready;
-assign o_post_valid = lsu_post_valid;
-assign o_pre_ready =  (i_load || i_store)  ?  (M_AXI_RLAST && M_AXI_RREADY)||(M_AXI_BREADY)  : 
+reg post_valid;
+assign o_post_valid =  (i_load || i_store)  ?  (M_AXI_RLAST && M_AXI_RREADY)||(M_AXI_BREADY) : 
+                      post_valid;
+
+assign o_pre_ready =  (i_load || i_store)  ?  (M_AXI_RLAST && M_AXI_RREADY)||(M_AXI_BREADY) : 
                       1'b1;
 
 always @(posedge  clock or negedge i_rst_n) begin
@@ -100,6 +151,17 @@ always @(posedge  clock or negedge i_rst_n) begin
   else pre_ready <= pre_ready;
 end
 
+always @(posedge clock) begin
+    if(~i_rst_n) begin
+        post_valid <= 1'b0;   
+    end
+    else if(i_pre_valid) begin
+        post_valid <= 1'b1;
+    end
+    else if(~i_pre_valid)begin
+        post_valid <= 1'b0;
+    end
+end
 
 ysyx_23060124_ALU exu_alu(
     .src1                              (alu_src1                  ),
@@ -109,11 +171,11 @@ ysyx_23060124_ALU exu_alu(
     .res                               (alu_res                   ) 
 );
 
-ysyx_23060124_AGU exu_agu(
-    .src1                              (i_pc                      ),
-    .src2                              (agu_src2                  ),
-    .res                               (o_pc_next                 ) 
-);
+// ysyx_23060124_AGU exu_agu(
+//     .src1                              (i_pc                      ),
+//     .src2                              (agu_src2                  ),
+//     .res                               (o_pc_next                 ) 
+// );
 
 ysyx_23060124_LSU exu_lsu(
     .clock                             (clock                     ),

@@ -19,7 +19,7 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 static bool is_skip_ref = false;
 static int skip_dut_nr_inst = 0;
 static bool is_skip_ref_delay = false;
-static int skip_nr = 1;
+static int skip_nr = 0;
 // this is used to let ref skip instructions which
 // can not produce consistent behavior with NEMU
 void difftest_skip_ref() {
@@ -116,20 +116,20 @@ bool difftest_step(vaddr_t pc, vaddr_t npc){
   // return reg_eqa;
   CPU_state ref_r;
 
-  if(skip_nr > 0){
-    skip_nr --;
-    return 1;
-  }
+  // if(skip_nr > 0){
+  //   skip_nr --;
+  //   return 1;
+  // }
 
-  if(cpu.pc == 0xa0000010 || cpu.pc == 0xa0000030 || cpu.pc == 0xa0000034){
-    is_skip_ref = true;
-  }
+  // if(cpu.pc == 0xa0000010 || cpu.pc == 0xa0000030 || cpu.pc == 0xa0000034){
+  //   is_skip_ref = true;
+  // }
 
-  if(is_skip_ref){
-    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, 0);
-    is_skip_ref = false;
-    return 1;
-  }
+  // if(is_skip_ref){
+  //   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, 0);
+  //   is_skip_ref = false;
+  //   return 1;
+  // }
   
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT, 0);
