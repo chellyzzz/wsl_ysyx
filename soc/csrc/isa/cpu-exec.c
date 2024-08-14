@@ -32,7 +32,7 @@ uint64_t cycles = 0;
 uint64_t ins_cnt = 0;
 
 #define MAX_INST_TO_PRINT 11
-#define PC_WAVE_START 0xa001736c
+#define PC_WAVE_START 0xa0015f08
 #ifdef CONFIG_WP
 bool wp_check();
 #endif

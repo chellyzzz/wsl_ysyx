@@ -7,6 +7,8 @@ module ysyx_23060124_EXU(
     input              [32 - 1:0]       i_csr_src2                 ,
     input                               i_csr_sel                  ,
     input              [  31:0]         lsu_src2                   ,
+
+    
     input                               if_unsigned                ,
     //control signal
     input                               i_load                     ,

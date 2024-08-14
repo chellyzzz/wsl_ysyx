@@ -16,9 +16,9 @@ module ysyx_23060124_idu_exu_regs (
     input              [   4:0]         i_rd                       ,
     input              [  31:0]         csr_rs2                    ,
     input                               csr_src_sel                ,
-    /***TODO: 
+    /***TODO:
     combine exu_opt, load_opt, store_opt, brch_opt into one input
-    combine wen, csr_wen into one input 
+    combine wen, csr_wen into one input
     combine csr_addr rd into one input
     ***/
     input              [   2:0]         i_exu_opt                  ,
@@ -39,8 +39,8 @@ module ysyx_23060124_idu_exu_regs (
     input                               i_fence_i                  ,
     input                               i_ebreak                   ,
     
-    input              [  31:0]         i_mepc                       ,
-    input              [  31:0]         i_mtvec                      ,
+    input              [  31:0]         i_mepc                     ,
+    input              [  31:0]         i_mtvec                    ,
 
     output reg         [  31:0]         o_pc                       ,
     output reg         [  31:0]         o_src1                     ,
@@ -67,11 +67,11 @@ module ysyx_23060124_idu_exu_regs (
     output reg                          o_jal                      ,
     output reg                          o_ebreak                   ,
     //TODO:
-    output reg         [  31:0]         o_mepc                       ,
-    output reg         [  31:0]         o_mtvec                      ,
+    output reg         [  31:0]         o_mepc                     ,
+    output reg         [  31:0]         o_mtvec                    ,
     //
     output reg                          o_csr_sel                  ,
-    output reg                          o_jalr                     
+    output reg                          o_jalr                      
 );
 
 
