@@ -42,12 +42,9 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 void yield() {
 
 #if defined(__riscv_e) || defined(CONFIG_TARGET_SHARE)
-  asm volatile("li a5, 0xb; ecall");
+  asm volatile("li a5, -1; ecall");
 #else
-
-  // asm volatile("li a7, -1; ecall");
-  asm volatile("li a7, 0xb; ecall");
-
+  asm volatile("li a7, -1; ecall");
 #endif
 }
 

@@ -13,6 +13,7 @@ module ysyx_23060124_IDU (
     output             [   2:0]         o_load_opt                 ,
     output             [   2:0]         o_store_opt                ,
     output             [   2:0]         o_brch_opt                 ,
+
     output                              o_wen                      ,
     output                              o_csr_wen                  ,
     output             [   1:0]         o_src_sel                  ,
@@ -94,6 +95,8 @@ assign o_rs1 = (opcode == TYPE_I || opcode == TYPE_I_LOAD ||
 assign o_rs2 = (opcode == TYPE_R || opcode == TYPE_B ||
                 opcode == TYPE_S) ? rs2 : 5'b0;
 
+
+//TODO: TYPE_I
 assign o_csr_addr = (opcode == TYPE_EBRK) ? ins[31:20] : 12'b0;
 
 assign o_wen = (opcode == TYPE_I     || opcode == TYPE_I_LOAD ||
@@ -101,7 +104,7 @@ assign o_wen = (opcode == TYPE_I     || opcode == TYPE_I_LOAD ||
                 opcode == TYPE_AUIPC || opcode == TYPE_JAL ||
                 opcode == TYPE_JALR  || opcode == TYPE_EBRK) ? 1'b1 : 1'b0;
 
-assign o_csr_wen =  (opcode == TYPE_EBRK ) ? 1'b1 : 1'b0;
+assign o_csr_wen =  (opcode == TYPE_EBRK && |func3) ? 1'b1 : 1'b0;
               
 assign o_if_unsigned =  (opcode == TYPE_I && func3 == SRL_SRA && func7 == 7'b0100000) ? 1'b1 :
                         (opcode == TYPE_R && func3 == SRL_SRA && func7 == 7'b0100000) ? 1'b1 :
@@ -142,8 +145,9 @@ assign o_src_sel =    (opcode == TYPE_I)       ? EXU_SEL_IMM:
                       (opcode == TYPE_EBRK && func3 == FUN3_CSRRS) ? EXU_SEL_REG:
                       'b0;
                     
-assign o_ecall      = (opcode == TYPE_EBRK)&&(rs2 == RS2_ECALL) &&(func3 == FUN3_EXCPT) ? 'b1: 'b0;
-assign o_mret       = (opcode == TYPE_EBRK)&&(rs2 == RS2_MRET ) &&(func3 == FUN3_EXCPT) ? 'b1: 'b0;
+assign o_ecall      = (ins == 32'h00000073);
+assign o_mret       = (ins == 32'h30200073);
+
 assign o_load       = (opcode == TYPE_I_LOAD) ?  'b1: 'b0;
 assign o_store      = (opcode == TYPE_S)      ?  'b1: 'b0;
 assign o_brch       = (opcode == TYPE_B)      ?  'b1: 'b0;
@@ -151,4 +155,5 @@ assign o_jal        = (opcode == TYPE_JAL)    ?  'b1: 'b0;
 assign o_jalr       = (opcode == TYPE_JALR)   ?  'b1: 'b0;
 assign o_fence_i    = (opcode == TYPE_FENCE)&&(func3 == 3'b001) ? 'b1: 'b0;
 assign o_ebreak     = (ins == 32'h00100073);
+
 endmodule

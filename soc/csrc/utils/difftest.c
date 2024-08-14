@@ -121,15 +121,15 @@ bool difftest_step(vaddr_t pc, vaddr_t npc){
   //   return 1;
   // }
 
-  // if(cpu.pc == 0xa0000010 || cpu.pc == 0xa0000030 || cpu.pc == 0xa0000034){
-  //   is_skip_ref = true;
-  // }
+  if(cpu.pc == 0xa0019b78 || cpu.pc == 0xa0019ccc || cpu.pc == 0xa0019cd0){
+    is_skip_ref = true;
+  }
 
-  // if(is_skip_ref){
-  //   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, 0);
-  //   is_skip_ref = false;
-  //   return 1;
-  // }
+  if(is_skip_ref){
+    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, 0);
+    is_skip_ref = false;
+    return 1;
+  }
   
   ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT, 0);

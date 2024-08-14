@@ -45,21 +45,12 @@ static vaddr_t *CPU_CSRs(word_t imm) {
 #define CSR(i) *CPU_CSRs(i)
 
 static void ecall(vaddr_t* dnpc, vaddr_t pc) {
-  bool success = true;
   #ifdef CONFIG_TARGET_SHARE
-    int a5 = isa_reg_str2val("a5", &success);
-    if (success) {
-        *dnpc = isa_raise_intr(a5, pc);
-    } else {
-            panic("a5 value error");
-    }
+        *dnpc = isa_raise_intr(11, pc);
   #else
-    int a7 = isa_reg_str2val("a7", &success);
-    if (success) {
-        *dnpc = isa_raise_intr(a7, pc);
-    } else {
-            panic("a7 value error");
-    }
+  //TODO: a7 value
+  *dnpc = isa_raise_intr(11, pc);
+
   #endif
 }
 

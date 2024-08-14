@@ -38,6 +38,9 @@ module ysyx_23060124_idu_exu_regs (
     input                               i_jalr                     ,
     input                               i_fence_i                  ,
     input                               i_ebreak                   ,
+    
+    input              [  31:0]         i_mepc                       ,
+    input              [  31:0]         i_mtvec                      ,
 
     output reg         [  31:0]         o_pc                       ,
     output reg         [  31:0]         o_src1                     ,
@@ -46,6 +49,8 @@ module ysyx_23060124_idu_exu_regs (
     output reg         [  31:0]         o_csr_src                  ,
     output reg         [  31:0]         o_lsu_rs2                  ,
     output reg         [   4:0]         o_rd                       ,
+    //
+    output reg         [  11:0]         o_csr_addr                 ,
     output reg         [   2:0]         o_exu_opt                  ,
     output reg         [   2:0]         o_load_opt                 ,
     output reg         [   2:0]         o_store_opt                ,
@@ -61,9 +66,13 @@ module ysyx_23060124_idu_exu_regs (
     output reg                          o_brch                     ,
     output reg                          o_jal                      ,
     output reg                          o_ebreak                   ,
+    //TODO:
+    output reg         [  31:0]         o_mepc                       ,
+    output reg         [  31:0]         o_mtvec                      ,
+    //
+    output reg                          o_csr_sel                  ,
     output reg                          o_jalr                     
 );
-
 
 
 reg                                     pre_ready                  ;
@@ -117,6 +126,13 @@ always @(posedge clock or posedge reset) begin
         o_jalr <= 1'b0;
         o_src_sel <= 2'b0;
         o_ebreak <= 1'b0;
+        //
+        o_csr_sel <= 1'b0;
+        o_csr_addr <= 12'b0;
+        //
+        o_mepc <= 32'b0;
+        o_mtvec <= 32'b0;
+
     end
     else if(i_post_ready && o_post_valid) begin
         o_pc <= i_pc;
@@ -142,6 +158,12 @@ always @(posedge clock or posedge reset) begin
         o_jalr <= i_jalr;
         o_src_sel <= i_src_sel;
         o_ebreak <= i_ebreak;
+        o_csr_sel <= csr_src_sel;
+        o_csr_addr <= i_csr_addr;
+        //
+        o_mepc  <= i_mepc;
+        o_mtvec <= i_mtvec;
+
     end
     else if(i_post_ready && ~o_post_valid) begin
         o_pc <= 32'b0;
@@ -167,6 +189,12 @@ always @(posedge clock or posedge reset) begin
         o_jalr <= 1'b0;
         o_src_sel <= 2'b0;
         o_ebreak <= 1'b0;
+        //
+        o_csr_sel <= 1'b0;
+        o_csr_addr <= 12'b0;
+        //
+        o_mepc <= 32'b0;
+        o_mtvec <= 32'b0;
     end
 end
 

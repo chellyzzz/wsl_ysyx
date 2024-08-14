@@ -15,7 +15,11 @@ module ysyx_23060124_EXU(
     input                               i_jal                      ,
     input                               i_jalr                     ,
     input              [   1:0]         i_src_sel                  ,
-
+    //ecall and mret
+    input                               i_ecall                    ,
+    input                               i_mret                     ,
+    input              [  31:0]         i_mepc                     ,
+    input              [  31:0]         i_mtvec                    ,
 
     input              [  31:0]         i_pc                       ,
     input              [   2:0]         exu_opt                    ,
@@ -114,6 +118,8 @@ assign alu_src2 = (i_src_sel == EXU_SEL_REG) ? sel_src2 :
 assign o_pc_next =    i_jal   ? i_pc + i_imm : 
                       i_jalr  ? src1 + i_imm : 
                       i_brch && o_res[0] ? i_pc + i_imm : 
+                      i_ecall ? i_mtvec :
+                      i_mret  ? i_mepc :
                       i_pc + 4;
                       
 // assign agu_src2 =   i_brch ? i_imm :

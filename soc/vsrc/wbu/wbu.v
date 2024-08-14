@@ -3,8 +3,8 @@ module ysyx_23060124_WBU (
     input                               reset                      ,
     input                               i_pre_valid                ,
     input                               i_wen                      ,
-    input              [   4:0]         i_rd_addr                    ,
-    input              [  11:0]         i_csr_addr                   ,
+    input              [   4:0]         i_rd_addr                  ,
+    input              [  11:0]         i_csr_addr                 ,
     input                               i_csr_wen                  ,
     input                               i_brch                     ,
     input                               i_jal                      ,
@@ -44,8 +44,8 @@ assign o_csr_addr =  i_csr_addr;
 assign pc_next    =   i_jal     ? i_pc_next : 
                       i_jalr    ? i_pc_next : 
                       i_brch && i_res[0]  ? i_pc_next : 
-                      i_ecall   ? i_mtvec :
-                      i_mret    ? i_mepc  : 
+                      i_ecall   ? i_pc_next :
+                      i_mret    ? i_pc_next  : 
                       i_pc_next;
 
 always @(posedge clock or posedge reset) begin
