@@ -1,16 +1,14 @@
 module ysyx_23060124_LSU
 (
     input                               clock                      ,
-    input                               i_rst_n                    ,
-    input              [  31:0]         lsu_src2                   ,
+    input                               reset                     ,
+    input              [  31:0]         store_src                  ,
     input              [  31:0]         alu_res                    ,
-    input              [   2:0]         load_opt                   ,
-    input              [   2:0]         store_opt                  ,
-    output             [  31:0]         lsu_res                    ,
+    input              [   2:0]         exu_opt                    ,
+    output reg         [  31:0]         load_res                   ,
     //
     input                               i_load                     ,
     input                               i_store                    ,
-
     //axi interface
     //write address channel  
     output             [  31:0]         M_AXI_AWADDR               ,
@@ -52,11 +50,10 @@ module ysyx_23060124_LSU
     input              [   3:0]         M_AXI_BID                  ,
   //lsu -> wbu handshake
     input                               o_pre_ready                ,
-    input                               i_pre_valid                ,
-    output reg                          o_post_valid                
+    input                               i_pre_valid                
 );
 /************parameter************/
-//LSU_OPT
+//exu_opt
 parameter LB  = 3'b000;
 parameter LH  = 3'b001;
 parameter LW  = 3'b010;
@@ -67,15 +64,9 @@ parameter SB = 3'b000;
 parameter SH = 3'b001;
 parameter SW = 3'b010;
  
-reg [31 : 0]  store_addr, store_src2;
-reg [2 : 0]   store_opt_next;
-
-
 wire                   [   3:0]         wstrb                      ;
 // Initiate AXI transactions
 wire                                    INIT_AXI_TXN               ;
-wire                                    M_AXI_ACLK                 ;
-wire                                    M_AXI_ARESETN              ;
 
 // AXI4LITE signals
 reg                                     axi_awvalid                ;
@@ -85,8 +76,9 @@ reg                                     axi_arvalid                ;
 reg                                     axi_rready                 ;
 reg                    [  31:0]         axi_rdata                  ;
 reg                                     axi_bready                 ;
-reg                    [  31:0]         axi_awaddr                 ;
-reg                    [  31:0]         axi_araddr                 ;
+//combine awaddr araddr to 1
+reg                    [  31:0]         axi_axaddr                 ;
+
 reg                                     init_txn_ff                ;
 reg                                     init_txn_ff2               ;
 reg                                     init_txn_edge              ;
@@ -96,55 +88,54 @@ wire                                    init_txn_pulse             ;
 wire                                    is_ls, not_ls              ;
 wire                   [   1:0]         shift                      ;
 
-assign M_AXI_ARESETN = i_rst_n; 
-assign M_AXI_ACLK = clock;
-assign M_AXI_AWADDR = alu_res;
-assign M_AXI_WDATA  = lsu_src2 << 8*shift;
+assign M_AXI_AWADDR = axi_axaddr;
+assign M_AXI_WDATA  = store_src << 8*shift;
 
 assign M_AXI_AWVALID	= axi_awvalid;
 assign M_AXI_AWLEN = 'b0;
-assign M_AXI_AWSIZE =   (store_opt == SW) ? 3'b010 :
-                        (store_opt == SH) ? 3'b001 :
-                        (store_opt == SB) ? 3'b000 : 3'b010;
+assign M_AXI_AWSIZE =   (exu_opt == SW) ? 3'b010 :
+                        (exu_opt == SH) ? 3'b001 :
+                        (exu_opt == SB) ? 3'b000 : 3'b010;
 assign M_AXI_AWID = 0;
 assign M_AXI_AWBURST = 2'b00;
 //Write Data(W)
 assign M_AXI_WVALID	= axi_wvalid;
 //Set all byte strobes in this example
-assign wstrb =  (store_opt == SB) ? 4'b0001 :
-                (store_opt == SH) ? 4'b0011 :
-                (store_opt == SW) ? 4'b1111 : 4'b0000;
+assign wstrb =  (exu_opt == SB) ? 4'b0001 :
+                (exu_opt == SH) ? 4'b0011 :
+                (exu_opt == SW) ? 4'b1111 : 4'b0000;
 assign M_AXI_WSTRB = wstrb << shift;
 assign M_AXI_WLAST = axi_wlast;
 
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
 //Read Address (AR)
-assign M_AXI_ARADDR = alu_res;
+assign M_AXI_ARADDR = axi_axaddr;
 assign M_AXI_ARVALID	= axi_arvalid;
 assign M_AXI_ARLEN = 'b0;
-assign M_AXI_ARSIZE =   (load_opt == LW ) ? 3'b010 :
-                        (load_opt == LH || load_opt == LHU) ? 3'b001 :
-                        (load_opt == LB || load_opt == LBU) ? 3'b000 : 3'b010;
+assign M_AXI_ARSIZE =   (exu_opt == LW ) ? 3'b010 :
+                        (exu_opt == LH || exu_opt == LHU) ? 3'b001 :
+                        (exu_opt == LB || exu_opt == LBU) ? 3'b000 : 3'b010;
+                        
 // assign M_AXI_ARSIZE = 3'b010;
 assign M_AXI_ARBURST = 2'b00;
 assign M_AXI_ARID = 0;
 //Read and Read Response (R)
 assign M_AXI_RREADY	= axi_rready;
 //Example design I/O
-assign init_txn_pulse	= ~i_rst_n ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
-assign INIT_AXI_TXN = ~i_rst_n ? 1'b1 : (o_pre_ready_d1 && is_ls ? 1'b1 : 1'b0);
+assign init_txn_pulse	= reset ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
+assign INIT_AXI_TXN = reset ? 1'b1 : (o_pre_ready_d1 && is_ls ? 1'b1 : 1'b0);
 assign is_ls = |i_load  || |i_store;
 assign not_ls = ~is_ls;
 wire txn_pulse_load;
 wire txn_pulse_store;
-assign txn_pulse_load = |i_load && init_txn_pulse;
-assign txn_pulse_store = |i_store && init_txn_pulse;  
+assign txn_pulse_load   = |i_load && init_txn_pulse;
+assign txn_pulse_store  = |i_store && init_txn_pulse;  
 
 assign shift = alu_res[1:0];
 
 always @(posedge clock)begin
-    if(i_rst_n == 1'b0)begin
+    if(reset)begin
       o_pre_ready_d1 <= 1'b0; 
     end
     else begin
@@ -152,28 +143,11 @@ always @(posedge clock)begin
     end
 end
 
-always @(posedge clock)begin
-    if(i_rst_n == 1'b0)begin
-      o_post_valid <= 1'b0; 
-    end
-    else begin
-      if(is_ls && (M_AXI_BREADY || (M_AXI_RLAST && M_AXI_RREADY)))begin
-        o_post_valid <= 1'b1;
-      end
-      else if(not_ls && o_pre_ready_d1 && i_pre_valid)begin
-        o_post_valid <= 1'b1;
-      end
-      else begin
-        o_post_valid <= 1'b0;
-      end
-    end
-end
-
 //Generate a pulse to initiate AXI transaction.
-always @(posedge M_AXI_ACLK)										      
+always @(posedge clock)										      
     begin                                                                        
     // Initiates AXI transaction delay    
-    if (M_AXI_ARESETN == 0 )                                                   
+    if (reset)                                                   
         begin                                                                    
         init_txn_ff <= 1'b0;                                                   
         init_txn_ff2 <= 1'b0;                                                   
@@ -181,17 +155,16 @@ always @(posedge M_AXI_ACLK)
     else                                                                       
         begin  
         init_txn_ff <= INIT_AXI_TXN;
-        init_txn_ff2 <= init_txn_ff;                                                                 
+        init_txn_ff2 <= init_txn_ff;
+        axi_axaddr <= alu_res;
         end                                                                      
     end     
 	//--------------------
 	//Write Address Channel
 	//--------------------
-	  always @(posedge M_AXI_ACLK)										      
-	  begin                                                                        
-	    //Only VALID signals must be deasserted during reset per AXI spec          
-	    //Consider inverting then registering active-low reset for higher fmax     
-	    if (M_AXI_ARESETN == 0)                                                   
+	  always @(posedge clock)										      
+	  begin                                                                         
+	    if (reset)                                                   
 	      begin                                                                    
 	        axi_awvalid <= 1'b0;                                                   
 	      end                                                                      
@@ -200,7 +173,7 @@ always @(posedge M_AXI_ACLK)
 	      begin                                                                    
 	        if (txn_pulse_store == 1'b1)                                                
 	          begin                                                                
-	            axi_awvalid <= 1'b1;                                               
+	            axi_awvalid <= 1'b1;
 	          end                                                                  
 	     //Address accepted by interconnect/slave (issue of M_AXI_AWREADY by slave)
 	        else if (M_AXI_AWREADY && axi_awvalid)                                 
@@ -218,9 +191,9 @@ always @(posedge M_AXI_ACLK)
 	//The data generation is speific to the example design, and 
 	//so only the WVALID/WREADY handshake is shown here
 
-	   always @(posedge M_AXI_ACLK)                                        
+	   always @(posedge clock)                                        
 	   begin                                                                         
-	     if (M_AXI_ARESETN == 0)                                                    
+	     if (reset)                                                    
 	       begin                                                                     
 	         axi_wvalid <= 1'b0;       
            axi_wlast <= 1'b1;                                              
@@ -242,9 +215,9 @@ always @(posedge M_AXI_ACLK)
 	//Write Response (B) Channel
 	//----------------------------
 
-	  always @(posedge M_AXI_ACLK)                                    
+	  always @(posedge clock)                                    
 	  begin                                                                
-	    if (M_AXI_ARESETN == 0)                                           
+	    if (reset)                                           
 	      begin                                                            
 	        axi_bready <= 1'b0;                                            
 	      end                                                              
@@ -271,16 +244,16 @@ always @(posedge M_AXI_ACLK)
     // A new axi_arvalid is asserted when there is a valid read address              
     // available by the master. start_single_read triggers a new read                
     // transaction                                                                   
-    always @(posedge M_AXI_ACLK)                                                     
+    always @(posedge clock)                                                     
     begin                                                                            
-    if (M_AXI_ARESETN == 0 )                                                   
+    if (reset)                                                   
         begin                                                                        
         axi_arvalid <= 1'b0;                                                       
         end                                                                          
     //Signal a new read address command is available by user logic                 
     else if (txn_pulse_load == 1'b1)                                                    
         begin                                                                        
-        axi_arvalid <= 1'b1;                                                       
+        axi_arvalid <= 1'b1;  
         end                                                                          
     //RAddress accepted by interconnect/slave (issue of M_AXI_ARREADY by slave)    
     else if (axi_arvalid && M_AXI_ARREADY)                                         
@@ -297,13 +270,13 @@ always @(posedge M_AXI_ACLK)
 //The Read Data channel returns the results of the read request 
 //The master will accept the read data by asserting axi_rready
 //when there is a valid read data available.
-//While not necessary per spec, it is advisable to reset READY signals in
-//case of differing reset latencies between master/slave.
+//While not necessary per spec, it is advisable to resetREADY signals in
+//case of differing resetlatencies between master/slave.
 
-    always @(posedge M_AXI_ACLK)                                    
+    always @(posedge clock)                                    
     begin                                                                 
-    // if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)    
-    if (M_AXI_ARESETN == 0)                                                                                    
+    // if (reset|| init_txn_pulse == 1'b1)    
+    if (reset)                                                                                    
         begin                                                             
         axi_rready <= 1'b0;                                             
         end                                                               
@@ -324,9 +297,9 @@ always @(posedge M_AXI_ACLK)
 // wire mst_reg_rden;
 // assign mst_reg_rden = M_AXI_RVALID && ~axi_rready;
 
-    always @( posedge M_AXI_ACLK )
+    always @(posedge clock )
     begin
-        if ( M_AXI_ARESETN == 1'b0)
+        if (reset)
         begin
             axi_rdata  <= 0;
         end 
@@ -334,25 +307,32 @@ always @(posedge M_AXI_ACLK)
         begin    
             if (M_AXI_RVALID && ~axi_rready)
             begin
-                axi_rdata <= M_AXI_RDATA;     // register read data
+              case(shift)
+                2'b00: axi_rdata <= M_AXI_RDATA;
+                2'b01: axi_rdata <= {8'b0, M_AXI_RDATA[31:8]};
+                2'b10: axi_rdata <= {16'b0, M_AXI_RDATA[31:16]};
+                2'b11: axi_rdata <= {24'b0, M_AXI_RDATA[31:24]};
+                default: axi_rdata <= M_AXI_RDATA;
+            endcase
             end   
         end
     end
-// 8*shift = {shift, 3'b0}
-wire                   [  31:0]         res                        ;
 
-// assign res = M_AXI_RDATA >> {shift, 3'b0};
-assign res =  (shift == 2'b00 ) ? M_AXI_RDATA:
-              (shift == 2'b01 ) ? {8'b0, M_AXI_RDATA[31:8]}:
-              (shift == 2'b10 ) ? {16'b0, M_AXI_RDATA[31:16]}:
-              (shift == 2'b11 ) ? {24'b0, M_AXI_RDATA[31:24]}:
-              32'b0;
+// assign load_res =   (exu_opt == LB)  ? {{24{axi_rdata[7]}}, axi_rdata[7:0]}:
+//                     (exu_opt == LH)  ? {{16{axi_rdata[15]}}, axi_rdata[15:0]}:
+//                     (exu_opt == LW)  ? axi_rdata[31:0]:
+//                     (exu_opt == LBU) ? {24'b0, axi_rdata[7:0]}:
+//                     (exu_opt == LHU) ? {{16'b0}, axi_rdata[15:0]}:
+//                     32'b0;
 
-assign lsu_res =  (load_opt == LB)  ? {{24{res[7]}}, res[7:0]}:
-                  (load_opt == LH)  ? {{16{res[15]}}, res[15:0]}:
-                  (load_opt == LW)  ? res[31:0]:
-                  (load_opt == LBU) ? {24'b0, res[7:0]}:
-                  (load_opt == LHU) ? {{16'b0}, res[15:0]}:
-                  32'b0;
-
+always @(*) begin
+  case(exu_opt)
+    LB  : load_res = {{24{axi_rdata[7]}}, axi_rdata[7:0]};
+    LH  : load_res = {{16{axi_rdata[15]}}, axi_rdata[15:0]};
+    LW  : load_res = axi_rdata[31:0];
+    LBU : load_res = {24'b0, axi_rdata[7:0]};
+    LHU : load_res = {{16'b0}, axi_rdata[15:0]};
+    default: load_res = 32'b0;
+  endcase
+end
 endmodule

@@ -1,9 +1,9 @@
 module ysyx_23060124_ALU (
-    input              [32-1:0]         src1                       ,
-    input              [32-1:0]         src2                       ,
-    input                               if_unsigned                ,
-    input              [3-1:0]          opt                        ,
-    output             [32-1:0]         res                        
+    input              [  31:0]         src1                       ,
+    input              [  31:0]         src2                       ,
+    input                               shamt                      ,
+    input              [   2:0]         opt                        ,
+    output             [  31:0]         res                         
 );
 /***************parameter***************/
 parameter ADD =  3'b000;
@@ -24,19 +24,24 @@ wire [31:0] sll_res;
 wire [31:0] srl_res;
 wire [31:0] slt_res;
 wire [31:0] sltu_res;
-wire [63:0] temp;
-
+wire [63:0] arithmetic_shift;
+wire [31:0] logical_shift;
+wire [31:0] minus_res;
+wire [31:0] add_tmp;
 //TODO: combine add and sub
-assign temp = {{{32{src1[31]}},src1} >> src2[4:0]};
-assign add_res = if_unsigned ? src1 - src2 : src1 + src2;
-assign and_res = src1 & src2;
-assign or_res  = src1 | src2;
-assign xor_res = src1 ^ src2;
-assign sll_res = src1 << src2[4:0];
-assign srl_res = if_unsigned ? temp[31:0] : src1 >>> src2[4:0];
-assign slt_res = (src1[31] != src2[31]) ? (src1[31] ? 32'b1 : 32'b0) : ((src1 < src2) ? 32'b1 : 32'b0);
-assign sltu_res = ({1'b0, src1} < {1'b0, src2}) ? 32'b1 : 32'b0;
+assign arithmetic_shift = {{{32{src1[31]}},src1} >> src2[4:0]};
+assign logical_shift = src1 >> src2[4:0];
 
+assign add_tmp  = src1 + src2;
+assign minus_res    = src1 - src2;
+assign add_res      = shamt ? minus_res : add_tmp;
+assign and_res      = src1 & src2;
+assign or_res       = src1 | src2;
+assign xor_res      = src1 ^ src2;
+assign sll_res      = src1 << src2[4:0];
+assign srl_res      = shamt ? arithmetic_shift[31:0] : logical_shift;
+assign slt_res      = (src1[31] != src2[31]) ? (src1[31] ? 32'b1 : 32'b0) : ((src1 < src2) ? 32'b1 : 32'b0);
+assign sltu_res     = ({1'b0, src1} < {1'b0, src2}) ? 32'b1 : 32'b0;
 
 assign res = (opt == ADD) ? add_res :
              (opt == AND) ? and_res :
@@ -45,6 +50,7 @@ assign res = (opt == ADD) ? add_res :
              (opt == SLL) ? sll_res :
              (opt == SRL) ? srl_res :
              (opt == SLT) ? slt_res :
-             (opt == SLTU)? sltu_res: 32'b0;
+             (opt == SLTU)? sltu_res: 
+             32'b0;
 
 endmodule

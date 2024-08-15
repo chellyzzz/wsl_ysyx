@@ -11,16 +11,15 @@ module ysyx_23060124_exu_wbu_regs (
     input                               i_ebreak                   ,
     input                               i_mret                     ,
     input                               i_ecall                    ,
-    input              [  31:0]         i_mepc                     ,
-    input              [  31:0]         i_mtvec                    ,
+
     input              [  31:0]         i_res                      ,
     input              [  31:0]         i_pc_next                  ,
     input              [  11:0]         i_csr_addr                 ,
-    input              [   4:0]         i_rd_addr                  ,
+    input              [   3:0]         i_rd_addr                  ,
 
     output reg         [  31:0]         o_pc_next                  ,
     output reg         [  11:0]         o_csr_addr                 ,
-    output reg         [   4:0]         o_rd_addr                  , 
+    output reg         [   3:0]         o_rd_addr                  , 
     //
     output reg                          o_wen                      ,
     output reg                          o_csr_wen                  ,
@@ -30,8 +29,6 @@ module ysyx_23060124_exu_wbu_regs (
     output reg                          o_jalr                     ,
     output reg                          o_mret                     ,
     output reg                          o_ecall                    ,
-    output reg         [  31:0]         o_mepc                     ,
-    output reg         [  31:0]         o_mtvec                    ,
     output reg                          o_ebreak                   ,
     //
     output reg         [  31:0]         o_res                      ,
@@ -51,9 +48,7 @@ always @(posedge clock or posedge reset) begin
         o_jal       <= 'b0; 
         o_jalr      <= 'b0; 
         o_mret      <= 'b0; 
-        o_ecall     <= 'b0; 
-        o_mepc      <= 'b0; 
-        o_mtvec     <= 'b0; 
+        o_ecall     <= 'b0;  
         o_res       <= 'b0; 
         o_ebreak    <= 'b0;
         o_next      <= 'b0;
@@ -64,14 +59,11 @@ always @(posedge clock or posedge reset) begin
         o_rd_addr   <= i_rd_addr;
         o_wen       <= i_wen;
         o_csr_wen   <= i_csr_wen;
-        // o_brch      <= i_brch && i_res[0];
         o_brch      <= i_brch;
         o_jal       <= i_jal;
         o_jalr      <= i_jalr;
         o_mret      <= i_mret;
         o_ecall     <= i_ecall;
-        o_mepc      <= i_mepc;
-        o_mtvec     <= i_mtvec;
         o_res       <= i_res;
         o_ebreak    <= i_ebreak;
         o_next      <= 1'b1;
@@ -87,8 +79,6 @@ always @(posedge clock or posedge reset) begin
         o_jalr      <= 'b0; 
         o_mret      <= 'b0; 
         o_ecall     <= 'b0; 
-        o_mepc      <= 'b0; 
-        o_mtvec     <= 'b0; 
         o_res       <= 'b0; 
         o_ebreak    <= 'b0;
         o_next      <= 'b0;

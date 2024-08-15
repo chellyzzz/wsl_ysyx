@@ -28,6 +28,7 @@ always @(posedge  clock) begin
         mstatus <= 32'b0;
         mepc <= 32'b0;
         mcause <= 32'd11;
+        mtvec <= 32'b0;
     end
     else if(i_ecall)begin
         mepc    <= i_pc;
@@ -45,17 +46,6 @@ always @(posedge  clock) begin
         // mstatus[7] <= 1'b1;
         // mstatus[12:11] <= 2'b0;
     end
-    else begin
-        mepc <= mepc;
-        mcause <= mcause;
-        mstatus <= mstatus;
-    end
-end
-
-always @(posedge clock) begin
-    if(reset) begin
-        mtvec <= 32'b0;
-    end
     else if (i_csr_wen) begin 
         case (i_csr_waddr)
             12'h300: mstatus    <= i_csr_wdata;
@@ -68,6 +58,9 @@ always @(posedge clock) begin
     end
     else begin
         mtvec <= mtvec;
+        mepc <= mepc;
+        mcause <= mcause;
+        mstatus <= mstatus;
     end
 end
 

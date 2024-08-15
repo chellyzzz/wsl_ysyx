@@ -23,7 +23,7 @@
 
 
 static int is_batch_mode = false;
-bool wave_enable = false;
+bool wave_enable = true;
 void init_regex();
 #ifdef CONFIG_WP
 void init_wp_pool();

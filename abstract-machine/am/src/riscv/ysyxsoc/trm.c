@@ -63,7 +63,6 @@ void printf_ysyx() {
 
 void _trm_init() {
   uart_init();
-  //TODO:
   printf_ysyx();
   int ret = main(mainargs);
   halt(ret);

@@ -46,20 +46,19 @@ module ysyx_23060124__icache #(
     output                              M_AXI_BREADY               ,
     input              [   3:0]         M_AXI_BID                  ,
 
-    input  wire                         clk                        ,
-    input  wire                         rst_n_sync                 ,
-    input  wire        [ADDR_WIDTH-1:0] addr                       ,
-    output wire        [DATA_WIDTH-1:0] data                       ,
+    input                               clk                        ,
+    input                               rst_n_sync                 ,
+    input              [ADDR_WIDTH-1:0] addr                       ,
+    output             [DATA_WIDTH-1:0] data                       ,
 
-    input  wire                         fence_i                    ,
-    output                              hit                       
+    input                               fence_i                    ,
+    output                              hit                         
 );
 
-localparam RINDEX = $clog2(BYTES_NUMS); //index = log2(CACHE_SIZE) = 4 = n
+localparam RINDEX = $clog2(BYTES_NUMS); //index = log2(CACHE_SIZE) = 3 = n
 localparam INDEX_BITS = $clog2(WAY_NUMS); //index = log2(CACHE_SIZE) = 1
 localparam OFFSET_BITS = $clog2(BLOCK_SIZE); //offset = log2(BLOCK_SIZE) = 5 = m
-// localparam TAG_BITS = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS; //tag = 32 - 5  -1 = 26
-localparam TAG_BITS =ADDR_WIDTH - OFFSET_BITS;
+localparam TAG_BITS = ADDR_WIDTH - INDEX_BITS - OFFSET_BITS; //tag = 32 - 5  -1 = 26
 
 // AXI
 /******************************regs*****************************/
@@ -212,7 +211,7 @@ reg                    [DATA_WIDTH-1:0] cache_data  [WAY_NUMS-1:0][BYTES_NUMS-1:
 reg                    [TAG_BITS-1:0]   cache_tag   [WAY_NUMS-1:0]                           ;
 reg                    [WAY_NUMS-1:0]   cache_valid                ;
 
-    wire [TAG_BITS-1:0]   tag = M_AXI_ARADDR[ADDR_WIDTH-1:OFFSET_BITS]; // tag = M_AXI_ARADDR[31:6]
+    wire [TAG_BITS-1:0]   tag = M_AXI_ARADDR[ADDR_WIDTH-1:INDEX_BITS+OFFSET_BITS]; // tag = M_AXI_ARADDR[31:6]
     wire [INDEX_BITS-1:0] index = M_AXI_ARADDR[OFFSET_BITS+INDEX_BITS-1:OFFSET_BITS]; // index = M_AXI_ARADDR[4+2:4]
 
 // Cache control logic 
@@ -246,7 +245,7 @@ end
 //TODO: hit_tag
 assign data = hit ? cache_data[hit_index][hit_offset[OFFSET_BITS-1:2]] :32'b0;
 
-wire [TAG_BITS-1:0]    hit_tag    = addr[ADDR_WIDTH-1 : OFFSET_BITS];
+wire [TAG_BITS-1:0]    hit_tag    = addr[ADDR_WIDTH-1 : INDEX_BITS+OFFSET_BITS];
 wire [INDEX_BITS-1:0]  hit_index  = addr[OFFSET_BITS+INDEX_BITS-1 : OFFSET_BITS];
 wire [OFFSET_BITS-1:0] hit_offset = addr[OFFSET_BITS-1:0];
 

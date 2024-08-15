@@ -32,7 +32,7 @@ uint64_t cycles = 0;
 uint64_t ins_cnt = 0;
 
 #define MAX_INST_TO_PRINT 11
-#define PC_WAVE_START 0xa0015f08
+#define PC_WAVE_START 0x30000000
 #ifdef CONFIG_WP
 bool wp_check();
 #endif
@@ -76,7 +76,7 @@ void reg_update(){
   }
   cpu.gpr[0] = 0;
   for(int i = 0; i < 16; i++){
-    cpu.gpr[i+1] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile1__DOT__rf[i] ;
+    cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile1__DOT__rf[i];
   }
   cpu.csr.mcause = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mcause;
   cpu.csr.mstatus = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mstatus;
@@ -88,10 +88,9 @@ void reg_update(){
     wave_enable = true;
   }
   #endif
-
   return;
 }
-
+#ifdef CONFIG_ITRACE
 void disasm_pc(Decode* s){
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -111,7 +110,7 @@ void disasm_pc(Decode* s){
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
 }
-
+#endif
 void verilator_sync_init(VerilatedContext* contextp_sdb, VysyxSoCFull* top_sdb, VerilatedVcdC* vcd_sdb){
   contextp = contextp_sdb;
   top = top_sdb;  
@@ -122,7 +121,7 @@ void decode_pc(Decode* s){
   s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_pc_next;
   s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_pc_next + 4;
   s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_pc_next;
-  s->isa.inst.val = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu2idu_ins;
+  s->isa.inst.val = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT____Vcellout__ifu2idu_regs__o_ins;
   instr = s->isa.inst.val;
   #ifdef CONFIG_ITRACE
       disasm_pc(s);
@@ -148,10 +147,7 @@ void exec_once(Decode *s){
     nvboard_update();
     #endif
     reg_update();
-    
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu1__DOT__lsu_post_valid){
-      decode_pc(s);
-    }
+    decode_pc(s);
     #ifdef CONFIG_WAVE
     if(wave_enable){
       contextp->timeInc(1);

@@ -3,7 +3,7 @@ module ysyx_23060124_WBU (
     input                               reset                      ,
     input                               i_pre_valid                ,
     input                               i_wen                      ,
-    input              [   4:0]         i_rd_addr                  ,
+    input              [   3:0]         i_rd_addr                  ,
     input              [  11:0]         i_csr_addr                 ,
     input                               i_csr_wen                  ,
     input                               i_brch                     ,
@@ -15,8 +15,7 @@ module ysyx_23060124_WBU (
     input              [  31:0]         i_pc_next                  ,
     input                               i_next                     ,
   // ecall and mret
-    input              [  31:0]         i_mepc                     ,
-    input              [  31:0]         i_mtvec                    ,
+
     input              [  31:0]         i_res                      ,
 
     output reg         [  31:0]         o_pc_next                  ,
@@ -24,7 +23,7 @@ module ysyx_23060124_WBU (
     output             [  31:0]         o_csr_rd_wdata             ,
     output                              o_wbu_wen                  ,
     output                              o_wbu_csr_wen              ,
-    output             [   4:0]         o_rd_addr                  ,
+    output             [   3:0]         o_rd_addr                  ,
     output             [  11:0]         o_csr_addr                 ,
 
     output reg                          o_pre_ready                ,
@@ -41,12 +40,6 @@ assign o_wbu_wen       = i_wen ;
 assign o_wbu_csr_wen   = i_csr_wen ;
 assign o_rd_addr  =  i_rd_addr ;
 assign o_csr_addr =  i_csr_addr;
-assign pc_next    =   i_jal     ? i_pc_next : 
-                      i_jalr    ? i_pc_next : 
-                      i_brch && i_res[0]  ? i_pc_next : 
-                      i_ecall   ? i_pc_next :
-                      i_mret    ? i_pc_next  : 
-                      i_pc_next;
 
 always @(posedge clock or posedge reset) begin
   if(reset) begin
@@ -64,8 +57,8 @@ always @(posedge clock or posedge reset) begin
     o_pc_next <= 32'b0;
   end
   else if(~o_pc_update) begin
-    o_pc_update <= i_jal || i_jalr || (i_brch && i_res[0]) || i_ecall || i_mret;
-    o_pc_next <= pc_next;
+    o_pc_update <= i_jal || i_jalr || i_brch  || i_ecall || i_mret;
+    o_pc_next <= i_pc_next;
   end
   else if(o_pc_update) begin
     o_pc_update <= 1'b0;
@@ -78,7 +71,7 @@ always @(posedge clock)begin
   if(reset) begin
     diff <= 1'b0;
   end
-  else diff <= i_next && ((i_res != 32'b0) || (i_rd_addr != 5'b0) || (i_wen != 1'b0) || (i_jal || i_jalr || i_brch || i_ecall || i_mret) != 0);
+  else diff <= i_next && ((i_res != 32'b0) || (i_rd_addr != 4'b0) || (i_wen != 1'b0) || (i_jal || i_jalr || i_brch || i_ecall || i_mret) != 0);
 end
 
 endmodule
