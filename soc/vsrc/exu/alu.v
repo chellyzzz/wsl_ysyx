@@ -32,7 +32,7 @@ wire [31:0] add_tmp;
 assign arithmetic_shift = {{{32{src1[31]}},src1} >> src2[4:0]};
 assign logical_shift = src1 >> src2[4:0];
 
-assign add_tmp  = src1 + src2;
+assign add_tmp      = src1 + src2;
 assign minus_res    = src1 - src2;
 assign add_res      = shamt ? minus_res : add_tmp;
 assign and_res      = src1 & src2;

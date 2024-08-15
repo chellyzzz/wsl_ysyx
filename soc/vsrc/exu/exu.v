@@ -114,18 +114,6 @@ localparam EXU_SEL_IMM = 2'b01;
 localparam EXU_SEL_PC4 = 2'b10;
 localparam EXU_SEL_PCI = 2'b11;
 
-// wire                   [  31:0]         alu_src1                   ;
-// wire                   [  31:0]         alu_src2                   ;
-// assign alu_src1 = (i_src_sel == EXU_SEL_REG) ? i_src1   :
-//                   (i_src_sel == EXU_SEL_IMM) ? i_src1   :
-//                   (i_src_sel == EXU_SEL_PC4) ? i_pc     :
-//                   (i_src_sel == EXU_SEL_PCI) ? i_pc     : 32'b0;
-
-// assign alu_src2 = (i_src_sel == EXU_SEL_REG) ? i_src2   :
-//                   (i_src_sel == EXU_SEL_IMM) ? i_imm    :
-//                   (i_src_sel == EXU_SEL_PC4) ? 32'h4    :
-//                   (i_src_sel == EXU_SEL_PCI) ? i_imm    : 32'b0;
-
 reg                    [  31:0]         alu_src1                   ;
 reg                    [  31:0]         alu_src2                   ;
 always @(*) begin

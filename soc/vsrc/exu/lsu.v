@@ -117,9 +117,9 @@ assign M_AXI_ARSIZE =   (exu_opt == LW ) ? 3'b010 :
                         (exu_opt == LH || exu_opt == LHU) ? 3'b001 :
                         (exu_opt == LB || exu_opt == LBU) ? 3'b000 : 3'b010;
                         
-// assign M_AXI_ARSIZE = 3'b010;
 assign M_AXI_ARBURST = 2'b00;
 assign M_AXI_ARID = 0;
+
 //Read and Read Response (R)
 assign M_AXI_RREADY	= axi_rready;
 //Example design I/O
@@ -317,13 +317,6 @@ always @(posedge clock)
             end   
         end
     end
-
-// assign load_res =   (exu_opt == LB)  ? {{24{axi_rdata[7]}}, axi_rdata[7:0]}:
-//                     (exu_opt == LH)  ? {{16{axi_rdata[15]}}, axi_rdata[15:0]}:
-//                     (exu_opt == LW)  ? axi_rdata[31:0]:
-//                     (exu_opt == LBU) ? {24'b0, axi_rdata[7:0]}:
-//                     (exu_opt == LHU) ? {{16'b0}, axi_rdata[15:0]}:
-//                     32'b0;
 
 always @(*) begin
   case(exu_opt)
