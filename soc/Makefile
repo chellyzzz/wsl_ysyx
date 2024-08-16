@@ -55,7 +55,7 @@ endif
 
 # NPC_FLAGS += $(ARGS)
 NPC_FLAGS += --log=$(BUILD_DIR)/npc-log.txt
-# NPC_FLAGS += -b
+NPC_FLAGS += -b
 NPC_FLAGS += -i $(IMAGE)
 
 VSRCS += $(shell find $(abspath $(SOC_HOME)/vsrc) \( -name "*.v" -o -name "*.sv" \) -print)

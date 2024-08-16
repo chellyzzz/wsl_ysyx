@@ -194,7 +194,9 @@ assign CLINT_ARLEN   = (state[0]) ? LSU_ARLEN       : 0;
 assign CLINT_ARSIZE  = (state[0]) ? LSU_ARSIZE      : 0;
 assign CLINT_ARBURST = (state[0]) ? LSU_ARBURST     : 0;
 
-endmodulemodule CLINT(
+endmodule
+
+module CLINT(
     input                               clock                      ,
     input                               reset                      ,
     //read data channel
@@ -216,8 +218,7 @@ endmodulemodule CLINT(
 );
 
 /**********************regs******************************/
-reg                    [  63:0]         reg_mtime                  ;
-
+wire                   [  63:0]         reg_mtime                  ;
 
 assign S_AXI_ARREADY    = 1'b1;
 assign S_AXI_RRESP      = 2'b0;
@@ -225,18 +226,33 @@ assign S_AXI_RVALID     = 1'b1;
 assign S_AXI_RLAST      = 1'b1;
 assign S_AXI_RID        = 4'b0;
 
-//mtime ++ per clock cycle
-always @( posedge clock)
-begin
-    if (reset)
-    begin
-        reg_mtime <= 'b0;
-    end 
-    else reg_mtime <= reg_mtime + 1'b1;
-end  
 
+Reg  #(.WIDTH(64), .RESET_VAL(64'b0)) mtime_reg
+(
+    .clk(clock),
+    .rst(reset),
+    .din(reg_mtime+1),
+    .dout(reg_mtime),
+    .wen(1'b1)
+);
+ 
 assign S_AXI_RDATA = S_AXI_ARADDR ? reg_mtime[63 : 32] : reg_mtime[31 : 0];
 
+endmodule
+
+module Reg #( parameter WIDTH = 1, 
+              parameter RESET_VAL = 0) 
+(
+  input clk,
+  input rst,
+  input [WIDTH-1:0] din,
+  output reg [WIDTH-1:0] dout,
+  input wen
+);
+  always @(posedge clk) begin
+    if (rst) dout <= RESET_VAL;
+    else if (wen) dout <= din;
+  end
 
 endmodule
 module ysyx_23060124_stdrst(
@@ -1189,7 +1205,6 @@ always @(posedge clock)
                 2'b01: axi_rdata <= {8'b0, M_AXI_RDATA[31:8]};
                 2'b10: axi_rdata <= {16'b0, M_AXI_RDATA[31:16]};
                 2'b11: axi_rdata <= {24'b0, M_AXI_RDATA[31:24]};
-                default: axi_rdata <= M_AXI_RDATA;
             endcase
             end   
         end
@@ -1207,11 +1222,11 @@ always @(*) begin
 end
 endmodule
 module ysyx_23060124_ALU (
-    input              [  31:0]         src1                       ,
-    input              [  31:0]         src2                       ,
+    input       signed [  31:0]         src1                       ,
+    input       signed [  31:0]         src2                       ,
     input                               shamt                      ,
     input              [   2:0]         opt                        ,
-    output             [  31:0]         res                         
+    output reg         [  31:0]         res                         
 );
 /***************parameter***************/
 parameter ADD =  3'b000;
@@ -1224,43 +1239,46 @@ parameter SRL =  3'b101;
 parameter OR  =  3'b110;
 parameter AND =  3'b111;
 
-wire [31:0] add_res;
-wire [31:0] and_res;
-wire [31:0] or_res;
-wire [31:0] xor_res;
-wire [31:0] sll_res;
-wire [31:0] srl_res;
-wire [31:0] slt_res;
-wire [31:0] sltu_res;
-wire [63:0] arithmetic_shift;
-wire [31:0] logical_shift;
-wire [31:0] minus_res;
-wire [31:0] add_tmp;
-//TODO: combine add and sub
-assign arithmetic_shift = {{{32{src1[31]}},src1} >> src2[4:0]};
-assign logical_shift = src1 >> src2[4:0];
+wire                   [  31:0]         add_res                    ;
+wire                   [  31:0]         and_res                    ;
+wire                   [  31:0]         or_res                     ;
+wire                   [  31:0]         xor_res                    ;
+wire                   [  31:0]         sll_res                    ;
+wire                   [  31:0]         srl_res                    ;
+wire                   [  31:0]         slt_res                    ;
+wire                   [  31:0]         sltu_res                   ;
+wire            signed [  31:0]         arithmetic_shift           ;
+wire                   [  31:0]         logical_shift              ;
+wire                   [  31:0]         minus_res                  ;
+wire                   [  31:0]         add_tmp                    ;
+
+assign arithmetic_shift = src1 >>> src2[4:0];
+assign logical_shift    = src1 >> src2[4:0];
 
 assign add_tmp      = src1 + src2;
 assign minus_res    = src1 - src2;
-assign add_res      = shamt ? minus_res : add_tmp;
+// assign add_res      = shamt ? minus_res : add_tmp;
 assign and_res      = src1 & src2;
 assign or_res       = src1 | src2;
 assign xor_res      = src1 ^ src2;
 assign sll_res      = src1 << src2[4:0];
-assign srl_res      = shamt ? arithmetic_shift[31:0] : logical_shift;
+assign srl_res      = shamt ? arithmetic_shift : logical_shift;
 assign slt_res      = (src1[31] != src2[31]) ? (src1[31] ? 32'b1 : 32'b0) : ((src1 < src2) ? 32'b1 : 32'b0);
 assign sltu_res     = ({1'b0, src1} < {1'b0, src2}) ? 32'b1 : 32'b0;
 
-assign res = (opt == ADD) ? add_res :
-             (opt == AND) ? and_res :
-             (opt == OR)  ? or_res  :
-             (opt == XOR) ? xor_res :
-             (opt == SLL) ? sll_res :
-             (opt == SRL) ? srl_res :
-             (opt == SLT) ? slt_res :
-             (opt == SLTU)? sltu_res: 
-             32'b0;
-
+always @(*) begin
+    case(opt)
+        ADD: res = shamt ? minus_res : add_tmp;
+        SLL: res = sll_res;
+        SLT: res = slt_res;
+        SLTU: res = sltu_res;
+        XOR: res = xor_res;
+        SRL: res = srl_res;
+        OR: res = or_res;
+        AND: res = and_res;
+        default: res = 32'b0;
+    endcase
+end
 endmodule
 module ysyx_23060124_CSR_RegisterFile (
     input                               clock                      ,
@@ -1324,6 +1342,18 @@ always @(posedge  clock) begin
         mstatus <= mstatus;
     end
 end 
+// always @(*) begin
+//     case(i_csr_raddr)
+//         12'hf11: o_csr_rdata = mvendorid;
+//         12'hf12: o_csr_rdata = marchid;
+//         12'h300: o_csr_rdata = mstatus;
+//         12'h341: o_csr_rdata = mepc;
+//         12'h342: o_csr_rdata = mcause;
+//         12'h305: o_csr_rdata = mtvec;
+//         default: o_csr_rdata = 32'b0;
+//     endcase
+// end
+
 assign o_csr_rdata  = i_csr_raddr == 12'hf11 ? mvendorid :
                       i_csr_raddr == 12'hf12 ? marchid :
                       i_csr_raddr == 12'h300 ? mstatus :
@@ -1443,7 +1473,6 @@ always @(posedge clock or posedge reset) begin
     o_pre_ready <= 1'b1;
   end
   else begin
-    o_pc_update <= 1'b0;
     o_pre_ready <= o_pre_ready;
   end
 end
@@ -1711,6 +1740,10 @@ ysyx_23060124__icache icache1(
     .M_AXI_ARBURST                     (IFU_SRAM_AXI_ARBURST      )
 );
 
+
+wire [29:0] ifu2idu_ins;
+wire [31:0] ifu2idu_pc;
+
 ysyx_23060124_IFU ifu1
 (
     .i_pc_next                         (pc_next                   ),
@@ -1727,8 +1760,6 @@ ysyx_23060124_IFU ifu1
     .req_addr                          (ifu_req_addr              ) 
 );
 
-wire [29:0] ifu2idu_ins;
-wire [31:0] ifu2idu_pc;
 ysyx_23060124_ifu_idu_regs ifu2idu_regs(
     .i_pc                              (ifu_pc_next               ),
     .o_pc                              (ifu2idu_pc                ),
@@ -1790,8 +1821,8 @@ wire                                    idu2exu_brch               ;
 wire                                    idu2exu_jal                ;
 wire                                    idu2exu_jalr               ;
 wire                                    idu2exu_ebreak             ;
-//
 wire                   [  11:0]         idu2exu_csr_addr           ;
+
 ysyx_23060124_idu_exu_regs idu2exu_regs(
     .clock                             (clock                     ),
     .reset                             (reset || pc_update_en     ),
@@ -1853,6 +1884,7 @@ ysyx_23060124_idu_exu_regs idu2exu_regs(
     .o_csr_addr                        (idu2exu_csr_addr          )
 );
 
+wire                   [  31:0]         exu_pc_next                ;
 ysyx_23060124_EXU exu1(
     .clock                             (clock                     ),
     .reset                             (reset                     ),
@@ -1918,8 +1950,6 @@ ysyx_23060124_EXU exu1(
     .o_post_valid                      (exu2wbu_valid             ),
     .o_pre_ready                       (exu2idu_ready             ) 
 );
-wire [31:0] exu_pc_next;
-
 wire                   [  31:0]         exu2wbu_pc_next            ;
 wire                   [  11:0]         exu2wbu_csr_addr           ;
 wire                   [   3:0]         exu2wbu_rd_addr            ;
@@ -1933,6 +1963,7 @@ wire                                    exu2wbu_ecall              ;
 wire                   [  31:0]         exu2wbu_res                ;
 wire                                    exu2wbu_ebreak             ;
 wire                                    exu2wbu_next               ;
+
 ysyx_23060124_exu_wbu_regs exu_wbu_regs (
     .clock                             (clock                     ),
     .reset                             (reset || pc_update_en     ),

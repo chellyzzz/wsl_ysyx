@@ -79,11 +79,6 @@ assign o_imm = (opcode == TYPE_I || opcode == TYPE_I_LOAD) ? {{20{ins[31]}}, ins
                (opcode == TYPE_S) ? {{20{ins[31]}}, ins[31:25], ins[11:7]} :
                32'b0;
 
-// assign o_rd = (opcode == TYPE_I || opcode == TYPE_I_LOAD ||
-//                opcode == TYPE_R || opcode == TYPE_LUI ||
-//                opcode == TYPE_AUIPC || opcode == TYPE_JAL ||
-//                opcode == TYPE_JALR || opcode == TYPE_EBRK) ? rd : 4'b0;
-
 assign o_rd = rd;
 
 assign o_rs1 = (opcode == TYPE_AUIPC || opcode == TYPE_LUI ||opcode == TYPE_JAL) ? 4'b0 : rs1;
@@ -102,21 +97,12 @@ assign o_if_unsigned =  (opcode == TYPE_I && func3 == SRL_SRA && func7[5]) ? 1'b
                         (opcode == TYPE_R && func3 == ADD     && func7[5]) ? 1'b1 :
                         1'b0;
 
-assign o_exu_opt =  (opcode == TYPE_I)       ? func3 :
-                    (opcode == TYPE_R)       ? func3 :
-                    (opcode == TYPE_LUI)     ? 3'b000:
+assign o_exu_opt =  (opcode == TYPE_LUI)     ? 3'b000:
                     (opcode == TYPE_AUIPC)   ? 3'b000:
                     (opcode == TYPE_JAL)     ? 3'b000:
-                    (opcode == TYPE_JALR)    ? func3:
-                    (opcode == TYPE_I_LOAD)  ? func3:
-                    (opcode == TYPE_S)       ? func3:
-                    (opcode == TYPE_B )      ? func3:
-                    (opcode == TYPE_EBRK && func3 == FUN3_CSRRW)    ? 3'b000:
                     (opcode == TYPE_EBRK && func3 == FUN3_CSRRS)    ? 3'b110:
-                    'b0;
+                    func3;
 
-
-//TODO: jalr, jal, ecall, mret, fence_i                
 assign o_src_sel =    (opcode == TYPE_I)       ? EXU_SEL_IMM:
                       (opcode == TYPE_R)       ? EXU_SEL_REG:
                       (opcode == TYPE_LUI)     ? EXU_SEL_IMM:

@@ -86,7 +86,7 @@ reg                                     o_pre_ready_d1             ;
 
 wire                                    init_txn_pulse             ;
 wire                                    is_ls, not_ls              ;
-wire                   [   1:0]         shift                      ;
+reg                    [   1:0]         shift                      ;
 
 assign M_AXI_AWADDR = axi_axaddr;
 assign M_AXI_WDATA  = store_src << 8*shift;
@@ -96,7 +96,7 @@ assign M_AXI_AWLEN = 'b0;
 assign M_AXI_AWSIZE =   (exu_opt == SW) ? 3'b010 :
                         (exu_opt == SH) ? 3'b001 :
                         (exu_opt == SB) ? 3'b000 : 3'b010;
-assign M_AXI_AWID = 0;
+assign M_AXI_AWID    = 0;
 assign M_AXI_AWBURST = 2'b00;
 //Write Data(W)
 assign M_AXI_WVALID	= axi_wvalid;
@@ -104,6 +104,7 @@ assign M_AXI_WVALID	= axi_wvalid;
 assign wstrb =  (exu_opt == SB) ? 4'b0001 :
                 (exu_opt == SH) ? 4'b0011 :
                 (exu_opt == SW) ? 4'b1111 : 4'b0000;
+
 assign M_AXI_WSTRB = wstrb << shift;
 assign M_AXI_WLAST = axi_wlast;
 
@@ -113,9 +114,9 @@ assign M_AXI_BREADY	= axi_bready;
 assign M_AXI_ARADDR = axi_axaddr;
 assign M_AXI_ARVALID	= axi_arvalid;
 assign M_AXI_ARLEN = 'b0;
-assign M_AXI_ARSIZE =   (exu_opt == LW ) ? 3'b010 :
-                        (exu_opt == LH || exu_opt == LHU) ? 3'b001 :
-                        (exu_opt == LB || exu_opt == LBU) ? 3'b000 : 3'b010;
+assign M_AXI_ARSIZE =   (exu_opt[1:0] == 2'b10) ? 3'b010 :
+                        (exu_opt[1:0] == 2'b01) ? 3'b001 :
+                        (exu_opt[1:0] == 2'b00) ? 3'b000 : 3'b010;
                         
 assign M_AXI_ARBURST = 2'b00;
 assign M_AXI_ARID = 0;
@@ -124,15 +125,16 @@ assign M_AXI_ARID = 0;
 assign M_AXI_RREADY	= axi_rready;
 //Example design I/O
 assign init_txn_pulse	= reset ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
-assign INIT_AXI_TXN = reset ? 1'b1 : (o_pre_ready_d1 && is_ls ? 1'b1 : 1'b0);
+assign INIT_AXI_TXN   = reset ? 1'b1 : (o_pre_ready_d1 && is_ls ? 1'b1 : 1'b0);
 assign is_ls = |i_load  || |i_store;
 assign not_ls = ~is_ls;
 wire txn_pulse_load;
 wire txn_pulse_store;
-assign txn_pulse_load   = |i_load && init_txn_pulse;
+assign txn_pulse_load   = |i_load  && init_txn_pulse;
 assign txn_pulse_store  = |i_store && init_txn_pulse;  
 
-assign shift = alu_res[1:0];
+reg IDLE;
+// assign shift = alu_res[1:0];
 
 always @(posedge clock)begin
     if(reset)begin
@@ -143,53 +145,42 @@ always @(posedge clock)begin
     end
 end
 
-//Generate a pulse to initiate AXI transaction.
 always @(posedge clock)										      
     begin                                                                        
-    // Initiates AXI transaction delay    
     if (reset)                                                   
         begin                                                                    
         init_txn_ff <= 1'b0;                                                   
-        init_txn_ff2 <= 1'b0;                                                   
+        init_txn_ff2 <= 1'b0;     
+        shift <= 2'b00;                                              
         end                                                                               
     else                                                                       
         begin  
         init_txn_ff <= INIT_AXI_TXN;
         init_txn_ff2 <= init_txn_ff;
         axi_axaddr <= alu_res;
+        shift <= alu_res[1:0];  
         end                                                                      
     end     
-	//--------------------
-	//Write Address Channel
-	//--------------------
+
+
 	  always @(posedge clock)										      
 	  begin                                                                         
 	    if (reset)                                                   
 	      begin                                                                    
 	        axi_awvalid <= 1'b0;                                                   
 	      end                                                                      
-	      //Signal a new address/data command is available by user logic           
 	    else                                                                       
 	      begin                                                                    
 	        if (txn_pulse_store == 1'b1)                                                
 	          begin                                                                
 	            axi_awvalid <= 1'b1;
 	          end                                                                  
-	     //Address accepted by interconnect/slave (issue of M_AXI_AWREADY by slave)
 	        else if (M_AXI_AWREADY && axi_awvalid)                                 
 	          begin                                                                
 	            axi_awvalid <= 1'b0;                                               
 	          end                                                                  
 	      end                                                                      
 	  end      
-
-	//--------------------
-	//Write Data Channel
-	//--------------------
-
-	//The write data channel is for transfering the actual data.
-	//The data generation is speific to the example design, and 
-	//so only the WVALID/WREADY handshake is shown here
 
 	   always @(posedge clock)                                        
 	   begin                                                                         
@@ -198,31 +189,23 @@ always @(posedge clock)
 	         axi_wvalid <= 1'b0;       
            axi_wlast <= 1'b1;                                              
 	       end                                                                       
-	     //Signal a new address/data command is available by user logic              
 	     else if (txn_pulse_store == 1'b1)                                                
 	       begin                                                                     
 	         axi_wvalid <= 1'b1;       
            axi_wlast <= 1'b1;                                              
 	       end                                                                       
-	     //Data accepted by interconnect/slave (issue of M_AXI_WREADY by slave)      
 	     else if (M_AXI_WREADY && axi_wvalid)                                        
 	       begin                                                                     
 	        axi_wvalid <= 1'b0;         
 	       end                                                                       
 	   end                                                                           
 
-	//----------------------------
-	//Write Response (B) Channel
-	//----------------------------
-
 	  always @(posedge clock)                                    
 	  begin                                                                
 	    if (reset)                                           
 	      begin                                                            
 	        axi_bready <= 1'b0;                                            
-	      end                                                              
-	    // accept/acknowledge bresp with axi_bready by the master          
-	    // when M_AXI_BVALID is asserted by slave                          
+	      end                                                                                   
 	    else if (M_AXI_BVALID && ~axi_bready)                              
 	      begin                                                            
 	        axi_bready <= 1'b1;                                            
@@ -232,71 +215,42 @@ always @(posedge clock)
 	      begin                                                            
 	        axi_bready <= 1'b0;                                            
 	      end                                                              
-	    // retain the previous value                                       
 	    else                                                               
 	      axi_bready <= axi_bready;                                        
 	  end                                                                  
-	                                                                       
-
-//----------------------------
-//Read Address Channel
-//----------------------------
-    // A new axi_arvalid is asserted when there is a valid read address              
-    // available by the master. start_single_read triggers a new read                
-    // transaction                                                                   
+	                                                                                                                                  
     always @(posedge clock)                                                     
     begin                                                                            
     if (reset)                                                   
         begin                                                                        
         axi_arvalid <= 1'b0;                                                       
         end                                                                          
-    //Signal a new read address command is available by user logic                 
     else if (txn_pulse_load == 1'b1)                                                    
         begin                                                                        
         axi_arvalid <= 1'b1;  
         end                                                                          
-    //RAddress accepted by interconnect/slave (issue of M_AXI_ARREADY by slave)    
     else if (axi_arvalid && M_AXI_ARREADY)                                         
         begin                                                                        
         axi_arvalid <= 1'b0;                                                       
         end                                                                          
-    // retain the previous value                                                   
     end                                                                              
                      
-//--------------------------------
-//Read Data (and Response) Channel
-//--------------------------------
-
-//The Read Data channel returns the results of the read request 
-//The master will accept the read data by asserting axi_rready
-//when there is a valid read data available.
-//While not necessary per spec, it is advisable to resetREADY signals in
-//case of differing resetlatencies between master/slave.
-
     always @(posedge clock)                                    
     begin                                                                 
-    // if (reset|| init_txn_pulse == 1'b1)    
     if (reset)                                                                                    
         begin                                                             
         axi_rready <= 1'b0;                                             
-        end                                                               
-    // accept/acknowledge rdata/rresp with axi_rready by the master     
-    // when M_AXI_RVALID is asserted by slave                           
+        end                                                                                        
     else if (M_AXI_RVALID && ~axi_rready)                               
         begin                                                             
         axi_rready <= 1'b1;                                             
         end                                                               
-    // deassert after one clock cycle                                   
     else if (axi_rready)                                                
         begin                                                             
         axi_rready <= 1'b0;                                             
         end                                                               
-    // retain the previous value                                        
     end 
                                 
-// wire mst_reg_rden;
-// assign mst_reg_rden = M_AXI_RVALID && ~axi_rready;
-
     always @(posedge clock )
     begin
         if (reset)
@@ -312,7 +266,6 @@ always @(posedge clock)
                 2'b01: axi_rdata <= {8'b0, M_AXI_RDATA[31:8]};
                 2'b10: axi_rdata <= {16'b0, M_AXI_RDATA[31:16]};
                 2'b11: axi_rdata <= {24'b0, M_AXI_RDATA[31:24]};
-                default: axi_rdata <= M_AXI_RDATA;
             endcase
             end   
         end

@@ -34,19 +34,18 @@ module ysyx_23060124_WBU (
 
 wire [31:0] pc_next;
 
-assign o_rd_wdata = i_res;
-assign o_csr_rd_wdata  = i_res;
-assign o_wbu_wen       = i_wen ;
-assign o_wbu_csr_wen   = i_csr_wen ;
-assign o_rd_addr  =  i_rd_addr ;
-assign o_csr_addr =  i_csr_addr;
+assign o_rd_wdata       = i_res;
+assign o_csr_rd_wdata   = i_res;
+assign o_wbu_wen        = i_wen ;
+assign o_wbu_csr_wen    = i_csr_wen ;
+assign o_rd_addr        =  i_rd_addr ;
+assign o_csr_addr       =  i_csr_addr;
 
 always @(posedge clock or posedge reset) begin
   if(reset) begin
     o_pre_ready <= 1'b1;
   end
   else begin
-    o_pc_update <= 1'b0;
     o_pre_ready <= o_pre_ready;
   end
 end

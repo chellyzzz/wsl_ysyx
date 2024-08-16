@@ -237,6 +237,10 @@ ysyx_23060124__icache icache1(
     .M_AXI_ARBURST                     (IFU_SRAM_AXI_ARBURST      )
 );
 
+
+wire [29:0] ifu2idu_ins;
+wire [31:0] ifu2idu_pc;
+
 ysyx_23060124_IFU ifu1
 (
     .i_pc_next                         (pc_next                   ),
@@ -253,8 +257,6 @@ ysyx_23060124_IFU ifu1
     .req_addr                          (ifu_req_addr              ) 
 );
 
-wire [29:0] ifu2idu_ins;
-wire [31:0] ifu2idu_pc;
 ysyx_23060124_ifu_idu_regs ifu2idu_regs(
     .i_pc                              (ifu_pc_next               ),
     .o_pc                              (ifu2idu_pc                ),
@@ -303,7 +305,7 @@ wire                   [  31:0]         idu2exu_imm                ;
 wire                   [   1:0]         idu2exu_src_sel            ;
 
 wire                   [   3:0]         idu2exu_rd                 ;
-wire                   [   2:0]         idu2exu_exu_opt            ;
+wire                   [   3:0]         idu2exu_exu_opt            ;
 
 wire                                    idu2exu_wen                ;
 wire                                    idu2exu_csr_wen            ;
@@ -316,8 +318,8 @@ wire                                    idu2exu_brch               ;
 wire                                    idu2exu_jal                ;
 wire                                    idu2exu_jalr               ;
 wire                                    idu2exu_ebreak             ;
-//
 wire                   [  11:0]         idu2exu_csr_addr           ;
+
 ysyx_23060124_idu_exu_regs idu2exu_regs(
     .clock                             (clock                     ),
     .reset                             (reset || pc_update_en     ),
@@ -379,6 +381,7 @@ ysyx_23060124_idu_exu_regs idu2exu_regs(
     .o_csr_addr                        (idu2exu_csr_addr          )
 );
 
+wire                   [  31:0]         exu_pc_next                ;
 ysyx_23060124_EXU exu1(
     .clock                             (clock                     ),
     .reset                             (reset                     ),
@@ -444,8 +447,6 @@ ysyx_23060124_EXU exu1(
     .o_post_valid                      (exu2wbu_valid             ),
     .o_pre_ready                       (exu2idu_ready             ) 
 );
-wire [31:0] exu_pc_next;
-
 wire                   [  31:0]         exu2wbu_pc_next            ;
 wire                   [  11:0]         exu2wbu_csr_addr           ;
 wire                   [   3:0]         exu2wbu_rd_addr            ;
@@ -459,6 +460,7 @@ wire                                    exu2wbu_ecall              ;
 wire                   [  31:0]         exu2wbu_res                ;
 wire                                    exu2wbu_ebreak             ;
 wire                                    exu2wbu_next               ;
+
 ysyx_23060124_exu_wbu_regs exu_wbu_regs (
     .clock                             (clock                     ),
     .reset                             (reset || pc_update_en     ),
@@ -470,7 +472,6 @@ ysyx_23060124_exu_wbu_regs exu_wbu_regs (
     .i_ebreak                          (idu2exu_ebreak            ),
     .i_mret                            (idu2exu_mret              ),
     .i_ecall                           (idu2exu_ecall             ),
-    //TODO: mepc mtvec
     .i_res                             (exu_res                   ),
     .i_pc_next                         (exu_pc_next               ),
     .i_csr_addr                        (idu2exu_csr_addr          ),

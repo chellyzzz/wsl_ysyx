@@ -47,7 +47,7 @@ module ysyx_23060124_idu_exu_regs (
     output reg         [   3:0]         o_rd                       ,
     //
     output reg         [  11:0]         o_csr_addr                 ,
-    output reg         [   2:0]         o_exu_opt                  ,
+    output reg         [   3:0]         o_exu_opt                  ,
     output reg                          o_wen                      ,
     output reg                          o_csr_wen                  ,
     output reg                          o_if_unsigned              ,
@@ -98,7 +98,7 @@ always @(posedge clock or posedge reset) begin
         o_imm           <= 32'b0;
         o_src_sel       <= 2'b0;
         o_rd            <= 4'b0;
-        o_exu_opt       <= 3'b0;
+        o_exu_opt       <= 4'b0;
         o_wen           <= 1'b0;
         o_csr_wen       <= 1'b0;
         o_if_unsigned   <= 1'b0;
@@ -122,8 +122,8 @@ always @(posedge clock or posedge reset) begin
         o_src_sel       <= i_src_sel;
 
         o_rd            <= i_rd;
-        o_exu_opt       <= i_exu_opt;
-
+        o_exu_opt       <=  (i_exu_opt == 3'b000 && i_if_unsigned) ? 4'b1000 :
+                            {1'b0, i_exu_opt};
         o_wen           <= i_wen;
         o_csr_wen       <= i_csr_wen;
         o_if_unsigned   <= i_if_unsigned;
@@ -147,7 +147,7 @@ always @(posedge clock or posedge reset) begin
         o_src_sel       <= 2'b0;
 
         o_rd            <= 4'b0;
-        o_exu_opt       <= 3'b0;
+        o_exu_opt       <= 4'b0;
 
         o_wen           <= 1'b0;
         o_csr_wen       <= 1'b0;

@@ -195,3 +195,4 @@ assign CLINT_ARSIZE  = (state[0]) ? LSU_ARSIZE      : 0;
 assign CLINT_ARBURST = (state[0]) ? LSU_ARBURST     : 0;
 
 endmodule
+

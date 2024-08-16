@@ -42,7 +42,9 @@ assign S_AXI_RDATA = S_AXI_ARADDR ? reg_mtime[63 : 32] : reg_mtime[31 : 0];
 
 endmodule
 
-module Reg #(WIDTH = 1, RESET_VAL = 0) (
+module Reg #( parameter WIDTH = 1, 
+              parameter RESET_VAL = 0) 
+(
   input clk,
   input rst,
   input [WIDTH-1:0] din,

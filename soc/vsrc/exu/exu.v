@@ -18,7 +18,7 @@ module ysyx_23060124_EXU(
     input                               i_ecall                    ,
     input                               i_mret                     ,
 
-    input              [   2:0]         exu_opt                    ,
+    input              [   3:0]         exu_opt                    ,
 
     output             [  31:0]         o_res                      ,
     output                              o_brch                     ,
@@ -69,7 +69,6 @@ module ysyx_23060124_EXU(
     output                              o_pre_ready                 
 );
 
-
 /******************parameter******************/
 parameter BEQ   = 3'b000;
 parameter BNE   = 3'b001;
@@ -78,12 +77,11 @@ parameter BGE   = 3'b101;
 parameter BLTU  = 3'b110;
 parameter BGEU  = 3'b111;
 
-
-wire                   [  31:0]         alu_res, load_res           ;
-wire                                    brch_res                   ;
+wire                   [  31:0]         alu_res, load_res          ;
 wire                                    if_lsu                     ;
 
 reg post_valid;
+
 assign if_lsu = i_load || i_store;
 assign o_post_valid =  if_lsu  ?  (M_AXI_RLAST && M_AXI_RREADY)||(M_AXI_BREADY) : 
                         post_valid;
@@ -95,20 +93,14 @@ always @(posedge clock) begin
     if(reset) begin
         post_valid <= 1'b0;   
     end
-    else if(i_pre_valid) begin
-        post_valid <= 1'b1;
-    end
-    else if(~i_pre_valid)begin
-        post_valid <= 1'b0;
-    end
+    post_valid <= i_pre_valid;
 end
-wire [2:0] alu_opt;
-assign alu_opt =  if_lsu                ? 3'b000:
-                  i_brch && ~exu_opt[1] ? 3'b010:
-                  i_brch &&  exu_opt[2] ? 3'b011:
+
+wire [3:0] alu_opt;
+assign alu_opt =  if_lsu  ? 4'b0000:
+                  i_brch  ? {2'b0,exu_opt[2:1]}:
                   exu_opt;
 
-//EXU_SRC_SEL
 localparam EXU_SEL_REG = 2'b00;
 localparam EXU_SEL_IMM = 2'b01;
 localparam EXU_SEL_PC4 = 2'b10;
@@ -137,7 +129,6 @@ always @(*) begin
   endcase
 end
 
-
 assign o_pc_next =    i_jal             ? i_pc    + i_imm : 
                       i_jalr            ? i_src1  + i_imm : 
                       i_brch            ? i_pc    + i_imm :
@@ -158,7 +149,7 @@ ysyx_23060124_LSU exu_lsu(
     .reset                             (reset                     ),
     .store_src                         (i_src2                    ),
     .alu_res                           (alu_res                   ),
-    .exu_opt                           (exu_opt                   ),
+    .exu_opt                           (exu_opt[2:0]              ),
     .load_res                          (load_res                  ),
     .i_load                            (i_load                    ),
     .i_store                           (i_store                   ),
@@ -202,20 +193,24 @@ ysyx_23060124_LSU exu_lsu(
     .i_pre_valid                       (i_pre_valid               ),
     .o_pre_ready                       (o_pre_ready               )
 );
-wire beq, bne, blt, bge, bltu, bgeu;
+
+wire beq, bne;
 assign beq = (alu_src1 == alu_src2);
-assign bne = (alu_src1 != alu_src2);
-
-assign brch_res = (~i_brch)            ? 1'b0 : 
-//TODO: combine BEQ and BNE
-                  (exu_opt == BEQ ) ? beq  :
-                  (exu_opt == BNE ) ? bne  :
-                  (exu_opt == BLT ) ? (alu_res[0] == 1'b1) :
-                  (exu_opt == BGE ) ? (alu_res[0] == 1'b0) :
-                  (exu_opt == BLTU) ? (alu_res[0] == 1'b1) :
-                  (exu_opt == BGEU) ? (alu_res[0] == 1'b0) :
-                  1'b0;
-
+assign bne = ~beq;
+reg                                     brch_res                   ;
+wire [2:0] brch_opt;
+assign brch_opt = i_brch ? exu_opt[2:0] : 3'b0;
+always @(*) begin
+  case(brch_opt)
+    BEQ:  brch_res = beq;
+    BNE:  brch_res = bne;
+    BLT:  brch_res = alu_res[0] ;
+    BGE:  brch_res = ~alu_res[0] ;
+    BLTU: brch_res = alu_res[0];
+    BGEU: brch_res = ~alu_res[0];
+    default: brch_res = 1'b0;
+  endcase
+end
 assign o_res = i_load ? load_res : alu_res;
 assign o_brch = brch_res;
 

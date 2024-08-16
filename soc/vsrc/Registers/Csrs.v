@@ -60,6 +60,18 @@ always @(posedge  clock) begin
         mstatus <= mstatus;
     end
 end 
+// always @(*) begin
+//     case(i_csr_raddr)
+//         12'hf11: o_csr_rdata = mvendorid;
+//         12'hf12: o_csr_rdata = marchid;
+//         12'h300: o_csr_rdata = mstatus;
+//         12'h341: o_csr_rdata = mepc;
+//         12'h342: o_csr_rdata = mcause;
+//         12'h305: o_csr_rdata = mtvec;
+//         default: o_csr_rdata = 32'b0;
+//     endcase
+// end
+
 assign o_csr_rdata  = i_csr_raddr == 12'hf11 ? mvendorid :
                       i_csr_raddr == 12'hf12 ? marchid :
                       i_csr_raddr == 12'h300 ? mstatus :
