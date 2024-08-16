@@ -84,7 +84,7 @@ reg post_valid;
 
 assign if_lsu = i_load || i_store;
 assign o_post_valid =  if_lsu  ?  (M_AXI_RLAST && M_AXI_RREADY)||(M_AXI_BREADY) : 
-                        post_valid;
+                       post_valid;
 
 assign o_pre_ready  =  if_lsu  ?  (M_AXI_RLAST && M_AXI_RREADY)||(M_AXI_BREADY) : 
                        1'b1;

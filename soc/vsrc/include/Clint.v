@@ -34,8 +34,7 @@ Reg  #(.WIDTH(64), .RESET_VAL(64'b0)) mtime_reg
     .clk(clock),
     .rst(reset),
     .din(reg_mtime+1),
-    .dout(reg_mtime),
-    .wen(1'b1)
+    .dout(reg_mtime)
 );
  
 assign S_AXI_RDATA = S_AXI_ARADDR ? reg_mtime[63 : 32] : reg_mtime[31 : 0];
@@ -48,12 +47,11 @@ module Reg #( parameter WIDTH = 1,
   input clk,
   input rst,
   input [WIDTH-1:0] din,
-  output reg [WIDTH-1:0] dout,
-  input wen
+  output reg [WIDTH-1:0] dout
 );
   always @(posedge clk) begin
     if (rst) dout <= RESET_VAL;
-    else if (wen) dout <= din;
+    else dout <= din;
   end
 
 endmodule

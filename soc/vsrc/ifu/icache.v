@@ -61,6 +61,24 @@ reg                                         idle                       ;
     assign M_AXI_RREADY     = axi_rready; 
 
 
+// Cache control logic 
+always @(posedge clock)
+begin
+    if(~rst_n_sync) 
+        begin
+            cache_valid <= 'b0;
+        end
+    else if(M_AXI_ARVALID && ~M_AXI_ARREADY) begin
+        cache_tag[index]   <= tag;
+        cache_valid[index] <= 1'b0;                                                       
+    end
+    else if(M_AXI_RLAST) begin
+        cache_valid[index] <= 1'b1;
+    end
+    else if(fence_i) begin
+        cache_valid <= 'b0;
+    end
+end
 	  always @(posedge clock)                                       
 	  begin                                                              
 	    if (rst_n_sync == 0)                                          
@@ -152,7 +170,6 @@ reg                                         idle                       ;
         end                                                                                                      
     end 
 
-//TODO: reset cache_tag
 reg                    [DATA_WIDTH-1:0] cache_data  [WAY_NUMS-1:0][BYTES_NUMS-1:0]                           ;
 reg                    [TAG_BITS-1:0]   cache_tag   [WAY_NUMS-1:0]                           ;
 reg                    [WAY_NUMS-1:0]   cache_valid                ;
@@ -160,24 +177,7 @@ reg                    [WAY_NUMS-1:0]   cache_valid                ;
 wire [TAG_BITS-1:0]   tag   = araddr[ADDR_WIDTH-OFFSET_BITS-1:INDEX_BITS]; // tag = M_AXI_ARADDR[31:6]
 wire [INDEX_BITS-1:0] index = araddr[OFFSET_BITS+INDEX_BITS-OFFSET_BITS-1:0]; // index = M_AXI_ARADDR[4+2:4]
 
-// Cache control logic 
-always @(posedge clock)
-begin
-    if(~rst_n_sync) 
-        begin
-            cache_valid <= 'b0;
-        end
-    else if(M_AXI_ARVALID && ~M_AXI_ARREADY) begin
-        cache_tag[index]   <= tag;
-        cache_valid[index] <= 1'b0;                                                       
-    end
-    else if(M_AXI_RLAST) begin
-        cache_valid[index] <= 1'b1;
-    end
-    else if(fence_i) begin
-        cache_valid <= 'b0;
-    end
-end
+
 
 
 always @(posedge clock) begin

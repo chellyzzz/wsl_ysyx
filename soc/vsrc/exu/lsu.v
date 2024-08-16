@@ -67,14 +67,11 @@ parameter SW = 3'b010;
 wire                   [   3:0]         wstrb                      ;
 // Initiate AXI transactions
 wire                                    INIT_AXI_TXN               ;
-
 // AXI4LITE signals
 reg                                     axi_awvalid                ;
 reg                                     axi_wvalid                 ;
-reg                                     axi_wlast                  ;
 reg                                     axi_arvalid                ;
 reg                                     axi_rready                 ;
-reg                    [  31:0]         axi_rdata                  ;
 reg                                     axi_bready                 ;
 //combine awaddr araddr to 1
 reg                    [  31:0]         axi_axaddr                 ;
@@ -85,11 +82,16 @@ reg                                     init_txn_edge              ;
 reg                                     o_pre_ready_d1             ;
 
 wire                                    init_txn_pulse             ;
-wire                                    is_ls, not_ls              ;
+wire                                    is_ls                      ;
+wire                   [   4:0]         shift8                     ;
 reg                    [   1:0]         shift                      ;
 
+wire txn_pulse_load;
+wire txn_pulse_store;
+
+assign shift8 = {shift, 3'b0};
 assign M_AXI_AWADDR = axi_axaddr;
-assign M_AXI_WDATA  = store_src << 8*shift;
+assign M_AXI_WDATA  = store_src << shift8;
 
 assign M_AXI_AWVALID	= axi_awvalid;
 assign M_AXI_AWLEN = 'b0;
@@ -106,7 +108,7 @@ assign wstrb =  (exu_opt == SB) ? 4'b0001 :
                 (exu_opt == SW) ? 4'b1111 : 4'b0000;
 
 assign M_AXI_WSTRB = wstrb << shift;
-assign M_AXI_WLAST = axi_wlast;
+assign M_AXI_WLAST = 1'b1;
 
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
@@ -124,17 +126,13 @@ assign M_AXI_ARID = 0;
 //Read and Read Response (R)
 assign M_AXI_RREADY	= axi_rready;
 //Example design I/O
-assign init_txn_pulse	= reset ? 1'b1 : (!init_txn_ff2) && init_txn_ff;
-assign INIT_AXI_TXN   = reset ? 1'b1 : (o_pre_ready_d1 && is_ls ? 1'b1 : 1'b0);
-assign is_ls = |i_load  || |i_store;
-assign not_ls = ~is_ls;
-wire txn_pulse_load;
-wire txn_pulse_store;
-assign txn_pulse_load   = |i_load  && init_txn_pulse;
-assign txn_pulse_store  = |i_store && init_txn_pulse;  
+assign init_txn_pulse	= reset ? 1'b0 : (!init_txn_ff2) && init_txn_ff;
+assign INIT_AXI_TXN   = reset ? 1'b0 : (o_pre_ready_d1 && is_ls ? 1'b1 : 1'b0);
+assign is_ls = i_load  || i_store;
+assign txn_pulse_load   = i_load  && init_txn_pulse;
+assign txn_pulse_store  = i_store && init_txn_pulse;  
 
-reg IDLE;
-// assign shift = alu_res[1:0];
+reg idle;
 
 always @(posedge clock)begin
     if(reset)begin
@@ -162,6 +160,20 @@ always @(posedge clock)
         end                                                                      
     end     
 
+  // always @(posedge clock)										      
+  //   begin                                                                        
+  //   if (reset)                                                   
+  //       begin                                                                    
+  //         idle <= 1'b1;
+  //       end                                                                               
+  //   else if((i_store || i_load) && idle) begin
+  //     idle <= 1'b0;
+  //   end            
+  //   else if((M_AXI_RLAST && M_AXI_RREADY) || M_AXI_BREADY) begin
+  //     idle <= 1'b1;
+  //   end          
+  //   else idle <= idle;                                                
+  //   end     
 
 	  always @(posedge clock)										      
 	  begin                                                                         
@@ -171,7 +183,7 @@ always @(posedge clock)
 	      end                                                                      
 	    else                                                                       
 	      begin                                                                    
-	        if (txn_pulse_store == 1'b1)                                                
+	        if (txn_pulse_store)                                                
 	          begin                                                                
 	            axi_awvalid <= 1'b1;
 	          end                                                                  
@@ -187,12 +199,10 @@ always @(posedge clock)
 	     if (reset)                                                    
 	       begin                                                                     
 	         axi_wvalid <= 1'b0;       
-           axi_wlast <= 1'b1;                                              
 	       end                                                                       
-	     else if (txn_pulse_store == 1'b1)                                                
+	     else if (txn_pulse_store)                                                
 	       begin                                                                     
 	         axi_wvalid <= 1'b1;       
-           axi_wlast <= 1'b1;                                              
 	       end                                                                       
 	     else if (M_AXI_WREADY && axi_wvalid)                                        
 	       begin                                                                     
@@ -225,7 +235,7 @@ always @(posedge clock)
         begin                                                                        
         axi_arvalid <= 1'b0;                                                       
         end                                                                          
-    else if (txn_pulse_load == 1'b1)                                                    
+    else if (txn_pulse_load)                                                    
         begin                                                                        
         axi_arvalid <= 1'b1;  
         end                                                                          
@@ -251,25 +261,8 @@ always @(posedge clock)
         end                                                               
     end 
                                 
-    always @(posedge clock )
-    begin
-        if (reset)
-        begin
-            axi_rdata  <= 0;
-        end 
-        else
-        begin    
-            if (M_AXI_RVALID && ~axi_rready)
-            begin
-              case(shift)
-                2'b00: axi_rdata <= M_AXI_RDATA;
-                2'b01: axi_rdata <= {8'b0, M_AXI_RDATA[31:8]};
-                2'b10: axi_rdata <= {16'b0, M_AXI_RDATA[31:16]};
-                2'b11: axi_rdata <= {24'b0, M_AXI_RDATA[31:24]};
-            endcase
-            end   
-        end
-    end
+wire                   [  31:0]         axi_rdata                  ;
+assign axi_rdata = M_AXI_RDATA >> shift8;
 
 always @(*) begin
   case(exu_opt)
@@ -281,4 +274,5 @@ always @(*) begin
     default: load_res = 32'b0;
   endcase
 end
+
 endmodule

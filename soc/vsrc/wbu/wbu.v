@@ -30,7 +30,6 @@ module ysyx_23060124_WBU (
     output reg                          o_pc_update                 
 );
 
-//TODO: res and pc+Imm
 
 wire [31:0] pc_next;
 
