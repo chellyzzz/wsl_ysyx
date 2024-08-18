@@ -178,8 +178,6 @@ wire [TAG_BITS-1:0]   tag   = araddr[ADDR_WIDTH-OFFSET_BITS-1:INDEX_BITS]; // ta
 wire [INDEX_BITS-1:0] index = araddr[OFFSET_BITS+INDEX_BITS-OFFSET_BITS-1:0]; // index = M_AXI_ARADDR[4+2:4]
 
 
-
-
 always @(posedge clock) begin
     if(M_AXI_RVALID && ~axi_rready) begin
             cache_data [index][read_index] <= M_AXI_RDATA;
@@ -201,16 +199,12 @@ assign hit_offset = addr[OFFSET_BITS-1              :0];
 assign hit  =  cache_valid[hit_index] && (cache_tag[hit_index] == hit_tag);
 
 
-// import "DPI-C" function void cache_hit ();
-// import "DPI-C" function void cache_miss ();
+import "DPI-C" function void cache_miss ();
 
-// always @(posedge clock) begin
-//   if(hit) begin
-//     cache_hit();
-//   end
-//   else if(~hit) begin
-//     cache_miss();
-//   end
-// end
+always @(posedge clock) begin
+ if(!hit && idle) begin
+    cache_miss();
+  end
+end
 
 endmodule

@@ -90,7 +90,7 @@ wire txn_pulse_load;
 wire txn_pulse_store;
 
 assign shift8 = {shift, 3'b0};
-assign M_AXI_AWADDR = axi_axaddr;
+assign M_AXI_AWADDR = alu_res;
 assign M_AXI_WDATA  = store_src << shift8;
 
 assign M_AXI_AWVALID	= axi_awvalid;
@@ -113,7 +113,7 @@ assign M_AXI_WLAST = 1'b1;
 //Write Response (B)
 assign M_AXI_BREADY	= axi_bready;
 //Read Address (AR)
-assign M_AXI_ARADDR = axi_axaddr;
+assign M_AXI_ARADDR = alu_res;
 assign M_AXI_ARVALID	= axi_arvalid;
 assign M_AXI_ARLEN = 'b0;
 assign M_AXI_ARSIZE =   (exu_opt[1:0] == 2'b10) ? 3'b010 :
@@ -155,7 +155,7 @@ always @(posedge clock)
         begin  
         init_txn_ff <= INIT_AXI_TXN;
         init_txn_ff2 <= init_txn_ff;
-        axi_axaddr <= alu_res;
+        // axi_axaddr <= alu_res;
         shift <= alu_res[1:0];  
         end                                                                      
     end     

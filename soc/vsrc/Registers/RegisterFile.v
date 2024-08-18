@@ -6,7 +6,9 @@ module ysyx_23060124_RegisterFile (
   
     //
     input              [   3:0]         exu_rd                     ,
+    input              [  31:0]         exu_wdata                  ,
     input              [   3:0]         wbu_rd                     ,
+    input              [  31:0]         wbu_wdata                  ,
     //
     input                               idu_wen                    ,
     input              [   3:0]         idu_waddr                  ,
@@ -38,9 +40,6 @@ always @(posedge  clock) begin
   end
 end
 
-assign rdata1 = rf[raddr1[3:0]];
-assign rdata2 = rf[raddr2[3:0]];
-
 wire   valid1, valid2;
 wire   data_valid1, data_valid2;
 wire   zero_valid1, zero_valid2;
@@ -54,6 +53,16 @@ assign zero_valid2 = (raddr2 == 4'b0);
 assign valid1 = zero_valid1|| data_valid1;
 assign valid2 = zero_valid2|| data_valid2;
 assign idu_vaild = valid1 && valid2;
+
+// assign rdata1 = (raddr1 == exu_rd)  ? exu_wdata:
+//                 (raddr1 == wbu_rd)  ? wbu_wdata:
+//                 rf[raddr1[3:0]];
+// assign rdata2 = (raddr2 == exu_rd)  ? exu_wdata:
+//                 (raddr2 == wbu_rd)  ? wbu_wdata:
+//                 rf[raddr2[3:0]];
+
+assign rdata1 = rf[raddr1[3:0]];
+assign rdata2 = rf[raddr2[3:0]];
 
 endmodule
 

@@ -14,7 +14,6 @@ uint64_t load_delay_start = 0;
 uint64_t load_delay_end = 0;
 uint64_t store_delay_start = 0;
 uint64_t store_delay_end = 0;
-uint32_t icache_hits = 0;
 uint32_t icache_miss = 0;
 
 extern "C" void load_cnt_dpic(){
@@ -46,6 +45,10 @@ extern "C" void ifu_end(){
   ifu_delay_end -= ifu_delay_start;
 }
 
+extern "C" void icache_end(){
+  ifu_delay_end += 1;
+}
+
 extern "C" void load_start(){
   load_delay_start = cycles;
 }
@@ -53,6 +56,7 @@ extern "C" void load_start(){
 extern "C" void load_end(){
   load_delay_end += cycles;
   load_delay_end -= load_delay_start;
+  load_delay_end += 2;
 }
 
 extern "C" void store_start(){
@@ -62,11 +66,9 @@ extern "C" void store_start(){
 extern "C" void store_end(){
   store_delay_end += cycles;
   store_delay_end -= store_delay_start;
+  store_delay_end += 2;
 }
 
-extern "C" void cache_hit(){
-  icache_hits ++;
-}
 extern "C" void cache_miss(){
   icache_miss ++;
 }

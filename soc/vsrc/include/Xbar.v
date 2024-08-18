@@ -106,7 +106,7 @@ wire ifu_ram_finish;
 wire lsu_ram_finish;
 assign ifu_req = IFU_ARVALID;
 assign lsu_req = LSU_AWVALID || LSU_ARVALID;
-assign ifu_ram_finish = SRAM_BREADY || (SRAM_RLAST && IFU_RREADY);
+assign ifu_ram_finish = (SRAM_RLAST && IFU_RREADY);
 assign lsu_ram_finish = SRAM_BREADY || LSU_RREADY;
 
 reg [2:0] state;
@@ -122,7 +122,7 @@ localparam LSU_RAM      = 3'b100;
             case (state)
                 IDLE: begin
                     if (ifu_req) begin
-                         state <= IFU_RAM;
+                        state <= IFU_RAM;
                     end 
                     else if(lsu_req) begin
                         state <= LSU_ARADDR[31:31-7] == 8'h02 ? LSU_CLINT : LSU_RAM;
@@ -164,7 +164,8 @@ assign LSU_RLAST   = state[2] ? SRAM_RLAST   : (state[0] ? CLINT_RLAST  : 'b0);
 assign LSU_RID     = state[2] ? SRAM_RID     : (state[0] ? CLINT_RID    : 'b0);
 
 // SRAM signals
-assign SRAM_AWADDR  = state[2] ? LSU_AWADDR  : 'b0;
+// assign SRAM_AWADDR  = state[2] ? LSU_AWADDR  : 'b0;
+assign SRAM_AWADDR  = LSU_AWADDR;
 assign SRAM_AWVALID = state[2] ? LSU_AWVALID : 'b0;
 assign SRAM_AWID    = state[2] ? LSU_AWID    : 'b0;
 assign SRAM_WDATA   = state[2] ? LSU_WDATA   : 'b0;
@@ -173,7 +174,7 @@ assign SRAM_WSTRB   = state[2] ? LSU_WSTRB   : 'b0;
 assign SRAM_WLAST   = state[2] ? LSU_WLAST   : 'b0;
 assign SRAM_BREADY  = state[2] ? LSU_BREADY  : 'b0;
 
-assign SRAM_ARADDR  = state[2] ? LSU_ARADDR  : (state[1] ? IFU_ARADDR  : 'b0);
+assign SRAM_ARADDR  = state[2] ? LSU_ARADDR  :  IFU_ARADDR;
 assign SRAM_ARID    = state[2] ? LSU_ARID    : (state[1] ? IFU_ARID    : 'b0);
 assign SRAM_ARVALID = state[2] ? LSU_ARVALID : (state[1] ? IFU_ARVALID : 'b0);
 assign SRAM_RREADY  = state[2] ? LSU_RREADY  : (state[1] ? IFU_RREADY  : 'b0);
@@ -186,7 +187,7 @@ assign SRAM_AWSIZE  = state[2] ? LSU_AWSIZE  : 'b0;
 assign SRAM_AWBURST = state[2] ? LSU_AWBURST : 'b0;
 
 // CLINT signals
-assign CLINT_ARADDR  = (state[0]) ? LSU_ARADDR[2]   : 0;
+assign CLINT_ARADDR  = LSU_ARADDR[2];
 assign CLINT_ARVALID = (state[0]) ? LSU_ARVALID     : 0;
 assign CLINT_ARID    = (state[0]) ? LSU_ARID        : 0;
 assign CLINT_RREADY  = (state[0]) ? LSU_RREADY      : 0;

@@ -146,7 +146,9 @@ void exec_once(Decode *s){
     #ifdef CONFIG_NVBOARD
     nvboard_update();
     #endif
-    reg_update();
+    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_next){
+        reg_update();
+    }
     decode_pc(s);
     #ifdef CONFIG_WAVE
     if(wave_enable){
@@ -228,7 +230,7 @@ void cpu_exec(uint64_t n){
         printf("    cycles      : %ld\n", cycles);
         printf("    instrs      : %ld\n", ins_cnt);
         printf("              Fetch per cycles: %ld\n", ifu_delay_end /ins_cnt);
-        printf("              Cache hit rates :  %f\n", (float)icache_hits / (float)(icache_hits + icache_miss));
+        printf("              Cache hit rates :  %f\n", (float)(ins_cnt - icache_miss) / (float)ins_cnt);
         printf("    Load  instrs: %ld\n", load_cnt);
         printf("              Load  per cycles: %ld\n", load_delay_end /load_cnt);
         printf("    Store instrs: %ld\n", store_cnt);

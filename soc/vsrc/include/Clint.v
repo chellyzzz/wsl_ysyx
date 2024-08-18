@@ -21,6 +21,7 @@ module CLINT(
 
 /**********************regs******************************/
 wire                   [  63:0]         reg_mtime                  ;
+reg axi_raddr;
 
 assign S_AXI_ARREADY    = 1'b1;
 assign S_AXI_RRESP      = 2'b0;
@@ -28,7 +29,14 @@ assign S_AXI_RVALID     = 1'b1;
 assign S_AXI_RLAST      = 1'b1;
 assign S_AXI_RID        = 4'b0;
 
-
+always @(posedge clock) begin
+    if (reset) begin
+        axi_raddr <= 1'b0;
+    end
+    else begin
+        axi_raddr <= S_AXI_ARADDR;
+    end
+end
 Reg  #(.WIDTH(64), .RESET_VAL(64'b0)) mtime_reg
 (
     .clk(clock),
@@ -37,7 +45,7 @@ Reg  #(.WIDTH(64), .RESET_VAL(64'b0)) mtime_reg
     .dout(reg_mtime)
 );
  
-assign S_AXI_RDATA = S_AXI_ARADDR ? reg_mtime[63 : 32] : reg_mtime[31 : 0];
+assign S_AXI_RDATA = axi_raddr ? reg_mtime[63 : 32] : reg_mtime[31 : 0];
 
 endmodule
 

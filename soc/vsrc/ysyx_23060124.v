@@ -183,7 +183,9 @@ ysyx_23060124_RegisterFile regfile1(
     .wen                               (wbu_wen                   ),
 //
     .exu_rd                            (idu2exu_rd                ),
+    .exu_wdata                         (exu2wbu_res               ),
     .wbu_rd                            (wbu_rd_addr               ),
+    .wbu_wdata                         (exu2wbu_res               ),
 //
     .raddr1                            (idu_addr_rs1              ),
     .raddr2                            (idu_addr_rs2              ),
@@ -646,62 +648,55 @@ CLINT clint
 );
 
 
-// import "DPI-C" function void load_cnt_dpic   ();
-// import "DPI-C" function void csr_cnt_dpic    ();
-// import "DPI-C" function void brch_cnt_dpic   ();
-// import "DPI-C" function void jal_cnt_dpic    ();
-// import "DPI-C" function void store_cnt_dpic  ();
-// import "DPI-C" function void ifu_start  ();
-// import "DPI-C" function void ifu_end  ();
-// import "DPI-C" function void load_start  ();
-// import "DPI-C" function void load_end  ();
-// import "DPI-C" function void store_start  ();
-// import "DPI-C" function void store_end  ();
+import "DPI-C" function void csr_cnt_dpic    ();
+import "DPI-C" function void brch_cnt_dpic   ();
+import "DPI-C" function void jal_cnt_dpic    ();
+import "DPI-C" function void ifu_start  ();
+import "DPI-C" function void ifu_end  ();
+import "DPI-C" function void icache_end  ();
+import "DPI-C" function void load_start  ();
+import "DPI-C" function void load_end  ();
+import "DPI-C" function void store_start  ();
+import "DPI-C" function void store_end  ();
 
 
-// always @(posedge clock) begin
-//   if(if_load && exu2idu_ready) begin
-//     load_cnt_dpic();
-//   end
-//   if(if_store && exu2idu_ready) begin
-//     store_cnt_dpic();
-//   end
-//   if(brch && exu2idu_ready) begin
-//     brch_cnt_dpic();
-//   end
-//   if((jal || jalr) && exu2idu_ready) begin
-//     jal_cnt_dpic();
-//   end
-//   if(csr_wen && exu2idu_ready) begin
-//     csr_cnt_dpic();
-//   end
-// end
+always @(posedge clock) begin
+  if(exu2wbu_brch) begin
+    brch_cnt_dpic();
+  end
+  if(exu2wbu_jalr || exu2wbu_jal) begin
+    jal_cnt_dpic();
+  end
+  if(exu2wbu_csr_wen) begin
+    csr_cnt_dpic();
+  end
+end
 
-// always @(posedge clock) begin
-//   if(pc_update_en) begin
-//     ifu_start();
-//   end
-//   else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RVALID) begin
-//     ifu_end();
-//   end
-//   else if(icache_hit && ifu2cache_req) begin
-//     ifu_end();
-//   end
+always @(posedge clock) begin
+  if(IFU_SRAM_AXI_ARVALID && IFU_SRAM_AXI_ARREADY) begin
+    ifu_start();
+  end
+  else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RLAST) begin
+    ifu_end();
+  end
+  if(icache_hit) begin
+    icache_end();
+  end
 
-//   if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
-//     load_start();
-//   end
-//   else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
-//     load_end();
-//   end
+  if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
+    load_start();
+  end
+  else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
+    load_end();
+  end
 
-//   if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
-//     store_start();
-//   end
-//   else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
-//     store_end();
-//   end
-// end
+  if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
+    store_start();
+  end
+  else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
+    store_end();
+  end
+end
 
 endmodule
 
