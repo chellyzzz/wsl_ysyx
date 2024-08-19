@@ -199,12 +199,12 @@ assign hit_offset = addr[OFFSET_BITS-1              :0];
 assign hit  =  cache_valid[hit_index] && (cache_tag[hit_index] == hit_tag);
 
 
-// import "DPI-C" function void cache_miss ();
+import "DPI-C" function void cache_miss ();
 
-// always @(posedge clock) begin
-//  if(!hit && idle) begin
-//     cache_miss();
-//   end
-// end
+always @(posedge clock) begin
+ if(!hit && idle) begin
+    cache_miss();
+  end
+end
 
 endmodule

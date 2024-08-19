@@ -32,7 +32,7 @@ uint64_t cycles = 0;
 uint64_t ins_cnt = 0;
 
 #define MAX_INST_TO_PRINT 11
-#define PC_WAVE_START 0x30000000
+#define PC_WAVE_START 0xa0000018
 #ifdef CONFIG_WP
 bool wp_check();
 #endif
@@ -43,9 +43,12 @@ static VerilatedVcdC* vcd;
 static word_t instr;
 extern bool wave_enable;
 
-#define MAX_DEADS 10000
+// #define MAX_DEADS 100000
+
+#ifdef MAX_DEADS  
 bool dead_detector = true;
 int dead_cycles   = 0;
+#endif
 
 #ifdef CONFIG_FTRACE
 
@@ -61,8 +64,10 @@ extern bool ftrace_enable;
 
 // cpu exec
 void reg_update(){  
-  ins_cnt ++;
-  // if()
+  if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu1__DOT__diff){
+    ins_cnt ++;
+  }
+  #ifdef MAX_DEADS
   if(dead_detector){
     if(cpu.pc == top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu_pc_next){
       dead_cycles ++;
@@ -74,7 +79,7 @@ void reg_update(){
       exit(1);
     }
   }
-  cpu.gpr[0] = 0;
+  #endif
   for(int i = 0; i < 16; i++){
     cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile1__DOT__rf[i];
   }
@@ -146,9 +151,7 @@ void exec_once(Decode *s){
     #ifdef CONFIG_NVBOARD
     nvboard_update();
     #endif
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2wbu_next){
-        reg_update();
-    }
+    reg_update();
     decode_pc(s);
     #ifdef CONFIG_WAVE
     if(wave_enable){
@@ -217,6 +220,9 @@ static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
 }
 
 void cpu_exec(uint64_t n){
+  #ifdef PC_WAVE_START
+    wave_enable = false;
+  #endif
     Decode s;
     int g_print_step = n <= MAX_INST_TO_PRINT && n >= 0 ? n : 0;
     for(; n > 0; n--){

@@ -8,7 +8,6 @@ module ysyx_23060124_idu_exu_regs (
     output                              o_pre_ready                ,
     output                              o_post_valid               ,
 
-    input                               i_rf_valid                 ,
     input              [  31:0]         i_imm                      ,
     input              [  11:0]         i_csr_addr                 ,
     input              [  31:0]         i_src1                     ,
@@ -65,8 +64,8 @@ module ysyx_23060124_idu_exu_regs (
 
 reg                                     post_valid                 ;
 
-assign o_post_valid = i_rf_valid && post_valid;
-assign o_pre_ready  = i_rf_valid && i_post_ready; 
+assign o_post_valid = post_valid;
+assign o_pre_ready  = i_post_ready; 
 always @(posedge clock or posedge reset) begin
     if(reset) begin
         post_valid <= 1'b0;   
@@ -165,16 +164,16 @@ always @(posedge clock or posedge reset) begin
     end
 end
 
-// import "DPI-C" function void load_cnt_dpic   ();
-// import "DPI-C" function void store_cnt_dpic  ();
+import "DPI-C" function void load_cnt_dpic   ();
+import "DPI-C" function void store_cnt_dpic  ();
 
-// always @(posedge clock) begin
-//   if(i_post_ready && o_post_valid && i_load) begin
-//     load_cnt_dpic();
-//   end
-//   if(i_post_ready && o_post_valid && i_store) begin
-//     store_cnt_dpic();
-//   end
-// end
+always @(posedge clock) begin
+  if(i_post_ready && o_post_valid && i_load) begin
+    load_cnt_dpic();
+  end
+  if(i_post_ready && o_post_valid && i_store) begin
+    store_cnt_dpic();
+  end
+end
 
 endmodule   

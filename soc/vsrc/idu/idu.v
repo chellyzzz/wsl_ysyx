@@ -1,7 +1,7 @@
 
 module ysyx_23060124_IDU (
     input                               clock                      ,
-    input              [  31:2]         ins                        ,
+    input              [  31:0]         ins                        ,
     input                               reset                      ,
 
     output             [  31:0]         o_imm                      ,
@@ -43,17 +43,17 @@ localparam                              EXU_SEL_IMM = 2'b01        ;
 localparam                              EXU_SEL_PC4 = 2'b10        ;
 localparam                              EXU_SEL_PCI = 2'b11        ;
 
-localparam                              TYPE_I       =  5'b00100 ;
-localparam                              TYPE_I_LOAD  =  5'b00000 ;
-localparam                              TYPE_JALR    =  5'b11001 ;
-localparam                              TYPE_EBRK    =  5'b11100 ;
-localparam                              TYPE_S       =  5'b01000 ;
-localparam                              TYPE_R       =  5'b01100 ;
-localparam                              TYPE_AUIPC   =  5'b00101 ;
-localparam                              TYPE_LUI     =  5'b01101 ;
-localparam                              TYPE_JAL     =  5'b11011 ;
-localparam                              TYPE_B       =  5'b11000 ;
-localparam                              TYPE_FENCE   =  5'b00011 ;
+localparam                              TYPE_I       =  7'b0010011;
+localparam                              TYPE_I_LOAD  =  7'b0000011;
+localparam                              TYPE_JALR    =  7'b1100111;
+localparam                              TYPE_EBRK    =  7'b1110011;
+localparam                              TYPE_S       =  7'b0100011;
+localparam                              TYPE_R       =  7'b0110011;
+localparam                              TYPE_AUIPC   =  7'b0010111;
+localparam                              TYPE_LUI     =  7'b0110111;
+localparam                              TYPE_JAL     =  7'b1101111;
+localparam                              TYPE_B       =  7'b1100011;
+localparam                              TYPE_FENCE   =  7'b0001111;
 //TYPE_I_FUN3
 localparam                              FUN3_SRL_SRA =  3'b101     ;
 //CSRR
@@ -65,7 +65,7 @@ localparam                              RS2_ECALL   =  5'b00000    ;
 localparam                              RS2_MRET    =  5'b00010    ;
 
 wire [2:0] func3    = ins[14:12];
-wire [4:0] opcode   = ins[6:2];
+wire [6:0] opcode   = ins[6:0];
 wire [6:0] func7    = ins[31:25];
 wire [3:0] rs1      = ins[18:15];
 wire [3:0] rs2      = ins[23:20];

@@ -7,12 +7,13 @@ module ysyx_23060124_RegisterFile (
     //
     input              [   3:0]         exu_rd                     ,
     input              [  31:0]         exu_wdata                  ,
+    input                               exu_wen                    ,
     input              [   3:0]         wbu_rd                     ,
     input              [  31:0]         wbu_wdata                  ,
+    input                               wbu_wen                    ,
     //
     input                               idu_wen                    ,
     input              [   3:0]         idu_waddr                  ,
-    output                              idu_vaild                  ,
     // 
     input              [   3:0]         raddr1                     ,
     input              [   3:0]         raddr2                     ,
@@ -40,30 +41,13 @@ always @(posedge  clock) begin
   end
 end
 
-wire   valid1, valid2;
-wire   data_valid1, data_valid2;
-wire   zero_valid1, zero_valid2;
-
-assign data_valid1 = (raddr1 != exu_rd)&&(raddr1 != wbu_rd);
-assign data_valid2 = (raddr2 != exu_rd)&&(raddr2 != wbu_rd);
-
-assign zero_valid1 = (raddr1 == 4'b0);
-assign zero_valid2 = (raddr2 == 4'b0);
-
-assign valid1 = zero_valid1|| data_valid1;
-assign valid2 = zero_valid2|| data_valid2;
-// assign idu_vaild = valid1 && valid2;
-assign idu_vaild = 1'b1;
-
-assign rdata1 = (raddr1 == exu_rd)  ? exu_wdata:
-                (raddr1 == wbu_rd)  ? wbu_wdata:
+assign rdata1 = (raddr1 == exu_rd && exu_wen)  ? exu_wdata:
+                (raddr1 == wbu_rd && wbu_wen)  ? wbu_wdata:
                 rf[raddr1[3:0]];
-assign rdata2 = (raddr2 == exu_rd)  ? exu_wdata:
-                (raddr2 == wbu_rd)  ? wbu_wdata:
-                rf[raddr2[3:0]];
 
-// assign rdata1 = rf[raddr1[3:0]];
-// assign rdata2 = rf[raddr2[3:0]];
+assign rdata2 = (raddr2 == exu_rd && exu_wen)  ? exu_wdata:
+                (raddr2 == wbu_rd && wbu_wen)  ? wbu_wdata:
+                rf[raddr2[3:0]];
 
 endmodule
 

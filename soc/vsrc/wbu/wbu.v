@@ -69,7 +69,8 @@ always @(posedge clock)begin
   if(reset) begin
     diff <= 1'b0;
   end
-  else diff <= i_next && ((i_res != 32'b0) || (i_rd_addr != 4'b0) || (i_wen != 1'b0) || (i_jal || i_jalr || i_brch || i_ecall || i_mret) != 0);
+  // else diff <= i_next && ((i_res != 32'b0) || (i_rd_addr != 4'b0) || (i_wen != 1'b0) || (i_jal || i_jalr || i_brch || i_ecall || i_mret) != 0);
+  else diff <= i_next;
 end
 
 endmodule
