@@ -199,7 +199,7 @@ assign beq = (alu_src1 == alu_src2);
 assign bne = ~beq;
 reg                                     brch_res                   ;
 wire [2:0] brch_opt;
-assign brch_opt = i_brch ? exu_opt[2:0] : 3'b0;
+assign brch_opt = exu_opt[2:0];
 always @(*) begin
   case(brch_opt)
     BEQ:  brch_res = beq;
@@ -212,6 +212,6 @@ always @(*) begin
   endcase
 end
 assign o_res = i_load ? load_res : alu_res;
-assign o_brch = brch_res;
+assign o_brch = i_brch && brch_res;
 
 endmodule

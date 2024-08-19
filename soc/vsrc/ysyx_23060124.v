@@ -240,7 +240,7 @@ ysyx_23060124__icache icache1(
 );
 
 
-wire [29:0] ifu2idu_ins;
+wire [31:0] ifu2idu_ins;
 wire [31:0] ifu2idu_pc;
 
 ysyx_23060124_IFU ifu1
@@ -275,7 +275,7 @@ ysyx_23060124_ifu_idu_regs ifu2idu_regs(
 
 ysyx_23060124_IDU idu1(
     .clock                             (clock                     ),
-    .ins                               (ifu2idu_ins               ),
+    .ins                               (ifu2idu_ins[31:2]               ),
     .reset                             (reset                     ),
 
     .o_imm                             (imm                       ),
@@ -648,55 +648,55 @@ CLINT clint
 );
 
 
-import "DPI-C" function void csr_cnt_dpic    ();
-import "DPI-C" function void brch_cnt_dpic   ();
-import "DPI-C" function void jal_cnt_dpic    ();
-import "DPI-C" function void ifu_start  ();
-import "DPI-C" function void ifu_end  ();
-import "DPI-C" function void icache_end  ();
-import "DPI-C" function void load_start  ();
-import "DPI-C" function void load_end  ();
-import "DPI-C" function void store_start  ();
-import "DPI-C" function void store_end  ();
+// import "DPI-C" function void csr_cnt_dpic    ();
+// import "DPI-C" function void brch_cnt_dpic   ();
+// import "DPI-C" function void jal_cnt_dpic    ();
+// import "DPI-C" function void ifu_start  ();
+// import "DPI-C" function void ifu_end  ();
+// import "DPI-C" function void icache_end  ();
+// import "DPI-C" function void load_start  ();
+// import "DPI-C" function void load_end  ();
+// import "DPI-C" function void store_start  ();
+// import "DPI-C" function void store_end  ();
 
 
-always @(posedge clock) begin
-  if(exu2wbu_brch) begin
-    brch_cnt_dpic();
-  end
-  if(exu2wbu_jalr || exu2wbu_jal) begin
-    jal_cnt_dpic();
-  end
-  if(exu2wbu_csr_wen) begin
-    csr_cnt_dpic();
-  end
-end
+// always @(posedge clock) begin
+//   if(exu2wbu_brch) begin
+//     brch_cnt_dpic();
+//   end
+//   if(exu2wbu_jalr || exu2wbu_jal) begin
+//     jal_cnt_dpic();
+//   end
+//   if(exu2wbu_csr_wen) begin
+//     csr_cnt_dpic();
+//   end
+// end
 
-always @(posedge clock) begin
-  if(IFU_SRAM_AXI_ARVALID && IFU_SRAM_AXI_ARREADY) begin
-    ifu_start();
-  end
-  else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RLAST) begin
-    ifu_end();
-  end
-  if(icache_hit) begin
-    icache_end();
-  end
+// always @(posedge clock) begin
+//   if(IFU_SRAM_AXI_ARVALID && IFU_SRAM_AXI_ARREADY) begin
+//     ifu_start();
+//   end
+//   else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RLAST) begin
+//     ifu_end();
+//   end
+//   if(icache_hit) begin
+//     icache_end();
+//   end
 
-  if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
-    load_start();
-  end
-  else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
-    load_end();
-  end
+//   if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
+//     load_start();
+//   end
+//   else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
+//     load_end();
+//   end
 
-  if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
-    store_start();
-  end
-  else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
-    store_end();
-  end
-end
+//   if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
+//     store_start();
+//   end
+//   else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
+//     store_end();
+//   end
+// end
 
 endmodule
 

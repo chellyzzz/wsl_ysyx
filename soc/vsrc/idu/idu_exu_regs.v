@@ -165,16 +165,16 @@ always @(posedge clock or posedge reset) begin
     end
 end
 
-import "DPI-C" function void load_cnt_dpic   ();
-import "DPI-C" function void store_cnt_dpic  ();
+// import "DPI-C" function void load_cnt_dpic   ();
+// import "DPI-C" function void store_cnt_dpic  ();
 
-always @(posedge clock) begin
-  if(i_post_ready && o_post_valid && i_load) begin
-    load_cnt_dpic();
-  end
-  if(i_post_ready && o_post_valid && i_store) begin
-    store_cnt_dpic();
-  end
-end
+// always @(posedge clock) begin
+//   if(i_post_ready && o_post_valid && i_load) begin
+//     load_cnt_dpic();
+//   end
+//   if(i_post_ready && o_post_valid && i_store) begin
+//     store_cnt_dpic();
+//   end
+// end
 
 endmodule   

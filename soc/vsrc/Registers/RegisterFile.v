@@ -52,17 +52,18 @@ assign zero_valid2 = (raddr2 == 4'b0);
 
 assign valid1 = zero_valid1|| data_valid1;
 assign valid2 = zero_valid2|| data_valid2;
-assign idu_vaild = valid1 && valid2;
+// assign idu_vaild = valid1 && valid2;
+assign idu_vaild = 1'b1;
 
-// assign rdata1 = (raddr1 == exu_rd)  ? exu_wdata:
-//                 (raddr1 == wbu_rd)  ? wbu_wdata:
-//                 rf[raddr1[3:0]];
-// assign rdata2 = (raddr2 == exu_rd)  ? exu_wdata:
-//                 (raddr2 == wbu_rd)  ? wbu_wdata:
-//                 rf[raddr2[3:0]];
+assign rdata1 = (raddr1 == exu_rd)  ? exu_wdata:
+                (raddr1 == wbu_rd)  ? wbu_wdata:
+                rf[raddr1[3:0]];
+assign rdata2 = (raddr2 == exu_rd)  ? exu_wdata:
+                (raddr2 == wbu_rd)  ? wbu_wdata:
+                rf[raddr2[3:0]];
 
-assign rdata1 = rf[raddr1[3:0]];
-assign rdata2 = rf[raddr2[3:0]];
+// assign rdata1 = rf[raddr1[3:0]];
+// assign rdata2 = rf[raddr2[3:0]];
 
 endmodule
 

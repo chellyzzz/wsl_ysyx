@@ -2,7 +2,7 @@ module ysyx_23060124_ifu_idu_regs (
     input              [  31:0]         i_pc                       ,
     input              [  31:0]         i_ins                      ,
     output reg         [  31:0]         o_pc                       ,
-    output reg         [  31:2]         o_ins                      ,
+    output reg         [  31:0]         o_ins                      ,
     input                               clock                      ,
     input                               reset                      ,
     // handshake signals
@@ -32,15 +32,15 @@ assign o_post_valid = i_post_ready && icache_hit;
 always @(posedge clock or posedge reset) begin
     if(reset) begin
         o_pc <= 32'h0;
-        o_ins <= 30'h0;
+        o_ins <= 32'h0;
     end
     else if(icache_hit && i_post_ready) begin
         o_pc <= i_pc;
-        o_ins <= i_ins[31:2];
+        o_ins <= i_ins;
     end
     else if(~icache_hit && i_post_ready) begin
         o_pc <= 32'h0;
-        o_ins <= 30'h0;
+        o_ins <= 32'h0;
     end
     else if(icache_hit && ~i_post_ready) begin
         o_pc <= o_pc;
