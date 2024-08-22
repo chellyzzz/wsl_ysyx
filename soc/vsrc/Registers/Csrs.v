@@ -22,12 +22,13 @@ assign mvendorid    = 32'h79737978;
 assign marchid      = 32'h23060124;
 assign mcause       = 32'd11;
 
-reg [31:0] mstatus, mepc;
+reg [12:0] mstatus;
+reg [31:0] mepc;
 reg [31:0] mtvec;
 
 always @(posedge  clock) begin
     if(reset) begin
-        mstatus <= 32'b0;
+        mstatus <= 13'b0;
         mepc <= 32'b0;
         mtvec <= 32'b0;
     end
@@ -47,7 +48,7 @@ always @(posedge  clock) begin
     end
     else if (i_csr_wen) begin 
         case (i_csr_waddr)
-            12'h300: mstatus    <= i_csr_wdata;
+            // 12'h300: mstatus    <= i_csr_wdata[15:0];
             12'h341: mepc       <= i_csr_wdata;
             12'h305: mtvec      <= i_csr_wdata;
             default: begin
@@ -74,7 +75,7 @@ end
 
 assign o_csr_rdata  = i_csr_raddr == 12'hf11 ? mvendorid :
                       i_csr_raddr == 12'hf12 ? marchid :
-                      i_csr_raddr == 12'h300 ? mstatus :
+                      i_csr_raddr == 12'h300 ? {19'b0, mstatus} :
                       i_csr_raddr == 12'h341 ? mepc :
                       i_csr_raddr == 12'h342 ? mcause :
                       i_csr_raddr == 12'h305 ? mtvec : 
