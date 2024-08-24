@@ -49,5 +49,6 @@ assign rdata2 = (raddr2 == exu_rd && exu_wen)  ? exu_wdata:
                 (raddr2 == wbu_rd && wbu_wen)  ? wbu_wdata:
                 rf[raddr2[3:0]];
 
+
 endmodule
 

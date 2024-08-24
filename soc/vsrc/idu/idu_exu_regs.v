@@ -20,10 +20,11 @@ module ysyx_23060124_idu_exu_regs (
     combine csr_addr rd into one input
     ***/
     input              [   2:0]         i_exu_opt                  ,
+    input              [   9:0]         i_alu_opt                  ,
     input                               i_wen                      ,
     input                               i_csr_wen                  ,
-    input              [   1:0]         i_src_sel                  ,
-    input                               i_if_unsigned              ,
+    input              [   1:0]         i_src_sel1                 ,
+    input              [   2:0]         i_src_sel2                 ,
     input                               i_mret                     ,
     input                               i_ecall                    ,
     input                               i_load                     ,
@@ -41,15 +42,15 @@ module ysyx_23060124_idu_exu_regs (
     output reg         [  31:0]         o_src1                     ,
     output reg         [  31:0]         o_src2                     ,
     output reg         [  31:0]         o_imm                      ,
-    output reg         [   1:0]         o_src_sel                  ,
-
+    output reg         [   1:0]         o_src_sel1                 ,
+    output reg         [   2:0]         o_src_sel2                 ,
     output reg         [   3:0]         o_rd                       ,
     //
     output reg         [  11:0]         o_csr_addr                 ,
-    output reg         [   3:0]         o_exu_opt                  ,
+    output reg         [   2:0]         o_exu_opt                  ,
+    output reg         [   9:0]         o_alu_opt                  ,
     output reg                          o_wen                      ,
     output reg                          o_csr_wen                  ,
-    output reg                          o_if_unsigned              ,
     output reg                          o_mret                     ,
     output reg                          o_ecall                    ,
     
@@ -82,12 +83,11 @@ end
 wire                    [  31:0]         sel_src1                   ;
 wire                    [  31:0]         sel_src2                   ;
 
-assign sel_src1 =   i_ecall ? i_mtvec :
-                    i_mret  ? i_mepc  :
+assign sel_src1 =   ({32{i_ecall}}& i_mtvec )|
+                    ({32{i_mret}} & i_mepc  )|
                     i_src1;
 
-assign sel_src2 =   i_csr_src_sel ? i_csr_rs2 : 
-                    i_src2;
+assign sel_src2 =   ({32{i_csr_src_sel}} & i_csr_rs2) | i_src2;
 
 always @(posedge clock or posedge reset) begin
     if(reset) begin
@@ -95,12 +95,13 @@ always @(posedge clock or posedge reset) begin
         o_src1          <= 32'b0;
         o_src2          <= 32'b0;
         o_imm           <= 32'b0;
-        o_src_sel       <= 2'b0;
+        o_src_sel1      <= 2'b0;
+        o_src_sel2      <= 3'b0;
         o_rd            <= 4'b0;
-        o_exu_opt       <= 4'b0;
+        o_exu_opt       <= 3'b0;
+        o_alu_opt       <= 10'b0;
         o_wen           <= 1'b0;
         o_csr_wen       <= 1'b0;
-        o_if_unsigned   <= 1'b0;
         o_mret          <= 1'b0;
         o_ecall         <= 1'b0;
         o_load          <= 1'b0;
@@ -118,14 +119,14 @@ always @(posedge clock or posedge reset) begin
         o_src1          <= sel_src1;
         o_src2          <= sel_src2;
         o_imm           <= i_imm;
-        o_src_sel       <= i_src_sel;
+        o_src_sel1      <= i_src_sel1;
+        o_src_sel2      <= i_src_sel2;
 
         o_rd            <= i_rd;
-        o_exu_opt       <=  (i_exu_opt == 3'b000 && i_if_unsigned) ? 4'b1000 :
-                            {1'b0, i_exu_opt};
+        o_exu_opt       <= i_exu_opt;
+        o_alu_opt       <= i_alu_opt;
         o_wen           <= i_wen;
         o_csr_wen       <= i_csr_wen;
-        o_if_unsigned   <= i_if_unsigned;
         o_mret          <= i_mret;
         o_ecall         <= i_ecall;
         o_load          <= i_load;
@@ -143,14 +144,13 @@ always @(posedge clock or posedge reset) begin
         o_src2          <= 32'b0;
         o_imm           <= 32'b0;
         //TODO:
-        o_src_sel       <= 2'b0;
-
+        o_src_sel1      <= 2'b0;
+        o_src_sel2      <= 3'b0;
         o_rd            <= 4'b0;
-        o_exu_opt       <= 4'b0;
-
+        o_exu_opt       <= 3'b0;
+        o_alu_opt       <= 10'b0;
         o_wen           <= 1'b0;
         o_csr_wen       <= 1'b0;
-        o_if_unsigned   <= 1'b0;
         o_mret          <= 1'b0;
         o_ecall         <= 1'b0;
         o_load          <= 1'b0;
@@ -164,16 +164,16 @@ always @(posedge clock or posedge reset) begin
     end
 end
 
-import "DPI-C" function void load_cnt_dpic   ();
-import "DPI-C" function void store_cnt_dpic  ();
+// import "DPI-C" function void load_cnt_dpic   ();
+// import "DPI-C" function void store_cnt_dpic  ();
 
-always @(posedge clock) begin
-  if(i_post_ready && o_post_valid && i_load) begin
-    load_cnt_dpic();
-  end
-  if(i_post_ready && o_post_valid && i_store) begin
-    store_cnt_dpic();
-  end
-end
+// always @(posedge clock) begin
+//   if(i_post_ready && o_post_valid && i_load) begin
+//     load_cnt_dpic();
+//   end
+//   if(i_post_ready && o_post_valid && i_store) begin
+//     store_cnt_dpic();
+//   end
+// end
 
 endmodule   

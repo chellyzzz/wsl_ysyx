@@ -87,16 +87,16 @@ wire                   [ISA_WIDTH-1:0]  csr_rs2                    ;
 wire                   [ISA_WIDTH-1:0]  mcause, mstatus, mepc, mtvec;
 
 //load store
-wire                   [3-1:0]          exu_opt          ;
-
+wire                   [3-1:0]          exu_opt                    ;
+wire                   [   9:0]         alu_opt                    ;
 wire                                    idu_wen, csr_wen, wbu_wen, wbu_csr_wen;
 wire                   [ISA_WIDTH-1:0]  pc_next, ifu_pc_next       ;
-wire                   [2-1:0]          i_src_sel                  ;
+wire                   [   1:0]         i_src_sel1                 ;
+wire                   [   2:0]         i_src_sel2                 ;
 wire                                    brch,jal,jalr              ;// idu -> pcu.
 wire                                    ebreak                     ;
 wire                                    if_store,if_load           ;// idu -> exu.
 wire                                    ecall,mret                 ;// idu -> pcu.
-wire                                    if_unsigned                ;// if_unsigned == 1, unsigned; else signed.
 wire                                    pc_update_en               ;
 //
 wire                                    ifu2idu_valid, idu2ifu_ready;
@@ -284,11 +284,11 @@ ysyx_23060124_IDU idu1(
     .o_rs2                             (idu_addr_rs2              ),
     .o_csr_addr                        (idu_csr_raddr             ),
     .o_exu_opt                         (exu_opt                   ),
-
+    .o_alu_opt                         (alu_opt                   ),
     .o_wen                             (idu_wen                   ),
     .o_csr_wen                         (csr_wen                   ),
-    .o_src_sel                         (i_src_sel                 ),
-    .o_if_unsigned                     (if_unsigned               ),
+    .o_src_sel1                        (i_src_sel1                ),
+    .o_src_sel2                        (i_src_sel2                ),
     .o_ecall                           (ecall                     ),
     .o_mret                            (mret                      ),
     .o_load                            (if_load                   ),
@@ -304,14 +304,13 @@ wire                   [  31:0]         idu2exu_pc                 ;
 wire                   [  31:0]         idu2exu_src1               ;
 wire                   [  31:0]         idu2exu_src2               ;
 wire                   [  31:0]         idu2exu_imm                ;
-wire                   [   1:0]         idu2exu_src_sel            ;
-
+wire                   [   1:0]         idu2exu_src_sel1           ;
+wire                   [   2:0]         idu2exu_src_sel2           ;
 wire                   [   3:0]         idu2exu_rd                 ;
-wire                   [   3:0]         idu2exu_exu_opt            ;
-
+wire                   [   2:0]         idu2exu_exu_opt            ;
+wire                   [   9:0]         idu2exu_alu_opt            ;
 wire                                    idu2exu_wen                ;
 wire                                    idu2exu_csr_wen            ;
-wire                                    idu2exu_if_unsigned        ;
 wire                                    idu2exu_mret               ;
 wire                                    idu2exu_ecall              ;
 wire                                    idu2exu_load               ;
@@ -343,11 +342,12 @@ ysyx_23060124_idu_exu_regs idu2exu_regs(
     .i_csr_rs2                         (csr_rs2                   ),
     .i_csr_src_sel                     (csr_wen                   ),
     .i_exu_opt                         (exu_opt                   ),
+    .i_alu_opt                         (alu_opt                   ),
 
     .i_wen                             (idu_wen                   ),
     .i_csr_wen                         (csr_wen                   ),
-    .i_src_sel                         (i_src_sel                 ),
-    .i_if_unsigned                     (if_unsigned               ),
+    .i_src_sel1                        (i_src_sel1                ),
+    .i_src_sel2                        (i_src_sel2                ),
     .i_mret                            (mret                      ),
     .i_ecall                           (ecall                     ),
     .i_load                            (if_load                   ),
@@ -362,14 +362,13 @@ ysyx_23060124_idu_exu_regs idu2exu_regs(
     .o_src1                            (idu2exu_src1              ),
     .o_src2                            (idu2exu_src2              ),
     .o_imm                             (idu2exu_imm               ),
-    .o_src_sel                         (idu2exu_src_sel           ),
-
+    .o_src_sel1                        (idu2exu_src_sel1          ),
+    .o_src_sel2                        (idu2exu_src_sel2          ),
     .o_rd                              (idu2exu_rd                ),
     .o_exu_opt                         (idu2exu_exu_opt           ),
-
+    .o_alu_opt                         (idu2exu_alu_opt           ),
     .o_wen                             (idu2exu_wen               ),
     .o_csr_wen                         (idu2exu_csr_wen           ),
-    .o_if_unsigned                     (idu2exu_if_unsigned       ),
     .o_mret                            (idu2exu_mret              ),
     .o_ecall                           (idu2exu_ecall             ),
     .o_load                            (idu2exu_load              ),
@@ -390,8 +389,8 @@ ysyx_23060124_EXU exu1(
     .i_src2                            (idu2exu_src2              ),
     .i_imm                             (idu2exu_imm               ),
     .i_pc                              (idu2exu_pc                ),
-    .i_src_sel                         (idu2exu_src_sel           ), 
-    .if_unsigned                       (idu2exu_if_unsigned       ),
+    .i_src_sel1                         (idu2exu_src_sel1           ), 
+    .i_src_sel2                         (idu2exu_src_sel2           ),
     //control signal
     .i_load                            (idu2exu_load              ),
     .i_store                           (idu2exu_store             ),
@@ -403,7 +402,7 @@ ysyx_23060124_EXU exu1(
     .i_mret                            (idu2exu_mret              ),
 
     .exu_opt                           (idu2exu_exu_opt           ),
-
+    .i_alu_opt                         (idu2exu_alu_opt           ),
     .o_res                             (exu_res                   ),
     .o_brch                            (exu_brch                  ),
     .o_pc_next                         (exu_pc_next               ),
@@ -647,55 +646,55 @@ CLINT clint
 );
 
 
-import "DPI-C" function void csr_cnt_dpic    ();
-import "DPI-C" function void brch_cnt_dpic   ();
-import "DPI-C" function void jal_cnt_dpic    ();
-import "DPI-C" function void ifu_start  ();
-import "DPI-C" function void ifu_end  ();
-import "DPI-C" function void icache_end  ();
-import "DPI-C" function void load_start  ();
-import "DPI-C" function void load_end  ();
-import "DPI-C" function void store_start  ();
-import "DPI-C" function void store_end  ();
+// import "DPI-C" function void csr_cnt_dpic    ();
+// import "DPI-C" function void brch_cnt_dpic   ();
+// import "DPI-C" function void jal_cnt_dpic    ();
+// import "DPI-C" function void ifu_start  ();
+// import "DPI-C" function void ifu_end  ();
+// import "DPI-C" function void icache_end  ();
+// import "DPI-C" function void load_start  ();
+// import "DPI-C" function void load_end  ();
+// import "DPI-C" function void store_start  ();
+// import "DPI-C" function void store_end  ();
 
 
-always @(posedge clock) begin
-  if(exu2wbu_brch) begin
-    brch_cnt_dpic();
-  end
-  if(exu2wbu_jalr || exu2wbu_jal) begin
-    jal_cnt_dpic();
-  end
-  if(exu2wbu_csr_wen) begin
-    csr_cnt_dpic();
-  end
-end
+// always @(posedge clock) begin
+//   if(exu2wbu_brch) begin
+//     brch_cnt_dpic();
+//   end
+//   if(exu2wbu_jalr || exu2wbu_jal) begin
+//     jal_cnt_dpic();
+//   end
+//   if(exu2wbu_csr_wen) begin
+//     csr_cnt_dpic();
+//   end
+// end
 
-always @(posedge clock) begin
-  if(IFU_SRAM_AXI_ARVALID && IFU_SRAM_AXI_ARREADY) begin
-    ifu_start();
-  end
-  else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RLAST) begin
-    ifu_end();
-  end
-  if(icache_hit) begin
-    icache_end();
-  end
+// always @(posedge clock) begin
+//   if(IFU_SRAM_AXI_ARVALID && IFU_SRAM_AXI_ARREADY) begin
+//     ifu_start();
+//   end
+//   else if(IFU_SRAM_AXI_RREADY && IFU_SRAM_AXI_RLAST) begin
+//     ifu_end();
+//   end
+//   if(icache_hit) begin
+//     icache_end();
+//   end
 
-  if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
-    load_start();
-  end
-  else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
-    load_end();
-  end
+//   if(LSU_SRAM_AXI_ARREADY && LSU_SRAM_AXI_ARVALID) begin
+//     load_start();
+//   end
+//   else if(LSU_SRAM_AXI_RREADY && LSU_SRAM_AXI_RVALID) begin
+//     load_end();
+//   end
 
-  if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
-    store_start();
-  end
-  else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
-    store_end();
-  end
-end
+//   if(LSU_SRAM_AXI_AWREADY && LSU_SRAM_AXI_AWVALID) begin
+//     store_start();
+//   end
+//   else if(LSU_SRAM_AXI_BREADY && LSU_SRAM_AXI_BVALID) begin
+//     store_end();
+//   end
+// end
 
 endmodule
 

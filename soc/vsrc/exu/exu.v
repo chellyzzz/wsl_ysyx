@@ -5,9 +5,9 @@ module ysyx_23060124_EXU(
     input              [  31:0]         i_src2                     ,
     input              [  31:0]         i_pc                       ,
     input              [  31:0]         i_imm                      ,
-    input              [   1:0]         i_src_sel                  ,
+    input              [   1:0]         i_src_sel1                 ,
+    input              [   2:0]         i_src_sel2                 ,
 
-    input                               if_unsigned                ,
     //control signal
     input                               i_load                     ,
     input                               i_store                    ,
@@ -17,13 +17,13 @@ module ysyx_23060124_EXU(
     //ecall and mret
     input                               i_ecall                    ,
     input                               i_mret                     ,
-
-    input              [   3:0]         exu_opt                    ,
+    input              [   9:0]         i_alu_opt                  ,
+    input              [   2:0]         exu_opt                    ,
 
     output             [  31:0]         o_res                      ,
     output                              o_brch                     ,
     output             [  31:0]         o_pc_next                  ,
-  //axi interface
+
     //write address channel  
     output             [  31:0]         M_AXI_AWADDR               ,
     output                              M_AXI_AWVALID              ,
@@ -96,37 +96,23 @@ always @(posedge clock) begin
     post_valid <= i_pre_valid;
 end
 
-wire [3:0] alu_opt;
-assign alu_opt =  if_lsu  ? 4'b0000:
-                  i_brch  ? {2'b0,exu_opt[2:1]}:
-                  exu_opt;
+reg                  [  31:0]         alu_src1                   ;
+reg                  [  31:0]         alu_src2                   ;
 
-localparam EXU_SEL_REG = 2'b00;
-localparam EXU_SEL_IMM = 2'b01;
-localparam EXU_SEL_PC4 = 2'b10;
-localparam EXU_SEL_PCI = 2'b11;
+always_comb begin
+    unique case(1'b1)
+        i_src_sel1[0]:  alu_src1 = i_src1;
+        default: alu_src1 = i_pc;
+    endcase
+end
 
-reg                    [  31:0]         alu_src1                   ;
-reg                    [  31:0]         alu_src2                   ;
-always @(*) begin
-  case(i_src_sel)
-    EXU_SEL_REG : begin
-      alu_src1 = i_src1;
-      alu_src2 = i_src2;
-    end
-    EXU_SEL_IMM : begin
-      alu_src1 = i_src1;
-      alu_src2 = i_imm;
-    end
-    EXU_SEL_PC4 : begin
-      alu_src1 = i_pc;
-      alu_src2 = 32'h4;
-    end
-    EXU_SEL_PCI : begin
-      alu_src1 = i_pc;
-      alu_src2 = i_imm;
-    end
-  endcase
+always_comb begin
+    unique case(1'b1)
+        i_src_sel2[0]:  alu_src2 = i_src2;
+        i_src_sel2[1]:  alu_src2 = i_imm;
+        i_src_sel2[2]:  alu_src2 = 32'h4;
+        default: alu_src2 = 32'h0;
+    endcase
 end
 
 assign o_pc_next =    i_jal             ? i_pc    + i_imm : 
@@ -139,8 +125,7 @@ assign o_pc_next =    i_jal             ? i_pc    + i_imm :
 ysyx_23060124_ALU exu_alu(
     .src1                              (alu_src1                  ),
     .src2                              (alu_src2                  ),
-    .shamt                             (if_unsigned               ),
-    .opt                               (alu_opt                   ),
+    .opt                               (i_alu_opt                 ),
     .res                               (alu_res                   ) 
 );
 
@@ -149,7 +134,7 @@ ysyx_23060124_LSU exu_lsu(
     .reset                             (reset                     ),
     .store_src                         (i_src2                    ),
     .alu_res                           (alu_res                   ),
-    .exu_opt                           (exu_opt[2:0]              ),
+    .exu_opt                           (exu_opt                   ),
     .load_res                          (load_res                  ),
     .i_load                            (i_load                    ),
     .i_store                           (i_store                   ),
@@ -199,7 +184,7 @@ assign beq = (alu_src1 == alu_src2);
 assign bne = ~beq;
 reg                                     brch_res                   ;
 wire [2:0] brch_opt;
-assign brch_opt = exu_opt[2:0];
+assign brch_opt = exu_opt;
 always @(*) begin
   case(brch_opt)
     BEQ:  brch_res = beq;
@@ -211,7 +196,7 @@ always @(*) begin
     default: brch_res = 1'b0;
   endcase
 end
-assign o_res = i_load ? load_res : alu_res;
+assign o_res  = i_load ? load_res : alu_res;
 assign o_brch = i_brch && brch_res;
 
 endmodule
