@@ -32,7 +32,7 @@ module ysyx_23060124_exu_wbu_regs (
     output reg                          o_ebreak                   ,
     //
     output reg         [  31:0]         o_res                      ,
-    output reg                          o_next                     ,
+    // output reg                          o_next                     ,
     input                               i_post_ready               ,
     input                               o_post_valid                
 );
@@ -51,7 +51,7 @@ always @(posedge clock or posedge reset) begin
         o_ecall     <= 'b0;  
         o_res       <= 'b0; 
         o_ebreak    <= 'b0;
-        o_next      <= 'b0;
+        // o_next      <= 'b0;
     end
     else if(i_post_ready && o_post_valid) begin
         o_pc_next   <= i_pc_next;
@@ -66,7 +66,7 @@ always @(posedge clock or posedge reset) begin
         o_ecall     <= i_ecall;
         o_res       <= i_res;
         o_ebreak    <= i_ebreak;
-        o_next      <= 1'b1;
+        // o_next      <= 1'b1;
     end
     else if(i_post_ready && ~o_post_valid) begin
         o_pc_next   <= 'b0; 
@@ -81,7 +81,7 @@ always @(posedge clock or posedge reset) begin
         o_ecall     <= 'b0; 
         o_res       <= 'b0; 
         o_ebreak    <= 'b0;
-        o_next      <= 'b0;
+        // o_next      <= 'b0;
     end
 end
 endmodule   

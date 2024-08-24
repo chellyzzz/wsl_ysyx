@@ -220,7 +220,7 @@ ysyx_23060124__icache icache1(
     .rst_n_sync                        (rst_n_sync                ),
     .addr                              (ifu_req_addr              ),
     .data                              (icache_ins                ),
-    .hit                               (icache_hit              ),
+    .hit                               (icache_hit                ),
     .fence_i                           (fence_i                   ),
   //read data channel
     .M_AXI_RDATA                       (IFU_SRAM_AXI_RDATA        ),
@@ -236,12 +236,12 @@ ysyx_23060124__icache icache1(
     .M_AXI_ARID                        (IFU_SRAM_AXI_ARID         ),
     .M_AXI_ARLEN                       (IFU_SRAM_AXI_ARLEN        ),
     .M_AXI_ARSIZE                      (IFU_SRAM_AXI_ARSIZE       ),
-    .M_AXI_ARBURST                     (IFU_SRAM_AXI_ARBURST      )
+    .M_AXI_ARBURST                     (IFU_SRAM_AXI_ARBURST      ) 
 );
 
 
-wire [31:0] ifu2idu_ins;
-wire [31:0] ifu2idu_pc;
+wire                   [  31:0]         ifu2idu_ins                ;
+wire                   [  31:0]         ifu2idu_pc                 ;
 
 ysyx_23060124_IFU ifu1
 (
@@ -265,7 +265,7 @@ ysyx_23060124_ifu_idu_regs ifu2idu_regs(
     .i_ins                             (ins                       ),
     .o_ins                             (ifu2idu_ins               ),
     .clock                             (clock                     ),
-    .reset                             (reset  || pc_update_en    ),
+    .reset                             (reset  || pc_update_en  || idu2exu_fence_i),
 
     .icache_hit                        (icache_hit                ),
     .i_pre_valid                       (pc_update_en              ),
@@ -297,7 +297,7 @@ ysyx_23060124_IDU idu1(
     .o_jal                             (jal                       ),
     .o_jalr                            (jalr                      ),
     .o_ebreak                          (ebreak                    ),
-    .o_fence_i                         (fence_i                   )
+    .o_fence_i                         (fence_i                   ) 
 );
 
 wire                   [  31:0]         idu2exu_pc                 ;
@@ -319,11 +319,12 @@ wire                                    idu2exu_brch               ;
 wire                                    idu2exu_jal                ;
 wire                                    idu2exu_jalr               ;
 wire                                    idu2exu_ebreak             ;
+wire                                    idu2exu_fence_i            ;
 wire                   [  11:0]         idu2exu_csr_addr           ;
 
 ysyx_23060124_idu_exu_regs idu2exu_regs(
     .clock                             (clock                     ),
-    .reset                             (reset || pc_update_en     ),
+    .reset                             (reset || pc_update_en || idu2exu_fence_i),
     .i_pre_valid                       (ifu2idu_valid             ),
     .i_post_ready                      (exu2idu_ready             ),
     .o_pre_ready                       (idu2ifu_ready             ),
@@ -377,6 +378,7 @@ ysyx_23060124_idu_exu_regs idu2exu_regs(
     .o_jal                             (idu2exu_jal               ),
     .o_jalr                            (idu2exu_jalr              ),
     .o_ebreak                          (idu2exu_ebreak            ),
+    .o_fence_i                         (idu2exu_fence_i           ),
     //
     .o_csr_addr                        (idu2exu_csr_addr          )
 );
@@ -489,7 +491,7 @@ ysyx_23060124_exu_wbu_regs exu_wbu_regs (
     .o_ecall                           (exu2wbu_ecall             ),
     .o_res                             (exu2wbu_res               ),
     .o_ebreak                          (exu2wbu_ebreak            ),
-    .o_next                            (exu2wbu_next              ),
+    // .o_next                            (exu2wbu_next              ),
     .i_post_ready                      (wbu2exu_ready             ),
     .o_post_valid                      (exu2wbu_valid             ) 
 );
@@ -499,7 +501,7 @@ ysyx_23060124_WBU wbu1(
     .reset                             (reset                     ),
     .i_pc_next                         (exu2wbu_pc_next           ),
     .i_pre_valid                       (exu2wbu_valid             ),
-    .i_next                            (exu2wbu_next              ),
+    // .i_next                            (exu2wbu_next              ),
 
     .i_rd_addr                         (exu2wbu_rd_addr           ),
     .i_csr_addr                        (exu2wbu_csr_addr          ),
