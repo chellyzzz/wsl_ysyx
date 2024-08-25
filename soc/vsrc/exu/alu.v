@@ -6,27 +6,6 @@ module ysyx_23060124_ALU (
 );
 
 /***************parameter***************/
-parameter ADD =  4'b0000;
-parameter SUB =  4'b1000;
-parameter SLL =  4'b0001;
-parameter SLT =  4'b0010;
-parameter SLTU=  4'b0011;
-parameter XOR =  4'b0100;
-parameter SRL =  4'b0101;
-parameter OR  =  4'b0110;
-parameter AND =  4'b0111;
-
-localparam                              ALU_ADD         =  10'd1   ;
-localparam                              ALU_SUB         =  10'd2   ;
-localparam                              ALU_SLL         =  10'd4   ;
-localparam                              ALU_SLT         =  10'd8   ;
-localparam                              ALU_SLTU        =  10'd16  ;
-localparam                              ALU_XOR         =  10'd32  ;
-localparam                              ALU_SRL         =  10'd64  ;
-localparam                              ALU_OR          =  10'd128 ;
-localparam                              ALU_AND         =  10'd256 ;
-localparam                              ALU_SRA         =  10'd512  ;
-
 wire                   [  31:0]         add_res                    ;
 wire                   [  31:0]         and_res                    ;
 wire                   [  31:0]         or_res                     ;

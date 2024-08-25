@@ -91,17 +91,19 @@ wire [3:0] rs1      = ins[18:15];
 wire [3:0] rs2      = ins[23:20];
 wire [3:0] rd       = ins[10:7];
 
-wire TYPEI       = (opcode == TYPE_I         );
-wire TYPEI_LOAD  = (opcode == TYPE_I_LOAD    );
-wire TYPER       = (opcode == TYPE_R         );     
-wire TYPELUI     = (opcode == TYPE_LUI       );   
-wire TYPEAUIPC   = (opcode == TYPE_AUIPC     ); 
-wire TYPEJAL     = (opcode == TYPE_JAL       );   
-wire TYPEJALR    = (opcode == TYPE_JALR      );  
-wire TYPES       = (opcode == TYPE_S         );     
-wire TYPEB       = (opcode == TYPE_B         );     
-wire TYPEEBRK    = (opcode == TYPE_EBRK      );
-wire TYPEFENCE   = (opcode == TYPE_FENCE     );
+wire                                    TYPEI       = (opcode == TYPE_I         );
+wire                                    TYPEI_LOAD  = (opcode == TYPE_I_LOAD    );
+wire                                    TYPER       = (opcode == TYPE_R         );
+wire                                    TYPELUI     = (opcode == TYPE_LUI       );
+wire                                    TYPEAUIPC   = (opcode == TYPE_AUIPC     );
+wire                                    TYPEJAL     = (opcode == TYPE_JAL       );
+wire                                    TYPEJALR    = (opcode == TYPE_JALR      );
+wire                                    TYPES       = (opcode == TYPE_S         );
+wire                                    TYPEB       = (opcode == TYPE_B         );
+wire                                    TYPEEBRK    = (opcode == TYPE_EBRK      );
+wire                                    TYPEFENCE   = (opcode == TYPE_FENCE     );
+wire                                    CSRRS       = (TYPEEBRK && func3 == FUN3_CSRRS      );
+wire                                    CSRRW       = (TYPEEBRK && func3 == FUN3_CSRRW      );
 
 assign o_imm = (TYPEI || TYPEI_LOAD) ? {{20{ins[31]}}, ins[31:20]} :
                (TYPELUI || TYPEAUIPC) ? {ins[31:12], 12'b0} :
@@ -135,12 +137,9 @@ wire [2:0] exu_opt;
 assign exu_opt =  (TYPEB)       ? {1'b0,func3[2:1]}:
                   func3;
 
-assign o_alu_opt =  (TYPES)                           ? ALU_ADD:
-                    (TYPEI_LOAD)                      ? ALU_ADD:
-                    (TYPELUI)                         ? ALU_ADD:
-                    (TYPEAUIPC)                       ? ALU_ADD:
-                    (TYPEJAL)                         ? ALU_ADD:
-                    (TYPEEBRK && func3 == FUN3_CSRRS) ? ALU_OR:  
+assign o_alu_opt =  (TYPES | TYPEI_LOAD | TYPELUI | TYPEAUIPC | TYPEJAL) ? ALU_ADD:
+                    (CSRRS) ? ALU_OR: 
+                    (CSRRW) ? ALU_ADD:
                     (exu_opt ==  ADD && ~o_if_unsigned           )  ? ALU_ADD  :
                     (exu_opt ==  SUB &&  o_if_unsigned           )  ? ALU_SUB  :
                     (exu_opt ==  SLL           )  ? ALU_SLL  :
@@ -153,6 +152,17 @@ assign o_alu_opt =  (TYPES)                           ? ALU_ADD:
                     (exu_opt ==  AND           )  ? ALU_AND  :
                     ALU_ADD;
 
+// assign o_alu_opt[0] = TYPES | TYPEI_LOAD | TYPELUI | TYPEAUIPC | TYPEJAL | CSRRW | (exu_opt ==  ADD && ~o_if_unsigned           );
+// assign o_alu_opt[1] = (exu_opt ==  SUB &&  o_if_unsigned           );
+// assign o_alu_opt[2] = (exu_opt ==  SLL           );
+// assign o_alu_opt[3] = (exu_opt ==  SLT           );
+// assign o_alu_opt[4] = (exu_opt ==  SLTU          );
+// assign o_alu_opt[5] = (exu_opt ==  XOR           );
+// assign o_alu_opt[6] = (exu_opt ==  SRL_SRA &&  o_if_unsigned      );
+// assign o_alu_opt[7] = (exu_opt ==  SRL_SRA && ~o_if_unsigned      );
+// assign o_alu_opt[8] = CSRRS |(exu_opt ==  OR            );
+// assign o_alu_opt[9] = (exu_opt ==  AND           );
+
 assign o_src_sel1 =   (TYPEI)       ? SEL1_REG:
                       (TYPER)       ? SEL1_REG:
                       (TYPELUI)     ? SEL1_REG:
@@ -162,8 +172,8 @@ assign o_src_sel1 =   (TYPEI)       ? SEL1_REG:
                       (TYPEI_LOAD)  ? SEL1_REG:
                       (TYPES)       ? SEL1_REG:
                       (TYPEB)       ? SEL1_REG:
-                      (TYPEEBRK && func3 == FUN3_CSRRW) ? SEL1_REG:
-                      (TYPEEBRK && func3 == FUN3_CSRRS) ? SEL1_REG:
+                      (CSRRW) ? SEL1_REG:
+                      (CSRRS) ? SEL1_REG:
                       'b0;
 
 assign o_src_sel2 =   (TYPEI)       ? SEL2_IMM:
@@ -175,8 +185,8 @@ assign o_src_sel2 =   (TYPEI)       ? SEL2_IMM:
                       (TYPEI_LOAD)  ? SEL2_IMM:
                       (TYPES)       ? SEL2_IMM:
                       (TYPEB)       ? SEL2_REG:
-                      (TYPEEBRK && func3 == FUN3_CSRRW) ? SEL2_IMM:
-                      (TYPEEBRK && func3 == FUN3_CSRRS) ? SEL2_REG:
+                      (CSRRW) ? SEL2_IMM:
+                      (CSRRS) ? SEL2_REG:
                       'b0;
                                         
 assign o_ecall      = (TYPEEBRK && func3 == 3'b0 && rs2[1:0] == 2'b00);

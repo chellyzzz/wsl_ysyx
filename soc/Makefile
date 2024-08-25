@@ -23,14 +23,15 @@ VERILATOR=verilator
 # Generate C++ in executable form
 VERILATOR_FLAGS += --top-module $(TOPNAME) +incdir+vsrc/include
 VERILATOR_FLAGS += +incdir+$(UART16550_DIR) +incdir+$(SPI_DIR)
-VERILATOR_FLAGS += --autoflush
-VERILATOR_FLAGS += -Wno-style
+VERILATOR_FLAGS += --lint-only
+VERILATOR_FLAGS += -Wall 
+VERILATOR_FLAGS += -Wno-DECLFILENAME
+# VERILATOR_FLAGS += --report-only 
+# VERILATOR_FLAGS += -Werror-
 
 VERILATOR_FLAGS += --timescale "1ns/1ns" --no-timing
 VERILATOR_FLAGS += -cc --exe --build --trace -MMD \
 				-O3 --x-assign fast --x-initial fast
-# Warn abount lint issues; may not want this on less solid designs
-VERILATOR_FLAGS += -Wno-fatal
 # Accelerate speed
 VERILATOR_FLAGS += -j 8
 
@@ -97,7 +98,7 @@ menuconfig:
 sim: run wave
 
 combined :
-	cat $(find ./vsrc/ -name "*.v") > combined.v
+	cat $(find ./vsrc/ -name "*.v") > ysyx_23060124.v
 
 clean:
 	rm -rf $(BUILD_DIR)
