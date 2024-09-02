@@ -62,7 +62,6 @@ static void ecall(vaddr_t* dnpc, vaddr_t pc) {
 #define MSTATUS_MIE          (1 << 3)
 static void mret(vaddr_t* dnpc) {
         *dnpc = cpu.csr.mepc; 
-        printf("mstatus = %x\n", cpu.csr.mstatus);
         int mpie = (cpu.csr.mstatus >> 7) & 1; 
         if (mpie) { 
             cpu.csr.mstatus |= MSTATUS_MIE; 

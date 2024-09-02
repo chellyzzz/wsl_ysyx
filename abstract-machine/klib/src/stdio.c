@@ -5,8 +5,8 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-#define PRESION_NUM 100
-
+#define PRESION_NUM 1000
+#define BUF_SIZE 5000
 int uinttostring(char *dst, unsigned int value) {
     if (value == 0) {
         dst[0] = '0';
@@ -161,7 +161,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
 int printf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char tmp[500];
+    char tmp[BUF_SIZE];
     int cnt = vsprintf(tmp, fmt, args);
     putstr(tmp);
     va_end(args);
