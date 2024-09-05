@@ -121,6 +121,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
             *(out + cnt) = sb_s;
             cnt ++;
             break;
+        case 'p':
+            unsigned int p = va_arg(ap, unsigned int);
+            *(out + cnt++) = '0';
+            *(out + cnt++) = 'x';
+            cnt += itohex(out + cnt, p);
+            break;
         default : cnt = cnt;        
         }
         }else{

@@ -45,13 +45,7 @@ static vaddr_t *CPU_CSRs(word_t imm) {
 #define CSR(i) *CPU_CSRs(i)
 
 static void ecall(vaddr_t* dnpc, vaddr_t pc) {
-  #ifdef CONFIG_TARGET_SHARE
-        *dnpc = isa_raise_intr(11, pc);
-  #else
-  //TODO: a7 value
-  *dnpc = isa_raise_intr(11, pc);
-
-  #endif
+    *dnpc = isa_raise_intr(11, pc);
 }
 
 //  set mie = mpie
