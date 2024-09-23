@@ -66,12 +66,21 @@ int _open(const char *path, int flags, mode_t mode) {
 }
 
 int _write(int fd, void *buf, size_t count) {
-  _exit(SYS_write);
-  return 0;
+  // _exit(SYS_write);
+  // return 0;
+  return _syscall_(SYS_write, fd, (intptr_t)buf, count);
 }
-
+extern char end;
+intptr_t pbrk = (intptr_t)&end;
 void *_sbrk(intptr_t increment) {
-  return (void *)-1;
+  // return (void *)-1;
+  intptr_t old_pbrk = pbrk;
+  intptr_t new_pbrk = pbrk + increment;
+  if(_syscall_(SYS_brk, increment, 0, 0) == 0) {
+    pbrk = new_pbrk;
+    return (void *)old_pbrk;
+  }
+  else return (void *)-1;
 }
 
 int _read(int fd, void *buf, size_t count) {
