@@ -1,12 +1,17 @@
 #include <common.h>
 #include "syscall.h"
-
-#define STRACE
+#include <fs.h>
+// #define STRACE
 
 void sys_yield(Context *c);
 void sys_exit(Context *c);
 void sys_write(Context *c);
 void sys_brk(Context *c);
+void sys_open(Context *c);
+void sys_lseek(Context *c);
+void sys_close(Context *c);
+void sys_read(Context *c);
+
 #ifdef STRACE
 void get_syscall_name(int id);
 #endif
@@ -25,6 +30,10 @@ void do_syscall(Context *c) {
     case SYS_exit:  sys_exit(c); break;
     case SYS_write: sys_write(c); break;
     case SYS_brk:   sys_brk(c); break;
+    case SYS_open:  sys_open(c); break;
+    case SYS_lseek: sys_lseek(c); break;
+    case SYS_close: sys_close(c); break;
+    case SYS_read:  sys_read(c); break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }
 
@@ -36,17 +45,18 @@ void sys_yield(Context *c) {
 }
 
 void sys_write(Context *c) {
-  int fd = c->GPR2;
-  char *buf = (char *)c->GPR3;
-  size_t count = c->GPR4;
-  if (fd == 1 || fd == 2) {
-    for (size_t i = 0; i < count; i++) {
-      putch(buf[i]);
-    }
-    c->GPRx = count;
-  } else {
-    c->GPRx = -1;
-  }
+  // int fd = c->GPR2;
+  // char *buf = (char *)c->GPR3;
+  // size_t count = c->GPR4;
+  // if (fd == 1 || fd == 2) {
+  //   for (size_t i = 0; i < count; i++) {
+  //     putch(buf[i]);
+  //   }
+  //   c->GPRx = count;
+  // } else {
+  //   c->GPRx = -1;
+  // }
+  c->GPRx = fs_write(c->GPR2, (void *)c->GPR3, c->GPR4);
 }
 
 void sys_brk(Context *c) {
@@ -55,6 +65,22 @@ void sys_brk(Context *c) {
 
 void sys_exit(Context *c) {
   halt(c->GPRx);
+}
+
+void sys_open(Context *c) {
+  c->GPRx = fs_open((char *)c->GPR2, c->GPR3, c->GPR4);
+}
+
+void sys_read(Context *c) {
+  c->GPRx = fs_read(c->GPR2, (void *)c->GPR3, c->GPR4);
+}
+
+void sys_close(Context *c) {
+  c->GPRx = fs_close(c->GPR2);
+} 
+
+void sys_lseek(Context *c) {
+  c->GPRx = fs_lseek(c->GPR2, c->GPR3, c->GPR4);
 }
 
 #ifdef STRACE

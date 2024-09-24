@@ -1,5 +1,6 @@
 #include <proc.h>
 #include <elf.h>
+#include <fs.h>
 #include <ramdisk.h>
 
 #ifdef __LP64__
@@ -20,8 +21,11 @@
 
 static uintptr_t loader(PCB *pcb, const char *filename) {
   // TODO();
+  int fd = fs_open(filename, 0, 0);
   Elf_Ehdr *ehdr = (Elf_Ehdr*)malloc(sizeof(Elf_Ehdr));
-  ramdisk_read(ehdr, 0, sizeof(Elf_Ehdr));
+  int ret = fs_read(fd, ehdr, sizeof(Elf_Ehdr));
+  assert(ret != -1);
+  // ramdisk_read(ehdr, 0, sizeof(Elf_Ehdr));
   assert(*(uint32_t *)(ehdr->e_ident) == 0x464c457f); 
   assert(EXPECT_TYPE == ehdr->e_machine);
   // 遍历程序头表
