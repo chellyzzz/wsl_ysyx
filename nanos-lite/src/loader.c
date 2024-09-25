@@ -21,20 +21,20 @@
 
 static uintptr_t loader(PCB *pcb, const char *filename) {
   // TODO();
+  // ramdisk_read(ehdr, 0, sizeof(Elf_Ehdr));
   int fd = fs_open(filename, 0, 0);
   Elf_Ehdr *ehdr = (Elf_Ehdr*)malloc(sizeof(Elf_Ehdr));
   int ret = fs_read(fd, ehdr, sizeof(Elf_Ehdr));
+  int offset = fs_offset(fd);
   assert(ret != -1);
-  // ramdisk_read(ehdr, 0, sizeof(Elf_Ehdr));
   assert(*(uint32_t *)(ehdr->e_ident) == 0x464c457f); 
   assert(EXPECT_TYPE == ehdr->e_machine);
   // 遍历程序头表
   for (int i = 0; i < ehdr->e_phnum; i++) {
     Elf_Phdr phdr;
-    ramdisk_read(&phdr, ehdr->e_phoff + i * sizeof(Elf_Phdr), sizeof(Elf_Phdr));
-
+    ramdisk_read(&phdr, offset + ehdr->e_phoff + i * sizeof(Elf_Phdr), sizeof(Elf_Phdr));
     if (phdr.p_type == PT_LOAD) {
-      ramdisk_read((void *)phdr.p_vaddr, phdr.p_offset, phdr.p_memsz);
+      ramdisk_read((void *)phdr.p_vaddr, offset + phdr.p_offset, phdr.p_memsz);
 
       if (phdr.p_memsz > phdr.p_filesz) {
         memset((void *)(phdr.p_vaddr + phdr.p_filesz), 0, phdr.p_memsz - phdr.p_filesz);

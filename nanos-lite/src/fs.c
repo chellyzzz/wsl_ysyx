@@ -67,6 +67,10 @@ size_t fs_read(int fd, void *buf, size_t len){
   }
 }
 
+size_t fs_offset(int fd){
+  return file_table[fd].disk_offset;
+}
+
 size_t fs_write(int fd, const void *buf, size_t len){
   if(file_table[fd].write != NULL){
     return (file_table[fd].write)(buf,0,len);
@@ -112,10 +116,14 @@ size_t fs_lseek(int fd, size_t offset, int whence){
       printf("Invalid whence\n");
       return -1;
   }
-  panic("fs_lseek not implemented");
+  return file_table[fd].open_offset;
 }
 
 int fs_close(int fd){
   file_table[fd].open_offset = 0;
   return 0;
+}
+
+void get_fs_name(int fd){
+  printf("File name: %s\n",file_table[fd].name);
 }

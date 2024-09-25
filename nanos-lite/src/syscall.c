@@ -1,6 +1,7 @@
 #include <common.h>
 #include "syscall.h"
 #include <fs.h>
+
 // #define STRACE
 
 void sys_yield(Context *c);
@@ -21,10 +22,14 @@ void do_syscall(Context *c) {
   a[0] = c->GPR1;
 
   #ifdef STRACE
-  printf("syscall trace ID = %d\n", a[0]);
+  printf("syscall trace ID = %d\t", a[0]);
   get_syscall_name(a[0]);
+  if(a[0] >= SYS_open && a[0] <= SYS_close){
+    int fd = c->GPR2;
+    get_fs_name(fd);
+  }
   #endif
-
+  
   switch (a[0]) {
     case SYS_yield: sys_yield(c); break;
     case SYS_exit:  sys_exit(c); break;
@@ -45,18 +50,17 @@ void sys_yield(Context *c) {
 }
 
 void sys_write(Context *c) {
-  // int fd = c->GPR2;
-  // char *buf = (char *)c->GPR3;
-  // size_t count = c->GPR4;
-  // if (fd == 1 || fd == 2) {
-  //   for (size_t i = 0; i < count; i++) {
-  //     putch(buf[i]);
-  //   }
-  //   c->GPRx = count;
-  // } else {
-  //   c->GPRx = -1;
-  // }
-  c->GPRx = fs_write(c->GPR2, (void *)c->GPR3, c->GPR4);
+  int fd = c->GPR2;
+  char *buf = (char *)c->GPR3;
+  size_t count = c->GPR4;
+  if (fd == 1 || fd == 2) {
+    for (size_t i = 0; i < count; i++) {
+      putch(buf[i]);
+    }
+    c->GPRx = count;
+  } else {
+    c->GPRx = fs_write(c->GPR2, (void *)c->GPR3, c->GPR4);
+  }
 }
 
 void sys_brk(Context *c) {
@@ -72,7 +76,7 @@ void sys_open(Context *c) {
 }
 
 void sys_read(Context *c) {
-  c->GPRx = fs_read(c->GPR2, (void *)c->GPR3, c->GPR4);
+    c->GPRx = fs_read(c->GPR2, (void *)c->GPR3, c->GPR4);
 }
 
 void sys_close(Context *c) {
