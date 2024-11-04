@@ -63,10 +63,16 @@ paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
+  if(cpu.pc == 0xa0015f18){
+    printf("read sdram data = 0x%x addr 0x%x pc = 0x%x\n", ret, addr, cpu.pc);
+  }
   return ret;
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
+  if(addr >= 0xa2029064 && addr <= 0xa2029068 + 0x4){
+    printf("write sdram data = 0x%x addr 0x%x pc = 0x%x\n", data, addr, cpu.pc);
+  }
   host_write(guest_to_host(addr), len, data);
 }
 
@@ -122,18 +128,18 @@ void init_mem() {
 
 word_t paddr_read(paddr_t addr, int len) {
   // log_write("paddr_write addr = " FMT_PADDR " len = %d \n", addr, len);
-  if(len == 4){
-    if(addr % 4 != 0){
-      printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
-      assert(0);
-    }
-  }
-  else if(len == 2){
-    if(addr % 2 != 0){
-      printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
-      assert(0);
-    }
-  }
+  // if(len == 4){
+  //   if(addr % 4 != 0){
+  //     printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
+  //     assert(0);
+  //   }
+  // }
+  // else if(len == 2){
+  //   if(addr % 2 != 0){
+  //     printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
+  //     assert(0);
+  //   }
+  // }
   IFDEF(CONFIG_MTRACE, mtrace_push(addr, len, cpu.pc, false, 0));
   word_t data;
   #ifdef CONFIG_TARGET_SHARE
@@ -156,18 +162,18 @@ word_t paddr_read(paddr_t addr, int len) {
 
 void paddr_write(paddr_t addr, int len, word_t data) {
   // log_write("paddr_write addr = " FMT_PADDR " len = %d data = " FMT_WORD"\n", addr, len, data);
-  if(len == 4){
-    if(addr % 4 != 0){
-      printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
-      assert(0);
-    }
-  }
-  else if(len == 2){
-    if(addr % 2 != 0){
-      printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
-      assert(0);
-    }
-  }
+  // if(len == 4){
+  //   if(addr % 4 != 0){
+  //     printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
+  //     assert(0);
+  //   }
+  // }
+  // else if(len == 2){
+  //   if(addr % 2 != 0){
+  //     printf("addr = " FMT_PADDR " is not aligned at pc %x\n", addr, cpu.pc);
+  //     assert(0);
+  //   }
+  // }
   IFDEF(CONFIG_MTRACE, mtrace_push(addr, len, cpu.pc, true, data));
   #ifdef CONFIG_TARGET_SHARE
   if (in_sdram(addr)||in_sram(addr)) {

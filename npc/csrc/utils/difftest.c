@@ -19,7 +19,6 @@ void (*ref_difftest_raise_intr)(uint64_t NO) = NULL;
 static bool is_skip_ref = false;
 static int skip_dut_nr_inst = 0;
 static bool is_skip_ref_delay = false;
-static int skip_nr = 1;
 // this is used to let ref skip instructions which
 // can not produce consistent behavior with NEMU
 void difftest_skip_ref() {
@@ -66,7 +65,7 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
 
   ref_difftest_raise_intr = (void (*)(uint64_t NO))dlsym(handle, "difftest_raise_intr");
   assert(ref_difftest_raise_intr);
-  
+
   void (*ref_difftest_init)(int) = (void (*)(int port))dlsym(handle, "difftest_init");
   assert(ref_difftest_init);
   
@@ -81,12 +80,9 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
 }
 
 static bool checkregs(CPU_state *ref, vaddr_t pc) {
-return diff_checkregs(ref, pc);
+  return diff_checkregs(ref, pc);
 }
 
-static inline bool in_uart(paddr_t addr) {
-  return addr - 0x10000000 < 0x00001000 && addr >= 0x10000000;
-}
 
 bool difftest_step(vaddr_t pc, vaddr_t npc){
 
@@ -115,25 +111,10 @@ bool difftest_step(vaddr_t pc, vaddr_t npc){
 
   // return reg_eqa;
   CPU_state ref_r;
-
-  if(skip_nr > 0){
-    skip_nr --;
-    return 1;
-  }
-
-  if(cpu.pc == 0xa00055b8  || cpu.pc == 0xa0005718+4 || cpu.pc == 0xa0005718+8){
-    is_skip_ref = true;
-  }
-
-  if(is_skip_ref){
-    ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF, 0);
-    is_skip_ref = false;
-    return 1;
-  }
-  
-  ref_difftest_exec(1);
   ref_difftest_regcpy(&ref_r, DIFFTEST_TO_DUT, 0);
+
   bool reg_eqa = checkregs(&ref_r, pc);
+    ref_difftest_exec(1);
   return reg_eqa;
 }
 #else

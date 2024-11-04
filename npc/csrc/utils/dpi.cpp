@@ -35,7 +35,7 @@ extern "C" void npc_pmem_write(int waddr, int wdata, int wen, int len){
 }
 extern "C" void store_skip(int addr){
   #ifdef CONFIG_DIFFTEST
-  if(!in_pmem(addr))
+  if(!in_mem_npc(addr))
     difftest_skip_ref();
     return ;
   #else

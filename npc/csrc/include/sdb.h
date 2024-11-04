@@ -18,7 +18,6 @@
 
 #include <common.h>
 
-extern bool wave_enable;
 word_t expr(char *e, bool *success);
 
 #endif

@@ -1,5 +1,5 @@
 `include "para_defines.v"
-module ysyx_23060124_ALU (
+module ysyx_23060124_alu (
   input [`ysyx_23060124_ISA_WIDTH-1:0] src1,
   input [`ysyx_23060124_ISA_WIDTH-1:0] src2,
   input if_unsigned,

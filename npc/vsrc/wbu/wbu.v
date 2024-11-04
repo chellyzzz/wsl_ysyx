@@ -1,11 +1,10 @@
 `include "para_defines.v"
 
-module ysyx_23060124_WBU (
+module ysyx_23060124_wbu (
   input clk,
   input i_rst_pcu,
   input i_pre_valid,
   input i_wen,
-  input i_csr_wen,
   input i_brch,
   input i_jal,
   input i_jalr,
@@ -26,7 +25,6 @@ module ysyx_23060124_WBU (
   output [`ysyx_23060124_ISA_WIDTH - 1:0] o_csr_rd,
   output o_pre_ready,
   output o_wbu_wen,
-  output o_wbu_csr_wen,
   output o_pc_update
 );
 
@@ -43,29 +41,36 @@ wire ecall;
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] mtvec;
 wire [`ysyx_23060124_ISA_WIDTH - 1:0] mepc;
 
-assign pc            =  i_pre_valid && o_pre_ready ? i_pc        :  'b0;
-assign res           =  i_pre_valid && o_pre_ready ? i_res       :  'b0;
-assign rs1           =  i_pre_valid && o_pre_ready ? i_rs1       :  'b0;
-assign imm           =  i_pre_valid && o_pre_ready ? i_imm       :  'b0;
-assign brch          =  i_pre_valid && o_pre_ready ? i_brch      :  'b0;
-assign jal           =  i_pre_valid && o_pre_ready ? i_jal       :  'b0;
-assign jalr          =  i_pre_valid && o_pre_ready ? i_jalr      :  'b0;
-assign csrr          =  i_pre_valid && o_pre_ready ? i_csrr      :  'b0;
-assign mret          =  i_pre_valid && o_pre_ready ? i_mret      :  'b0;
-assign ecall         =  i_pre_valid && o_pre_ready ? i_ecall     :  'b0;
-assign mtvec         =  i_pre_valid && o_pre_ready ? i_mtvec     :  'b0;
-assign mepc          =  i_pre_valid && o_pre_ready ? i_mepc      :  'b0;
-assign o_wbu_wen     =  i_pre_valid && o_pre_ready ? i_wen       :  1'b0;
-assign o_wbu_csr_wen =  i_pre_valid && o_pre_ready ? i_csr_wen   :  1'b0;
-
+assign pc = i_pre_valid && o_pre_ready ? i_pc : pc;
+assign res = i_pre_valid && o_pre_ready ? i_res : res;
+assign rs1 = i_pre_valid && o_pre_ready ? i_rs1 : rs1;
+assign imm = i_pre_valid && o_pre_ready ? i_imm : imm;
+assign brch = i_pre_valid && o_pre_ready ? i_brch : brch;
+assign jal = i_pre_valid && o_pre_ready ? i_jal : jal;
+assign jalr = i_pre_valid && o_pre_ready ? i_jalr : jalr;
+assign csrr = i_pre_valid && o_pre_ready ? i_csrr : csrr;
+assign mret = i_pre_valid && o_pre_ready ? i_mret : mret;
+assign ecall = i_pre_valid && o_pre_ready ? i_ecall : ecall;
+assign mtvec = i_pre_valid && o_pre_ready ? i_mtvec : mtvec;
+assign mepc = i_pre_valid && o_pre_ready ? i_mepc : mepc; 
+assign o_wbu_wen = i_pre_valid && o_pre_ready ? i_wen : 1'b0;
+// reg tmp_ready;
+wire [`ysyx_23060124_ISA_WIDTH - 1:0] pc_next;
 assign o_rd_wdata = jal || jalr ? pc + 4 : res;
-assign o_csr_rd  = res;
+assign o_csr_rd = res;
 assign o_pc_next =    jal ? (pc + imm) : 
                       (jalr ? (rs1 + imm) : 
                       (brch && res[0] ? pc + imm : 
                       (ecall ? mtvec :
                       (mret ? mepc : pc + 4))));
 
+// ysyx_23060124_Reg #(`ysyx_23060124_ISA_WIDTH, `ysyx_23060124_RESET_PC) next_pc_reg(
+//   .clk(clk),
+//   .rst(i_rst_pcu),
+//   .din(pc_next),
+//   .dout(o_pc_next),
+//   .wen(i_pre_valid)
+// );
 
 assign o_pc_update = i_pre_valid && o_pre_ready;
 assign o_pre_ready = 1'b1;

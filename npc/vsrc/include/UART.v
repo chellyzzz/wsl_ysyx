@@ -8,39 +8,27 @@ module UART(
     output  [1 : 0] S_AXI_RRESP,
     output   S_AXI_RVALID,
     input    S_AXI_RREADY,
-    output  S_AXI_RLAST,
-    output [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_RID,
 
     //read adress channel
     input   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_ARADDR,
     input    S_AXI_ARVALID,
     output   S_AXI_ARREADY,
-    input [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_ARID,
-    input [7 : 0] S_AXI_ARLEN,
-    input [2 : 0] S_AXI_ARSIZE,
-    input [1 : 0] S_AXI_ARBURST,
 
     //write back channel
     output  [1 : 0] S_AXI_BRESP,
     output   S_AXI_BVALID,
     input    S_AXI_BREADY,
-    output [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_BID,
 
     //write address channel  
     input   [`ysyx_23060124_ISA_ADDR_WIDTH-1 : 0] S_AXI_AWADDR,
     input    S_AXI_AWVALID,
     output   S_AXI_AWREADY,
-    input   [`ysyx_23060124_AXI_ID_WIDTH-1 : 0] S_AXI_AWID,
-    input   [7 : 0] S_AXI_AWLEN,
-    input [2 : 0] S_AXI_AWSIZE,
-    input [1 : 0] S_AXI_AWBURST,
 
     //write data channel
-    input   [`ysyx_23060124_ISA_WIDTH-1 : 0] S_AXI_WDATA,
-    input   [`ysyx_23060124_MASK_LENTH-1 : 0] S_AXI_WSTRB,
-    input   S_AXI_WVALID,
-    input   S_AXI_WLAST,
-    output  S_AXI_WREADY
+    input   [`ysyx_23060124_ISA_WIDTH-1:0] S_AXI_WDATA,
+    input   [`ysyx_23060124_OPT_WIDTH-1 : 0] S_AXI_WSTRB,
+    input    S_AXI_WVALID,
+    output   S_AXI_WREADY
 );
 
 //----------------------------------------------

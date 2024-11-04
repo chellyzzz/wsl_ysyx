@@ -35,12 +35,12 @@ void ssbl(){
     // while (dst < end)
     //   *dst++ = *src++;
 
-    // /* Zero bss.  */
-    // //TODO: zero bss
-    // extern char _bstart, _bend;
-    // dst = &_bstart;
-    // end = &_bend;
-    // /* ROM has data at end of text; copy it.  */
-    // while (dst < end)
-    //   *dst++ = 0;
+    /* Zero bss.  */
+    //TODO: zero bss
+    extern char _bss_start, _bss_end;
+    dst = &_bss_start;
+    end = &_bss_end;
+    /* ROM has data at end of text; copy it.  */
+    while (dst < end)
+      *dst++ = 0;
 }

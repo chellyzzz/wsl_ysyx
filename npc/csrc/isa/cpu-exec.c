@@ -17,31 +17,24 @@
 #include <cpu/cpu.h>
 #include <cpu/trace.h>
 #include <cpu/decode.h>
-#include "VysyxSoCFull.h"
-#include "VysyxSoCFull___024root.h"
-
-#ifdef CONFIG_NVBOARD
-#include <nvboard.h>
-#endif
+#include "Vtop.h"
+#include "Vtop___024root.h"
+// #include "verilated.h"
+// #include "verilated_vcd_c.h"
 
 CPU_state cpu = {};
 int cycles = 0;
 
 #define MAX_INST_TO_PRINT 11
-#define PC_WAVE_START 0xa0000000
+
 #ifdef CONFIG_WP
 bool wp_check();
 #endif
 
 static VerilatedContext* contextp;; 
-static VysyxSoCFull* top;
+static Vtop* top;
 static VerilatedVcdC* vcd;
 static word_t instr;
-extern bool wave_enable;
-
-#define MAX_DEADS 10000
-bool dead_detector = true;
-int dead_cycles   = 0;
 
 #ifdef CONFIG_FTRACE
 
@@ -56,33 +49,15 @@ extern bool ftrace_enable;
 #endif
 
 // cpu exec
-void reg_update(){  
-  if(dead_detector){
-    if(cpu.pc == top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next){
-      dead_cycles ++;
-    }else{
-      dead_cycles = 0;
-    }
-    if(dead_cycles > MAX_DEADS){
-      printf("Dead loop detected, pc = " FMT_WORD "\n", cpu.pc);
-      exit(1);
-    }
-  }
-
+void reg_update(){
   for(int i = 0; i < 32; i++){
-    cpu.gpr[i] = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__regfile1__DOT__rf[i] ;
+    cpu.gpr[i] = top->rootp->top__DOT__CPU__DOT__regfile1__DOT__rf[i] ;
   }
-  cpu.csr.mcause = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mcause;
-  cpu.csr.mstatus = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mstatus;
-  cpu.csr.mepc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mepc;
-  cpu.csr.mtvec = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__Csrs__DOT__mtvec;
-  cpu.pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next;
-  #ifdef PC_WAVE_START
-  if(cpu.pc == PC_WAVE_START){
-    wave_enable = true;
-  }
-  #endif
-
+  cpu.csr.mcause = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mcause;
+  cpu.csr.mstatus = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mstatus;
+  cpu.csr.mepc = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mepc;
+  cpu.csr.mtvec = top->rootp->top__DOT__CPU__DOT__Csrs__DOT__mtvec;
+  cpu.pc = top->rootp->top__DOT__CPU__DOT__ifu_pc_next;
   return;
 }
 
@@ -106,17 +81,17 @@ void disasm_pc(Decode* s){
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
 }
 
-void verilator_sync_init(VerilatedContext* contextp_sdb, VysyxSoCFull* top_sdb, VerilatedVcdC* vcd_sdb){
+void verilator_sync_init(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb){
   contextp = contextp_sdb;
   top = top_sdb;  
   vcd = vcd_sdb;
 }
 
 void decode_pc(Decode* s){
-  s->pc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu1__DOT__pc;
-  s->snpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__wbu1__DOT__pc + 4;
-  s->dnpc = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ifu1__DOT__pc_next;
-  s->isa.inst.val = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__ins;
+  s->pc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc;
+  s->snpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc + 4;
+  s->dnpc = top->rootp->top__DOT__CPU__DOT__wbu1__DOT__pc_next;
+  s->isa.inst.val = top->rootp->top__DOT__CPU__DOT__ins;
   instr = s->isa.inst.val;
   #ifdef CONFIG_ITRACE
       disasm_pc(s);
@@ -126,33 +101,24 @@ void decode_pc(Decode* s){
 }
 
 void exec_once(Decode *s){
-    // cycles ++;
-    top->reset = 0;
-    top->clock = 0;
+    cycles ++;
+    top->clk = 0;
     top->eval();
-
     #ifdef CONFIG_WAVE
-    if(wave_enable){
-      contextp->timeInc(1);
-      vcd->dump(contextp->time());
-    }
+    contextp->timeInc(1);
+    vcd->dump(contextp->time());
     #endif  
-    top->clock = 1;
+    top->clk = 1;
     top->eval();
-    #ifdef CONFIG_NVBOARD
-    nvboard_update();
-    #endif
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2idu_ready){
+    if(top->rootp->top__DOT__CPU__DOT__ifu2idu_valid){
       reg_update();
     }
-    if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu1__DOT__lsu_post_valid){
+    if(top->rootp->top__DOT__CPU__DOT__exu1__DOT__lsu_post_valid){
       decode_pc(s);
     }
     #ifdef CONFIG_WAVE
-    if(wave_enable){
-      contextp->timeInc(1);
-      vcd->dump(contextp->time());
-    }
+    contextp->timeInc(1);
+    vcd->dump(contextp->time());
     #endif
     return;
 }
@@ -160,7 +126,7 @@ void exec_once(Decode *s){
 static int trace_and_difftest(Decode *s, vaddr_t dnpc) {
         int flag = 0;
         #ifdef CONFIG_DIFFTEST
-        if(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__exu2idu_ready){
+        if(top->rootp->top__DOT__CPU__DOT__ifu2idu_valid){
           if(!difftest_step(s->pc, s->dnpc)) {
             flag = 1;
           }
@@ -223,10 +189,6 @@ void cpu_exec(uint64_t n){
     for(; n > 0; n--){
       if(contextp->gotFinish()){
         printf("Program execution has ended. To restart the program, exit NPC and run again.\n");
-        Log("npc: %s at pc = " FMT_WORD,
-        (hit_goodtrap() ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
-          ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED)),
-        cpu.pc);        
         break;
       }
         exec_once(&s);

@@ -51,7 +51,8 @@ SECTIONS {
     . = ALIGN(4);
     _edata = .;
   } > sdram AT> flash
-
+  edata = .;
+  
   .bss : {
 	  _bss_start = .;
     *(.bss*)
@@ -62,9 +63,9 @@ SECTIONS {
   } > sdram AT> flash
 
   _heap_start = ALIGN(0x1000);
-  _heap_end = _heap_start  + 0x40000;
+  _heap_end = _heap_start  + 0x4000000;
 
   _stack_top = ALIGN(0x1000);
-  . = _stack_top + 0x40000;
+  . = _stack_top + 0x4000000;
   _stack_pointer = .;
 }

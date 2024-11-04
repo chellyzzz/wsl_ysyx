@@ -45,22 +45,7 @@ static vaddr_t *CPU_CSRs(word_t imm) {
 #define CSR(i) *CPU_CSRs(i)
 
 static void ecall(vaddr_t* dnpc, vaddr_t pc) {
-  bool success = true;
-  #ifdef CONFIG_TARGET_SHARE
-    int a5 = isa_reg_str2val("a5", &success);
-    if (success) {
-        *dnpc = isa_raise_intr(a5, pc);
-    } else {
-            panic("a5 value error");
-    }
-  #else
-    int a7 = isa_reg_str2val("a7", &success);
-    if (success) {
-        *dnpc = isa_raise_intr(a7, pc);
-    } else {
-            panic("a7 value error");
-    }
-  #endif
+    *dnpc = isa_raise_intr(11, pc);
 }
 
 //  set mie = mpie
@@ -71,7 +56,6 @@ static void ecall(vaddr_t* dnpc, vaddr_t pc) {
 #define MSTATUS_MIE          (1 << 3)
 static void mret(vaddr_t* dnpc) {
         *dnpc = cpu.csr.mepc; 
-        printf("mstatus = %x\n", cpu.csr.mstatus);
         int mpie = (cpu.csr.mstatus >> 7) & 1; 
         if (mpie) { 
             cpu.csr.mstatus |= MSTATUS_MIE; 

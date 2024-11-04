@@ -20,10 +20,10 @@
 #include <cpu/cpu.h>
 #include <cpu/trace.h>
 #include <memory/paddr.h>
-
+// #include "verilated.h"
+// #include "verilated_vcd_c.h"
 
 static int is_batch_mode = false;
-bool wave_enable = false;
 void init_regex();
 #ifdef CONFIG_WP
 void init_wp_pool();
@@ -264,11 +264,7 @@ static int cmd_ft(char *args) {
   }
   #endif
 }
-static int cmd_t(char *args) {
-  wave_enable = !wave_enable;
-  printf("wave is %s!\n",wave_enable?"on":"off");
-  return 0;
-}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -289,7 +285,6 @@ static struct {
   { "b", "set breakpoint if CONFIG_WP enabled", cmd_b },
   { "i", "print current instructions", cmd_i },
   { "f", "turn on or off fucntrace when running program halfway, always off by default", cmd_ft}, 
-  { "t", "turn on or off wave trace halfway, always on by default", cmd_t}, 
   /* TODO: Add more commands */
 };
 
@@ -333,7 +328,7 @@ void assert_fail_msg() {
   #endif
 }
 
-int sdb_mainloop(VerilatedContext* contextp_sdb, VysyxSoCFull* top_sdb, VerilatedVcdC* vcd_sdb) {
+int sdb_mainloop(VerilatedContext* contextp_sdb, Vtop* top_sdb, VerilatedVcdC* vcd_sdb) {
   //pass parameters to global variables
   verilator_sync_init(contextp_sdb, top_sdb, vcd_sdb);
 
