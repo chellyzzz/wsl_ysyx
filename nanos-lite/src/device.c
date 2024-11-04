@@ -55,9 +55,6 @@ size_t fb_write(const void *buf, size_t offset, size_t len) {
   fbctl.w      = len;
   fbctl.h      =  1;
   fbctl.sync   = true;
-  printf("fb_write: offset=%d, len=%d\n", offset, len);
-  printf("fb_write: x=%d, y=%d, w=%d, h=%d\n", fbctl.x, fbctl.y, fbctl.w, fbctl.h);
-  // printf("windows size: %d x %d\n", cfg.width, cfg.height);
   ioe_write(AM_GPU_FBDRAW, &fbctl);
   return len;
 }

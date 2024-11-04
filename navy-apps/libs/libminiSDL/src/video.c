@@ -7,12 +7,62 @@
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+  if (!srcrect) {
+      // 如果没有提供 srcrect，则默认为整个源表面
+      srcrect = &(SDL_Rect){0, 0, src->w, src->h};
+  }
+
+  if (!dstrect) {
+      // 如果没有提供 dstrect，则默认为整个目标表面
+      dstrect = &(SDL_Rect){0, 0, dst->w, dst->h};
+  }
+  int src_x = srcrect->x;
+  int src_y = srcrect->y;
+  int src_w = srcrect->w;
+  int src_h = srcrect->h;
+  if(src_x < 0){
+    src_w += src_x;
+    src_x = 0;
+  }
+  if(src_y < 0){
+    src_h += src_y;
+    src_y = 0;
+  }
+  if(src_x + src_w > src->w){
+    src_w = src->w - src_x;
+  }
+  if(src_y + src_h > src->h){
+    src_h = src->h - src_y;
+  }
+  int dst_x = dstrect->x;
+  int dst_y = dstrect->y;
+  if (dst_x < 0 || dst_y < 0 || dst_x + src_w > dst->w || dst_y + src_h > dst->h) {
+      printf("target rect over src");
+      return;
+  }
+  for(int i = 0; i < src_h; i++){
+    uint8_t *src_pixel = (uint8_t *)src->pixels + ((src_y + i) * src->pitch) + (src_x * (src->format->BytesPerPixel));
+    uint8_t *dst_pixel = (uint8_t *)dst->pixels + ((dst_y + i) * dst->pitch) + (dst_x * (dst->format->BytesPerPixel));
+
+    memcpy(dst_pixel, src_pixel, src_w * (src->format->BytesPerPixel));
+  }
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  if (w == 0 && h == 0) {
+    w = s->w;
+    h = s->h;
+  }  
+  uint32_t *pixel = malloc(w * h * 4);
+  uint32_t *src = (uint32_t *)s->pixels;
+  for (int i = 0; i < h; i++) {
+    memcpy(pixel + w * i, src + (y + i) * s->w + x, w * 4);
+  }
+  NDL_DrawRect(pixel, x, y, w, h);
+  free(pixel);
 }
 
 // APIs below are already implemented.

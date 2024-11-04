@@ -51,7 +51,8 @@ SECTIONS {
     . = ALIGN(4);
     _edata = .;
   } > sdram AT> flash
-
+  edata = .;
+  
   .bss : {
 	  _bss_start = .;
     *(.bss*)
